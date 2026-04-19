@@ -1,0 +1,47 @@
+schema_version: '1.0'
+
+extension:
+  id: pencil
+  name: 'Pencil Design Planning'
+  version: '1.0.0'
+  description: 'Plan or adjust screen designs in a .pen file (via the Pencil MCP) before writing the feature specification, so design becomes the primordial source for requirements.'
+  author: markusdouglas
+  license: MIT
+
+requires:
+  speckit_version: '>=0.7.2'
+  mcp:
+    - name: pencil
+      required: true
+
+provides:
+  commands:
+    - name: speckit.pencil.design
+      file: commands/speckit.pencil.design.md
+      description: "Plan or adjust the feature's screen design in the active .pen file and capture screenshots/notes for the spec."
+
+  config:
+    - name: 'pencil-config.yml'
+      template: 'config-template.yml'
+      description: 'Pencil design planning configuration'
+      required: false
+
+hooks:
+  before_specify:
+    command: speckit.pencil.design
+    optional: true
+    prompt: 'Plan screen design in Pencil before writing the spec?'
+    description: 'Open/adjust the screen design in a .pen file so the spec can reference it as the primordial design source. Skip for backend-only features.'
+
+tags:
+  - 'design'
+  - 'ui'
+  - 'pencil'
+  - 'mcp'
+
+config:
+  defaults:
+    pen_file: 'layout.pen'
+    design_dir: 'design'
+    screenshot_format: 'png'
+    screens_per_feature: 'auto'

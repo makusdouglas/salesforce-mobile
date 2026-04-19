@@ -5,6 +5,35 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+## UI Design *(primordial source — include when the feature has a UI)*
+
+<!--
+  If the `/speckit-pencil-design` hook ran before this spec, a `design/` directory
+  will exist alongside this spec file with screenshots and a `screens.md` summary.
+  Treat those artifacts as the primordial source for User Scenarios and Functional
+  Requirements below: every user story and FR must trace back to a screen, a
+  component interaction, or a design decision captured in the design summary.
+
+  If the hook did NOT run (e.g. backend-only feature), remove this entire section.
+-->
+
+**Design source**: [design/screens.md](./design/screens.md) — generated from `<pen_file>`
+
+### Screens
+
+<!--
+  Copy the screens table from design/screens.md here (or reference it). Each row
+  is an independently testable unit — map them to User Stories below.
+-->
+
+| Screen | Screenshot | Intent |
+|--------|------------|--------|
+| [Screen name] | [screen.png](./design/[slug].png) | [1-line intent] |
+
+### Design decisions carried into this spec
+
+- [Layout / flow / copy / empty-state decision made during the design session that constrains requirements.]
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
