@@ -1,0 +1,41 @@
+name: Validate PR source branch
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+      - develop
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR source branch matches target policy
+        env:
+          TARGET: ${{ github.base_ref }}
+          SOURCE: ${{ github.head_ref }}
+        run: |
+          echo "PR: $SOURCE -> $TARGET"
+          case "$TARGET" in
+            main)
+              if [ "$SOURCE" != "staging" ]; then
+                echo "::error::PRs to main must come from staging (got: $SOURCE)"
+                exit 1
+              fi
+              ;;
+            staging)
+              if [ "$SOURCE" != "develop" ]; then
+                echo "::error::PRs to staging must come from develop (got: $SOURCE)"
+                exit 1
+              fi
+              ;;
+            develop)
+              if ! [[ "$SOURCE" =~ ^([0-9]{3,}-|feature/|fix/|chore/|docs/|refactor/) ]]; then
+                echo "::error::PRs to develop must come from NNN-*, feature/*, fix/*, chore/*, docs/*, or refactor/* (got: $SOURCE)"
+                exit 1
+              fi
+              ;;
+          esac
+          echo "OK: $SOURCE -> $TARGET is a valid transition"
