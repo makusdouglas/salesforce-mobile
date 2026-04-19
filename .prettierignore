@@ -1,0 +1,15 @@
+node_modules/
+.expo/
+dist/
+web-build/
+assets/
+ios/
+android/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+*.md
+.specify/
+.claude/
+.github/
+specs/

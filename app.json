@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Salesforce Mobile",
+    "slug": "salesforce-mobile",
+    "scheme": "salesforcemobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "bundleIdentifier": "com.markusdouglas.salesforcemobile",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.markusdouglas.salesforcemobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    }
+  }
+}
