@@ -39,6 +39,17 @@ Determine the branch numbering strategy by checking configuration in this order:
 2. Check `.specify/init-options.json` for `branch_numbering` value (backward compatibility)
 3. Default to `sequential` if neither exists
 
+## Base Branch
+
+The script reads `base_branch` from `.specify/extensions/git/git-config.yml`.
+When set (currently `develop`), the script checks out that branch and
+fast-forwards from `origin` before creating the new feature branch. This
+ensures feature work is always based on the latest upstream state of the
+integration branch, not whatever the developer happened to have checked out.
+
+If `base_branch` is unset or the branch does not exist locally/remotely, the
+script falls back to branching from the currently checked-out HEAD.
+
 ## Execution
 
 Generate a concise short name (2-4 words) for the branch:
