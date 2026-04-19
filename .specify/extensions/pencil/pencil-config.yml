@@ -1,0 +1,20 @@
+# Active Pencil configuration for this project.
+# Overrides the defaults in extension.yml and the structure from config-template.yml.
+
+pen_file: 'layout.pen'
+design_dir: 'design'
+screenshot_format: 'png'
+screens_per_feature: 'auto'
+
+# Design system — applied to every screen planned or adjusted during
+# `/speckit-pencil-design`. Shared by all features so the MVP stays cohesive.
+style_guide:
+  name: 'Anchored Ribbon Grid'
+  typography:
+    headings: 'Funnel Sans'
+    body: 'Inter'
+    captions: 'Geist'
+  color_palette: 'Lavender Cream'
+  roundness: 'Basic Roundness'
+  elevation: 'Gentle Lift'
+  decorative_imagery: 'Fluid Ribbon Gradients'
