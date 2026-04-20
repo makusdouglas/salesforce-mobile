@@ -26,7 +26,11 @@ Read configuration in this order (first match wins):
 
 1. `.specify/extensions/pencil/pencil-config.yml`
 2. Defaults from `.specify/extensions/pencil/extension.yml` under `config.defaults`
-3. Hard defaults: `pen_file: layout.pen`, `design_dir: design`, `screenshot_format: png`, `screens_per_feature: auto`
+3. Hard defaults: `pen_file: layout.pen`, `design_dir: design`, `screenshot_format: png`, `screens_per_feature: auto`, `viewports: { phone: 390x844, tablet: 820x1180 }`
+
+The `viewports` key is **mandatory** — it defines the form factors every
+logical screen must be designed for (constitution §5 UX5). Each logical
+screen expands into ONE Pencil frame per configured viewport.
 
 ## Resolve Feature Directory
 
@@ -54,21 +58,26 @@ Read configuration in this order (first match wins):
      - Use `decorative_imagery` as the aesthetic for hero/illustrative elements (backgrounds, onboarding, empty states) — generate via `G(nodeId, "ai", "<prompt>")` referencing the imagery style.
    - Promote the palette, roundness, and elevation into the file's `variables` block on the first run of the hook so later features reuse them by reference instead of duplicating values.
 
-3. **Identify candidate screens** for the feature (based on `screens_per_feature` config):
-   - `auto`: Scan top-level frames from `get_editor_state` output. Match frame names against feature keywords extracted from `$ARGUMENTS`. Pick the matches; if none match, propose creating new placeholder frames.
-   - `ask`: List top-level frames and wait for the user to choose which to adjust or extend.
-   - `all`: Use every top-level frame touched during the session.
+3. **Identify candidate logical screens** for the feature (based on `screens_per_feature` config):
+   - `auto`: Scan top-level frames from `get_editor_state` output. Group frames that share a logical screen name (ignoring a trailing `-phone` / `-tablet` suffix) and match those groups against feature keywords extracted from `$ARGUMENTS`. Pick the matches; if none match, propose creating new placeholder groups.
+   - `ask`: List logical screens (grouped by base name across viewports) and wait for the user to choose which to adjust or extend.
+   - `all`: Use every logical screen touched during the session.
 
-4. **Plan the design**
-   - For each screen in scope, decide whether to:
-     - **Adjust** an existing frame — set `placeholder: true` before edits, use `batch_design` operations, unset `placeholder` when finished.
-     - **Create** a new frame — start with `placeholder: true`, build with components from the existing design system (reusable components discovered via `batch_get`), finalize.
+   A **logical screen** is the user-visible concept (e.g., "Catalog home"). Each logical screen MUST exist as one frame **per configured viewport** — so with the default `viewports` (phone + tablet) each logical screen corresponds to TWO Pencil frames named `<screen-slug>-phone` and `<screen-slug>-tablet`.
+
+4. **Plan the design** — iterate once per logical screen × viewport pair:
+   - For each viewport in `viewports` (start with `phone`, then `tablet`):
+     - Resolve the frame named `<screen-slug>-<viewport>`; create it at the viewport's declared `width` × `height` if missing.
+     - Decide whether to:
+       - **Adjust** an existing frame — set `placeholder: true` before edits, use `batch_design` operations, unset `placeholder` when finished.
+       - **Create** a new frame — start with `placeholder: true` at the exact viewport dimensions, build with components from the existing design system (reusable components discovered via `batch_get`), finalize.
+   - **Tablet ≠ stretched phone.** The tablet layout MUST take advantage of the extra canvas where it meaningfully helps the user (split views, multi-column grids, side panels, denser cards). If the feature's interaction truly does not benefit from the larger canvas, document that decision under "Design decisions" in `screens.md` — do not silently duplicate the phone frame.
    - Follow the Pencil general instructions that were loaded via `get_editor_state(include_schema: true)`: keep each `batch_design` call to ≤25 operations, prefer existing reusable components, use flexbox over absolute positioning, etc.
    - Every shape, text, and component instance MUST conform to the style guide applied in step 2 — fonts, colors, corner radius, shadow. Inconsistencies are tracked as "Open questions for the spec".
 
 5. **Export screenshots**
-   - For every screen finalized in this session, call `mcp__pencil__export_nodes` (or `mcp__pencil__get_screenshot` as fallback) and write the output to `FEATURE_DIR/<design_dir>/<screen-slug>.<screenshot_format>`.
-   - Use the frame's `name` (lowercased, dash-separated) as `<screen-slug>`.
+   - For every frame finalized in this session (one per logical screen × viewport), call `mcp__pencil__export_nodes` (or `mcp__pencil__get_screenshot` as fallback) and write the output to `FEATURE_DIR/<design_dir>/<screen-slug>-<viewport>.<screenshot_format>`.
+   - Use the logical screen name (lowercased, dash-separated) as `<screen-slug>` and the viewport key (`phone`, `tablet`) as `<viewport>`.
 
 6. **Write a design summary** to `FEATURE_DIR/<design_dir>/screens.md` with this structure:
 
@@ -77,12 +86,13 @@ Read configuration in this order (first match wins):
 
    **Source**: [<pen_file>](../../../<pen_file>)
    **Captured**: <YYYY-MM-DD>
+   **Viewports**: Phone (390×844 pt), Tablet (820×1180 pt) — portrait only
 
    ## Screens
 
-   | Screen | Frame ID | Screenshot | Notes |
-   |--------|----------|------------|-------|
-   | <Screen name> | `<frame-id>` | [<slug>.png](./<slug>.png) | <1-line intent> |
+   | Screen | Phone frame | Phone shot | Tablet frame | Tablet shot | Notes |
+   |--------|-------------|------------|--------------|-------------|-------|
+   | <Screen name> | `<phone-frame-id>` | [<slug>-phone.png](./<slug>-phone.png) | `<tablet-frame-id>` | [<slug>-tablet.png](./<slug>-tablet.png) | <1-line intent + how tablet differs from phone> |
 
    ## Components referenced
 
@@ -91,20 +101,29 @@ Read configuration in this order (first match wins):
    ## Design decisions
 
    - <One bullet per non-obvious choice made during the session (layout, flow, copy, empty states).>
+   - <For each screen, one bullet on the phone→tablet delta: split view? multi-column grid? side panel? "same layout, scaled" is only acceptable with a stated reason.>
 
    ## Open questions for the spec
 
    - <Any [NEEDS CLARIFICATION] items the designer could not resolve — will be promoted into spec.md.>
    ```
 
-7. **Emit a pointer file** at `FEATURE_DIR/design.json` so downstream skills (`/speckit-plan`, `/speckit-tasks`, `/speckit-implement`) can locate the design artifacts:
+7. **Emit a pointer file** at `FEATURE_DIR/design.json` so downstream skills (`/speckit-plan`, `/speckit-tasks`, `/speckit-implement`) can locate the design artifacts. Each logical screen lists one entry per configured viewport:
 
    ```json
    {
      "pen_file": "<pen_file>",
      "design_dir": "<feature_dir>/<design_dir>",
+     "viewports": ["phone", "tablet"],
      "screens": [
-       { "name": "<screen name>", "frame_id": "<id>", "screenshot": "<path>" }
+       {
+         "name": "<screen name>",
+         "slug": "<screen-slug>",
+         "variants": [
+           { "viewport": "phone",  "frame_id": "<id>", "screenshot": "<slug>-phone.png"  },
+           { "viewport": "tablet", "frame_id": "<id>", "screenshot": "<slug>-tablet.png" }
+         ]
+       }
      ]
    }
    ```
@@ -117,7 +136,9 @@ Return JSON-shaped text (so `/speckit-specify` can parse it if needed):
 DESIGN_DIR=<feature_dir>/<design_dir>
 SCREENS_MD=<feature_dir>/<design_dir>/screens.md
 PEN_FILE=<pen_file>
-SCREENS_COUNT=<n>
+SCREENS_COUNT=<n>            # number of logical screens
+VIEWPORTS=phone,tablet       # from config; comma-separated
+FRAMES_COUNT=<n×viewports>   # total frames exported
 ```
 
 ## Graceful Degradation
@@ -130,5 +151,13 @@ SCREENS_COUNT=<n>
 
 When the spec is generated immediately after this command, the specify skill **MUST** include a `## UI Design` section in `spec.md` that:
 - Links to `<design_dir>/screens.md`
-- Lists the screens (with relative image links) as the primordial design source
+- Lists the screens (with phone AND tablet image links side by side) as the primordial design source
 - Derives user stories from the screens and interactions captured in the design summary
+- Calls out any phone→tablet layout deltas that carry functional implications (e.g., "tablet shows a persistent side panel, so the navigation requirement differs")
+
+## Notes for `/speckit-plan` and `/speckit-implement` integration
+
+Downstream commands MUST honor constitution §5 UX5:
+
+- `plan.md` "Structure Decision" MUST describe the responsive approach — e.g., viewport hook (`useWindowDimensions`), shared components with viewport-conditional layout sub-trees, breakpoint thresholds — whenever the feature introduces new screens.
+- `tasks.md` MUST include, for each screen task, a "verify on tablet simulator" acceptance check in addition to the phone check. A screen task is NOT complete if it has only been verified on one form factor.
