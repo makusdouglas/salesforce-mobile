@@ -1,4 +1,5 @@
 import { supabase } from '@/data';
+import { deletePinCredential } from '@/features/lock/storage/lockStorage';
 
 import { _internalSessionStore } from '../session/session';
 import { secureStore } from '../storage/secureStore';
@@ -123,13 +124,28 @@ export const authService = {
     return _completeLoginExchange(args.email, args.password, true);
   },
 
-  /** FR-011, FR-013: logout. Local wipe first; server revocation best-effort. */
-  async logout(): Promise<void> {
-    await Promise.all([
-      secureStore.deleteRefreshCredential(),
-      secureStore.deleteLastEmail(),
-    ]);
-    _internalSessionStore.setNotAuthenticated({ preserveEmail: null });
+  /**
+   * FR-011, FR-013 (003) + FR-018 (004): logout. Local wipe first; server
+   * revocation best-effort. When options.preserveEmail is true, auth.lastEmail
+   * is kept in secure store — used ONLY by the PIN-recovery path (004 FR-014)
+   * to feed the LoginScreen's pre-fill after a forced sign-out.
+   *
+   * This method also wipes the lock feature's PIN credential (004 FR-018),
+   * ensuring session and PIN are cleared atomically. Idempotent on the PIN
+   * side — no-op if no PIN was ever set.
+   */
+  async logout(options?: { preserveEmail?: boolean }): Promise<void> {
+    const wipes: Promise<void>[] = [secureStore.deleteRefreshCredential()];
+    if (options?.preserveEmail !== true) {
+      wipes.push(secureStore.deleteLastEmail());
+    }
+    await Promise.all(wipes);
+    await deletePinCredential();
+    _internalSessionStore.setNotAuthenticated({
+      preserveEmail: options?.preserveEmail === true
+        ? await secureStore.getLastEmail()
+        : null,
+    });
     // Fire-and-forget server revocation.
     void supabase.auth.signOut().catch(() => {
       // Swallow — local wipe already succeeded (FR-011).

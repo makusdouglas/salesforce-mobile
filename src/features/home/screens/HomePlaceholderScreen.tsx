@@ -1,15 +1,22 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
 import { colors } from '@/app/theme/colors';
 import { authService, useSession } from '@/features/auth';
+import { lockService } from '@/features/lock';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomePlaceholder'>;
 
+const TIMEOUT_OPTIONS: ReadonlyArray<number> = [1, 5, 10, 30];
+
 export function HomePlaceholderScreen({ navigation }: Props) {
   const { email } = useSession();
+  const [selectedMinutes, setSelectedMinutes] = useState<number>(
+    lockService.getInactivityTimeout(),
+  );
 
   const confirmLogout = () => {
     Alert.alert('Sair da conta', 'Seus dados permanecem no dispositivo.', [
@@ -24,12 +31,50 @@ export function HomePlaceholderScreen({ navigation }: Props) {
     ]);
   };
 
+  const selectMinutes = (minutes: number): void => {
+    const previous = selectedMinutes;
+    setSelectedMinutes(minutes);
+    void lockService.setInactivityTimeout(minutes).catch(() => {
+      setSelectedMinutes(previous);
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.heading}>Bem-vindo</Text>
         {email !== null ? <Text style={styles.subtitle}>{email}</Text> : null}
         <Text style={styles.subtitle}>Sua base de vendas fica aqui.</Text>
+
+        <View style={styles.settingsBlock}>
+          <Text style={styles.settingsLabel}>Bloquear após</Text>
+          <View style={styles.segmentRow}>
+            {TIMEOUT_OPTIONS.map((minutes) => {
+              const active = minutes === selectedMinutes;
+              return (
+                <Pressable
+                  key={minutes}
+                  accessibilityRole="button"
+                  onPress={() => selectMinutes(minutes)}
+                  style={({ pressed }) => [
+                    styles.segmentButton,
+                    active ? styles.segmentButtonActive : styles.segmentButtonInactive,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <Text
+                    style={
+                      active ? styles.segmentLabelActive : styles.segmentLabelInactive
+                    }
+                  >
+                    {minutes} min
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
         {__DEV__ ? (
           <Pressable
             accessibilityRole="button"
@@ -96,6 +141,47 @@ const styles = StyleSheet.create({
   ghostLabel: {
     color: '#71717A',
     fontSize: 14,
+    fontWeight: '500',
+  },
+  settingsBlock: {
+    width: '100%',
+    maxWidth: 420,
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 16,
+  },
+  settingsLabel: {
+    color: '#52525B',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  segmentRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  segmentButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#18181B',
+  },
+  segmentButtonInactive: {
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    backgroundColor: '#FFFFFF',
+  },
+  segmentLabelActive: {
+    color: '#FAFAFA',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  segmentLabelInactive: {
+    color: '#18181B',
+    fontSize: 13,
     fontWeight: '500',
   },
 });

@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { ReloginScreen, useSession } from '@/features/auth';
+import { LockGate } from '@/features/lock';
 
 import { AuthStack } from './AuthStack';
 import { HomeStack } from './HomeStack';
@@ -15,7 +16,13 @@ export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {authenticated ? (
-        <Stack.Screen name="Home" component={HomeStack} />
+        <Stack.Screen name="Home">
+          {() => (
+            <LockGate>
+              <HomeStack />
+            </LockGate>
+          )}
+        </Stack.Screen>
       ) : (
         <Stack.Screen name="Auth" component={AuthStack} />
       )}
