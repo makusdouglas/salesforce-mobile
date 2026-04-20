@@ -9,6 +9,7 @@ export type AuthStackParamList = {
 
 export type HomeStackParamList = {
   HomePlaceholder: undefined;
+  DataLayerSmoke: undefined;
 };
 
 declare global {
