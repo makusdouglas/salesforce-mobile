@@ -20,6 +20,15 @@ export function HomePlaceholderScreen({ navigation }: Props) {
         >
           <Text style={styles.buttonLabel}>Entrar</Text>
         </Pressable>
+        {__DEV__ ? (
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+            onPress={() => navigation.navigate('DataLayerSmoke')}
+          >
+            <Text style={styles.buttonLabel}>[dev] Data-Layer Smoke</Text>
+          </Pressable>
+        ) : null}
       </View>
     </SafeAreaView>
   );
