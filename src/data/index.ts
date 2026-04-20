@@ -43,3 +43,5 @@ export type {
   PaymentReceiptCreateInput,
   PaymentReceiptUpdatePatch,
 } from './repositories/paymentReceiptsRepository';
+
+export { supabase } from './supabase';

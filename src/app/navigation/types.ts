@@ -1,10 +1,11 @@
 export type RootStackParamList = {
   Auth: undefined;
   Home: undefined;
+  Relogin: { resolve: () => void; reject: () => void };
 };
 
 export type AuthStackParamList = {
-  AuthPlaceholder: undefined;
+  Login: undefined;
 };
 
 export type HomeStackParamList = {
