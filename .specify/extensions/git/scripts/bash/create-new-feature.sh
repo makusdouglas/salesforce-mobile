@@ -379,6 +379,33 @@ fi
 
 if [ "$DRY_RUN" != true ]; then
     if [ "$HAS_GIT" = true ]; then
+        # Resolve base branch from git-config.yml (optional). If set, check it
+        # out and fast-forward before creating the new feature branch so the
+        # feature is always based on the latest upstream state of that branch.
+        GIT_CONFIG_FILE="$REPO_ROOT/.specify/extensions/git/git-config.yml"
+        BASE_BRANCH=""
+        if [ -f "$GIT_CONFIG_FILE" ]; then
+            BASE_BRANCH=$(grep -E '^[[:space:]]*base_branch:' "$GIT_CONFIG_FILE" 2>/dev/null | head -1 \
+                | sed 's/.*base_branch:[[:space:]]*//; s/[[:space:]]*#.*//; s/^"\(.*\)"$/\1/; s/^'\''\(.*\)'\''$/\1/; s/[[:space:]]*$//')
+        fi
+        if [ -n "$BASE_BRANCH" ]; then
+            current_head="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+            if git show-ref --verify --quiet "refs/heads/$BASE_BRANCH"; then
+                if [ "$current_head" != "$BASE_BRANCH" ]; then
+                    if ! git checkout -q "$BASE_BRANCH" 2>/dev/null; then
+                        >&2 echo "[specify] Warning: Failed to check out base branch '$BASE_BRANCH'; branching from '$current_head'"
+                    fi
+                fi
+                git pull --ff-only -q 2>/dev/null || true
+            elif git show-ref --verify --quiet "refs/remotes/origin/$BASE_BRANCH"; then
+                if ! git checkout -q -b "$BASE_BRANCH" "origin/$BASE_BRANCH" 2>/dev/null; then
+                    >&2 echo "[specify] Warning: Failed to track origin/$BASE_BRANCH; branching from '$current_head'"
+                fi
+            else
+                >&2 echo "[specify] Warning: base_branch '$BASE_BRANCH' not found locally or on origin; branching from '$current_head'"
+            fi
+        fi
+
         branch_create_error=""
         if ! branch_create_error=$(git checkout -q -b "$BRANCH_NAME" 2>&1); then
             current_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"

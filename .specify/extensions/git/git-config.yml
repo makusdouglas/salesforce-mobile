@@ -4,6 +4,11 @@
 # Branch numbering strategy: "sequential" (001, 002, ...) or "timestamp" (YYYYMMDD-HHMMSS)
 branch_numbering: sequential
 
+# Base branch for new feature branches. Feature branches are created from this
+# branch after a fast-forward pull. Leave empty or unset to branch from the
+# currently checked-out HEAD.
+base_branch: develop
+
 # Commit message used by `git commit` during repository initialization
 init_commit_message: '[Spec Kit] Initial commit'
 
