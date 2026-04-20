@@ -1,0 +1,11 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/003-online-auth/design",
+  "design_system": "shadcn/ui (light)",
+  "screens": [
+    { "name": "Login", "viewport": "phone", "frame_id": "nHzfG", "screenshot": "specs/003-online-auth/design/login-phone.png" },
+    { "name": "Login", "viewport": "tablet", "frame_id": "8C4hh", "screenshot": "specs/003-online-auth/design/login-tablet.png" },
+    { "name": "Relogin", "viewport": "phone", "frame_id": "BeFq2", "screenshot": "specs/003-online-auth/design/relogin-phone.png" },
+    { "name": "Relogin", "viewport": "tablet", "frame_id": "RnP3m", "screenshot": "specs/003-online-auth/design/relogin-tablet.png" }
+  ]
+}

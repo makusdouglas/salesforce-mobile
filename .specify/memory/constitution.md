@@ -1,44 +1,42 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 0.1.2 → 0.2.0
-Bump rationale: MINOR bump. A new section (§7 Security & Authentication) is
-introduced with two new rules (D5, D6), two new mandatory dependencies are
-added to §3, and two sections are renumbered to accommodate §7. No principle
-was removed or redefined; no rule's meaning was changed.
+Version change: 0.2.0 → 0.3.0
+Bump rationale: MINOR bump. A new UX rule (UX5) is introduced that elevates
+tablet support to a first-class deliverable across design and
+implementation. No principle was removed or redefined; no prior rule's
+meaning was changed.
 
 Added:
-  - §7 Security & Authentication (new section)
-    - D5 — Authentication is online-one-time + offline-persistent
-    - D6 — Mandatory local lock (biometrics preferred, PIN fallback)
-  - §3 Mandatory Stack additions:
-    - expo-secure-store (for refresh token persistence)
-    - expo-local-authentication (for biometric/PIN lock)
-
-Renumbered:
-  - §7 Out of Scope in the MVP → §8 Out of Scope in the MVP
-  - §8 Code Conventions → §9 Code Conventions
+  - §5 UX Rules: UX5 — Layouts serve phone and tablet
+    - Every screen must ship phone AND tablet frames in Pencil and must
+      render correctly on both form factors in React Native.
+    - Landscape orientation remains out of scope for the MVP.
 
 Governance update:
-  - Compliance scope updated from "sections 3–6" to "sections 3–7" so §7
-    auth/security rules are enforced at spec/plan/task time.
+  - Compliance scope unchanged (§3–§7). UX5 surfaces at Constitution Check
+    via the plan template without schema changes.
 
 Prior bumps:
+  - 0.1.2 → 0.2.0: added §7 Security & Authentication (D5, D6) and the
+    corresponding mandatory dependencies in §3.
   - 0.1.1 → 0.1.2: renamed DB entity/table/column/status identifiers to
     English to align with §9 (formerly §8) "English in code".
   - 0.1.0 → 0.1.1: full translation of the document from Portuguese to
     English.
 
 Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md — "Constitution Check" gate still
-       derived at plan time; new D5/D6 rules will surface there without
-       template changes.
+  - ✅ .specify/templates/plan-template.md — Constitution Check still
+       derives from this file at plan time; UX5 surfaces automatically.
   - ✅ .specify/templates/spec-template.md — unaffected.
   - ✅ .specify/templates/tasks-template.md — unaffected.
-  - ✅ .specify/extensions.yml — unaffected.
+  - ✅ .specify/extensions/pencil/commands/speckit.pencil.design.md —
+       updated in the same change to generate phone+tablet frames.
+  - ✅ .specify/extensions/pencil/pencil-config.yml — updated in the same
+       change to declare the target viewports.
 
-Follow-up TODOs: none. D5 commits to a concrete refresh-token TTL (90 days).
-D6 commits to biometrics-first with PIN fallback mandatory.
+Follow-up TODOs: none. UX5 pins concrete baseline viewports (phone
+390×844 pt, tablet 820×1180 pt, portrait-only).
 -->
 
 # External Sales App Constitution
@@ -198,6 +196,36 @@ not the system's.
 The salesperson MUST know, without asking, whether their data is synced. A
 sync status indicator sits on the home screen — never a modal or alert.
 
+### UX5 — Layouts serve phone and tablet
+
+Every screen MUST be designed and implemented for two target viewports.
+Tablets are a first-class deliverable, not an adaptation after the fact.
+
+**Baseline viewports** (portrait orientation only in the MVP):
+
+- **Phone**: 390 × 844 pt (iPhone 14 / modern Android reference)
+- **Tablet**: 820 × 1180 pt (iPad 11" reference)
+
+**Required behavior:**
+
+- **Design time** — `/speckit-pencil-design` MUST produce one Pencil frame
+  per screen per viewport (phone AND tablet) and export both screenshots.
+  The design summary (`screens.md`) MUST list the tablet variant alongside
+  the phone variant for every screen.
+- **Plan time** — `plan.md` "Structure Decision" MUST describe the
+  responsive strategy (shared components + viewport-conditional layout)
+  when the feature introduces new screens.
+- **Implementation time** — each screen component MUST render correctly on
+  a phone AND on a tablet simulator before the task is marked complete.
+  Layout changes between viewports (stack → split, column count, padding,
+  typography scale) MUST be explicit in the code, not accidental.
+- Landscape orientation is OUT of scope for the MVP and MUST NOT be
+  targeted by design or implementation.
+
+**Rationale**: the sales team already uses tablets in some stores for
+larger catalog browsing; shipping phone-only would force a rework later
+and violate P3 (simplicity) by accumulating hidden tech debt.
+
 ## 6. Data and Synchronization Rules
 
 ### D1 — Sync is pull + push, in that order
@@ -346,4 +374,4 @@ Every PR MUST declare, in its description, which principles/rules it touches
 and why. Violations without a justification recorded in the plan's
 `Complexity Tracking` section MUST be rejected in review.
 
-**Version**: 0.2.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-04-19
+**Version**: 0.3.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-04-19
