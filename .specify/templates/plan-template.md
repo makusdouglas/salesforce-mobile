@@ -33,6 +33,38 @@
 
 [Gates determined based on constitution file]
 
+## Design Prerequisite
+
+*GATE: Must pass before any implementation task is generated.*
+
+**Does this feature have a UI?** Answer "yes" if spec.md lists screens, user
+stories that describe visual interaction, or a `## UI Design` section.
+Answer "no" for pure backend/data/sync/infra features.
+
+- **If YES** — the Pencil design artifacts (`design/screens.md`,
+  `design/design.json`, and one screenshot per screen × viewport) are a
+  **mandatory prerequisite** to implementation:
+  - If the artifacts exist and cover every screen mentioned in spec.md for
+    both `phone` and `tablet` viewports (constitution §5 UX5), mark the
+    gate ✅ and record the `design.json` path here.
+  - If any screen is missing, any viewport is missing, or the artifacts do
+    not exist yet, the plan MUST mark the gate ⚠️ and the FIRST item in
+    tasks.md (Phase 0) MUST be `Run /speckit-pencil-design to produce the
+    missing frames before any Setup task begins`.
+  - The "Structure Decision" below MUST describe the responsive strategy
+    (viewport hook, shared components with layout branches, breakpoint
+    thresholds) since the same code serves both form factors.
+- **If NO** — record "N/A (no UI surface)" and skip the design phase in
+  tasks.md.
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Feature has UI? | [yes / no] | |
+| `design/screens.md` exists | [✅ / ⚠️ / N/A] | |
+| Phone frames cover all screens | [✅ / ⚠️ / N/A] | |
+| Tablet frames cover all screens | [✅ / ⚠️ / N/A] | |
+| Responsive strategy documented below | [✅ / ⚠️ / N/A] | |
+
 ## Project Structure
 
 ### Documentation (this feature)

@@ -44,6 +44,41 @@ description: "Task list template for feature implementation"
   ============================================================================
 -->
 
+## Phase 0: Design (UI features only) 🎨
+
+**Purpose**: Ensure the Pencil layout exists and covers every screen for
+every configured viewport BEFORE any code is written. Skip this entire
+phase when the plan's "Design Prerequisite" gate is marked `N/A (no UI
+surface)`.
+
+**⚠️ BLOCKING**: When the feature has a UI, no task from Phase 1 onward
+may start until every task in Phase 0 is checked. This enforces
+constitution §5 UX5 (phone + tablet are first-class deliverables) and
+makes the `.pen` file the primordial source for the implementation.
+
+Examples of design tasks (adjust based on the plan's Design Prerequisite
+gate and the `screens` listed in spec.md):
+
+- [ ] T000 [Design] Open `layout.pen` via Pencil MCP and confirm the project
+      style guide (`Anchored Ribbon Grid`) is applied to the workspace.
+- [ ] T000a [P] [Design] Create/adjust PHONE frame `<screen-slug>-phone`
+      (390×844 pt) for `<Screen name>` per spec.md; export to
+      `design/<screen-slug>-phone.png`.
+- [ ] T000b [P] [Design] Create/adjust TABLET frame `<screen-slug>-tablet`
+      (820×1180 pt) for `<Screen name>`; export to
+      `design/<screen-slug>-tablet.png`. Tablet MUST use the extra canvas
+      (split view, multi-column, side panel) unless `screens.md` records
+      a reason to keep the phone layout.
+- [ ] T000z [Design] Update `design/screens.md` with the final frame table
+      (phone + tablet columns) and refresh `design/design.json` via
+      `/speckit-pencil-design`. Commit the `.pen` file and exports.
+
+**Checkpoint**: `design.json` lists every screen from spec.md with BOTH
+`phone` and `tablet` variants. `screens.md` documents any phone→tablet
+layout delta. Only now may Phase 1 start.
+
+---
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Project initialization and basic structure
@@ -163,11 +198,13 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
+- **Design (Phase 0)**: UI features only. BLOCKS Phase 1. Skip entirely when the plan marks the Design Prerequisite gate `N/A (no UI surface)`.
+- **Setup (Phase 1)**: Depends on Phase 0 completion (or phase skipped). Can otherwise start immediately.
 - **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
 - **User Stories (Phase 3+)**: All depend on Foundational phase completion
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P2 → P3)
+  - Each screen task MUST be verified on a phone simulator AND a tablet simulator before it counts as complete (constitution §5 UX5).
 - **Polish (Final Phase)**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
@@ -213,11 +250,12 @@ Task: "Create [Entity2] model in src/models/[entity2].py"
 
 ### MVP First (User Story 1 Only)
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test User Story 1 independently
-5. Deploy/demo if ready
+1. Complete Phase 0: Design (if the feature has a UI — phone + tablet frames)
+2. Complete Phase 1: Setup
+3. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
+4. Complete Phase 3: User Story 1 (verify on phone AND tablet simulators)
+5. **STOP and VALIDATE**: Test User Story 1 independently
+6. Deploy/demo if ready
 
 ### Incremental Delivery
 
