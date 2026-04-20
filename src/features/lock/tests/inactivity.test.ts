@@ -1,4 +1,4 @@
-import { isInactivityExpired } from '../state/inactivity';
+import { isInactivityExpired } from '../state/inactivityPolicy';
 
 describe('isInactivityExpired', () => {
   test('returns false when backgroundedAtMs is null', () => {

@@ -1,5 +1,5 @@
-import { pbkdf2Async } from '@noble/hashes/pbkdf2';
-import { sha256 } from '@noble/hashes/sha256';
+import { pbkdf2Async } from '@noble/hashes/pbkdf2.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 import type { PinCredential } from '../storage/lockStorage';
 

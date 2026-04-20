@@ -11,6 +11,9 @@ dependencies:
   '@expo-google-fonts/inter':
     specifier: ^0.4.2
     version: 0.4.2
+  '@noble/hashes':
+    specifier: ^2.2.0
+    version: 2.2.0
   '@nozbe/watermelondb':
     specifier: ^0.28.0
     version: 0.28.0
@@ -29,12 +32,18 @@ dependencies:
   expo:
     specifier: ~55.0.15
     version: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+  expo-crypto:
+    specifier: ^55.0.14
+    version: 55.0.14(expo@55.0.15)
   expo-dev-client:
     specifier: ^55.0.27
     version: 55.0.27(expo@55.0.15)(typescript@5.9.3)
   expo-font:
     specifier: ^55.0.6
     version: 55.0.6(expo@55.0.15)(react-native@0.83.4)(react@19.2.0)
+  expo-local-authentication:
+    specifier: ^55.0.13
+    version: 55.0.13(expo@55.0.15)
   expo-secure-store:
     specifier: ^55.0.13
     version: 55.0.13(expo@55.0.15)
@@ -47,6 +56,9 @@ dependencies:
   react-native:
     specifier: 0.83.4
     version: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+  react-native-privacy-snapshot:
+    specifier: ^1.0.0
+    version: 1.0.0
   react-native-safe-area-context:
     specifier: ^5.6.2
     version: 5.7.0(react-native@0.83.4)(react@19.2.0)
@@ -2018,6 +2030,11 @@ packages:
       '@tybys/wasm-util': 0.10.1
     dev: true
     optional: true
+
+  /@noble/hashes@2.2.0:
+    resolution: {integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==}
+    engines: {node: '>= 20.19.0'}
+    dev: false
 
   /@nolyfill/is-core-module@1.0.39:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
@@ -4337,6 +4354,14 @@ packages:
       - typescript
     dev: false
 
+  /expo-crypto@55.0.14(expo@55.0.15):
+    resolution: {integrity: sha512-TfAADBGZNNv9OOmdKFJCz54wDj87ufxtzQNSY+Roycpm8e5tuCnDIL7EjqUOmNTGH99Jj8ftPGFt4KGG2Ii2fg==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+    dev: false
+
   /expo-dev-client@55.0.27(expo@55.0.15)(typescript@5.9.3):
     resolution: {integrity: sha512-Ala2ER6v1NPFySdnuQN/GpQZI9r7E9eSMvzD32vv8A4FJkPfzjvj6U5uH4IytQQLVTa837fknXRvOMwRb9ZYQQ==}
     peerDependencies:
@@ -4419,6 +4444,15 @@ packages:
     dependencies:
       expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
       react: 19.2.0
+    dev: false
+
+  /expo-local-authentication@55.0.13(expo@55.0.15):
+    resolution: {integrity: sha512-7m1+Roub/6xxjHtVKe0vVtsC5g0MXp1Nf0dxK0YfJ1i5314hvi/Glhl5/2loAgnplw8Nx4UVbf6L0/rDjhljsQ==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+      invariant: 2.2.4
     dev: false
 
   /expo-manifests@55.0.15(expo@55.0.15)(typescript@5.9.3):
@@ -7298,6 +7332,10 @@ packages:
     dependencies:
       react: 19.2.0
       react-native: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+    dev: false
+
+  /react-native-privacy-snapshot@1.0.0:
+    resolution: {integrity: sha512-GxwfZjfhusDfo6ssxnD0PWZHddfVT4jwRii4iwJ02fzAlQg/inoCKf3jjqheVATDSkHxeWwsymeHixyywQfGpw==}
     dev: false
 
   /react-native-safe-area-context@5.7.0(react-native@0.83.4)(react@19.2.0):

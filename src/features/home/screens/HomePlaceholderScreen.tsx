@@ -10,7 +10,7 @@ import { lockService } from '@/features/lock';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomePlaceholder'>;
 
-const TIMEOUT_OPTIONS: ReadonlyArray<number> = [1, 5, 10, 30];
+const TIMEOUT_OPTIONS: readonly number[] = [1, 5, 10, 30];
 
 export function HomePlaceholderScreen({ navigation }: Props) {
   const { email } = useSession();

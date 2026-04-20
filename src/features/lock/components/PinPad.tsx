@@ -15,7 +15,7 @@ type PinPadProps = {
   size?: 'phone' | 'tablet';
 };
 
-const LAYOUT: ReadonlyArray<ReadonlyArray<string | null>> = [
+const LAYOUT: readonly (readonly (string | null)[])[] = [
   ['1', '2', '3'],
   ['4', '5', '6'],
   ['7', '8', '9'],

@@ -1,3 +1,5 @@
+/* eslint-disable import/first */
+// jest.mock must hoist above the imports it affects.
 jest.mock('../storage/lockStorage', () => ({
   lockStorage: {
     getPinCredential: jest.fn(),

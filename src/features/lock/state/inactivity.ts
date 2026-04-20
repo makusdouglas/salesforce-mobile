@@ -1,24 +1,9 @@
 import { AppState, type AppStateStatus } from 'react-native';
 
+import { isInactivityExpired } from './inactivityPolicy';
 import { _internalLockStore, lockStore } from './lockStore';
 
-type IsExpiredInput = {
-  backgroundedAtMs: number | null;
-  nowMs: number;
-  timeoutMinutes: number;
-};
-
-/**
- * Pure policy function — exposed for unit testing. Returns true when the
- * elapsed background time exceeds the configured timeout, false otherwise.
- * Clock skew (negative elapsed) is clamped to 0.
- */
-export function isInactivityExpired(input: IsExpiredInput): boolean {
-  if (input.backgroundedAtMs === null) return false;
-  const elapsedMs = Math.max(0, input.nowMs - input.backgroundedAtMs);
-  const timeoutMs = input.timeoutMinutes * 60 * 1000;
-  return elapsedMs > timeoutMs;
-}
+export { isInactivityExpired } from './inactivityPolicy';
 
 /**
  * Start an AppState subscription that records backgroundedAtMs on

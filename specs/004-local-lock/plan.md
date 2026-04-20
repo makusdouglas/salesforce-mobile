@@ -95,7 +95,7 @@ The lock feature is bounded under `src/features/lock/` and imported through its 
     │   │   ├── RootNavigator.tsx           # MODIFIED — wraps the Home branch with <LockGate>; Relogin modal stays at root level so it can still overlay Home when unlocked
     │   │   └── types.ts                    # MODIFIED — LockStackParamList covers PinSetup, Lock, PinRecoveryConfirm; RootStackParamList unchanged
     │   └── providers/
-    │       └── AppProviders.tsx            # MODIFIED — wraps children with <LockProvider> INSIDE <SessionProvider> (lock depends on session's email for recovery pre-fill); also wraps the whole tree with <PrivacySnapshotView> from react-native-privacy-snapshot (FR-022 — OS task-switcher snapshot masking)
+    │       └── AppProviders.tsx            # MODIFIED — wraps children with <LockProvider> INSIDE <SessionProvider> (lock depends on session's email for recovery pre-fill); also enables react-native-privacy-snapshot imperatively via a one-line useEffect — PrivacySnapshot.enabled(true) — for FR-022 OS task-switcher masking.
     ├── features/
     │   ├── auth/
     │   │   └── service/
@@ -136,7 +136,7 @@ The lock feature is bounded under `src/features/lock/` and imported through its 
 
 **Structure Decision**: The lock feature sits as a peer of `src/features/auth/` under `src/features/`, exposing itself through a single barrel. Two architectural levers keep the dependency direction clean:
 
-1. **`<LockProvider>` wraps inside `<SessionProvider>` in `AppProviders.tsx`; `<PrivacySnapshotView>` wraps outermost**. Lock depends on session for PIN recovery (the email pre-fill); session does not depend on lock. This ordering makes `useSession()` available to `LockProvider` if future logic needs it (not used in the MVP, but the shape is there). The privacy-snapshot wrapper sits *outside* both providers so it also covers the `NotAuthenticated` / `LoginScreen` state (which can still contain a pre-filled email and therefore leak the last-known salesperson identity in the OS task-switcher).
+1. **`<LockProvider>` wraps inside `<SessionProvider>` in `AppProviders.tsx`; `PrivacySnapshot.enabled(true)` is called imperatively in a mount effect**. Lock depends on session for PIN recovery (the email pre-fill); session does not depend on lock. This ordering makes `useSession()` available to `LockProvider` if future logic needs it (not used in the MVP, but the shape is there). The privacy-snapshot is a **native module**, not a JSX component (see research R12), so it is enabled via a top-level `useEffect` in `AppProviders` and stays on for the lifetime of the app process — covering every screen, including `NotAuthenticated` / `LoginScreen` (which can still carry a pre-filled email that would otherwise leak in the OS task-switcher).
 
 2. **`<LockGate>` sits under the `Home` branch of `RootNavigator`, not at the root**. The Relogin modal (from 003) stays at the root stack level so it can still overlay the Home tree when unlocked and a sync rejection occurs. The guard lives inside the Home branch, so while the salesperson is NotAuthenticated they see `LoginScreen` unobstructed; while Authenticated but locked they see `PinSetupScreen` or `LockScreen`; only while Authenticated AND Unlocked do they see Home. Relogin-over-locked never happens because the silent-refresh-rejection state is reached from within a network-requiring action, which cannot run while the app is locked (business screens aren't mounted under the gate).
 

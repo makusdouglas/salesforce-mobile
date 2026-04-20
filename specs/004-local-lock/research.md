@@ -310,9 +310,9 @@ Not unit-tested: `biometricAdapter` (thin wrapper over an OS API), the React com
 
 ## R12 — OS task-switcher snapshot masking
 
-**Decision**: Wrap the root app tree with `react-native-privacy-snapshot`. On `AppState` `active → background | inactive`, the library overlays a masking view (solid color or icon + app name) that is captured by the OS snapshotting pass instead of the last foregrounded business screen. On foreground return the mask removes itself before the first React render.
+**Decision**: Enable `react-native-privacy-snapshot` imperatively from `AppProviders.tsx`. The library is a **native module** (not a React component) — its default export exposes `PrivacySnapshot.enabled(flag: boolean)`, which toggles an OS-level overlay captured by the snapshotting pass on `applicationWillResignActive` (iOS) / window FLAG_SECURE (Android). Calling `enabled(true)` once on mount is the entire integration.
 
-Integration: a single JSX wrapper in `AppProviders.tsx` above `<SessionProvider>` — no React state to manage, no configuration beyond the optional mask color (use `colors.background` for brand coherence). Auto-linked via `expo prebuild`; no `app.json` plugin entry required in the library's current version.
+Integration: a single `useEffect` hook in `AppProviders.tsx` that calls `PrivacySnapshot.enabled(true)` on mount and `enabled(false)` on unmount. No JSX wrapper, no React state, no configuration. A local `src/types/react-native-privacy-snapshot.d.ts` declares the module (the package ships no `.d.ts`). Auto-linked via `expo prebuild`; no `app.json` plugin entry required.
 
 **Rationale**:
 

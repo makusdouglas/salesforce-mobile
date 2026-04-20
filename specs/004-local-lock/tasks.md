@@ -73,17 +73,27 @@
 - [x] T015 Create `src/features/lock/components/LockProvider.tsx` — React component. On mount: `useEffect(() => { let cancelled = false; (async () => { await lockBootstrap(); if (cancelled) return; setBootstrapped(true); })(); const stopInactivity = startInactivityListener(); return () => { cancelled = true; stopInactivity(); }; }, [])`. If `!bootstrapped`, render `null`. Else render `{children}`. Does NOT inject a React Context. Depends T013, T014.
 - [x] T016 Create `src/features/lock/service/lockService.ts` SKELETON per [contracts/lock-service.md §lockService shape](./contracts/lock-service.md#lockservice-shape). Export `const lockService = { setupPin, verifyPin, unlockWithBiometric, beginPinRecovery, setInactivityTimeout, getInactivityTimeout }`. All methods except `getInactivityTimeout` throw `new Error('not implemented')`. `getInactivityTimeout` returns `_internalLockStore.getInactivityTimeoutMinutes()`. Signatures exactly per the contract. US1 fills in `setupPin`/`verifyPin`/`unlockWithBiometric` (T022); US2 fills in `setInactivityTimeout` (T031); US3 fills in `beginPinRecovery` (T036). Lets the barrel (T017) compile now.
 - [x] T017 Create `src/features/lock/index.ts` — CONSERVATIVE barrel re-exporting **only** what Phase 2 ships: `lockService`, `useLock`, `LockProvider`, `LockError` (value and type `LockErrorCode`), types `LockStatus`, `LockSnapshot`. Does NOT yet re-export `LockGate`, `PinSetupScreen`, `LockScreen`, `PinRecoveryConfirmScreen` (US1/US3 extend the barrel as those screens land). Document at the top: "Design tokens from `@/features/auth/theme/tokens` are the one allowed cross-feature import; internal state (`lockStore`, `_internalLockStore`, `lockStorage`, `biometricAdapter`, `pinHash`, `random`, `bootstrap`, `inactivity`, `useLockFailedAttempts`) is NOT re-exported. `deletePinCredential` is a direct import path for the auth logout integration only (T032)."
-- [x] T018 Edit `src/app/providers/AppProviders.tsx` — wrap the existing provider tree with both `<LockProvider>` (inside `<SessionProvider>`) and `<PrivacySnapshotView />` (at the outermost level, so it also covers the `NotAuthenticated` / login screen state). Final shape:
+- [x] T018 Edit `src/app/providers/AppProviders.tsx` — wrap the existing provider tree with `<LockProvider>` (inside `<SessionProvider>`) and enable `react-native-privacy-snapshot` imperatively (it ships as a **native module**, not a JSX component — see research R12). A local `src/types/react-native-privacy-snapshot.d.ts` declares the module since the package has no `.d.ts`. Final shape:
   ```tsx
-  <PrivacySnapshotView>
-    <SessionProvider>
-      <LockProvider>
-        <SafeAreaProvider>{children}</SafeAreaProvider>
-      </LockProvider>
-    </SessionProvider>
-  </PrivacySnapshotView>
+  function usePrivacySnapshot(): void {
+    useEffect(() => {
+      PrivacySnapshot.enabled(true);
+      return () => PrivacySnapshot.enabled(false);
+    }, []);
+  }
+
+  export function AppProviders({ children }) {
+    usePrivacySnapshot();
+    return (
+      <SessionProvider>
+        <LockProvider>
+          <SafeAreaProvider>{children}</SafeAreaProvider>
+        </LockProvider>
+      </SessionProvider>
+    );
+  }
   ```
-  `PrivacySnapshotView` is imported from `react-native-privacy-snapshot` and auto-masks the app on background → OS task-switcher snapshot shows the mask instead of business data (FR-022). LockProvider goes INSIDE SessionProvider because US3's recovery flow uses `authService.logout` — outer-provider initializes first. Depends T015.
+  The `enabled(true)` call toggles the OS masking behavior for the app's lifetime, so the task-switcher snapshot shows the mask instead of business data (FR-022). LockProvider goes INSIDE SessionProvider because US3's recovery flow uses `authService.logout` — outer-provider initializes first. Depends T015.
 - [x] T019 [P] Create `src/features/lock/tests/pinHash.test.ts` — unit tests covering:
   - `hashPin(pin, salt, iters)` produces identical output for identical inputs (determinism).
   - `hashPin(pin1, salt, iters)` ≠ `hashPin(pin2, salt, iters)` for distinct PINs.
@@ -305,7 +315,7 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T037 [P] Run `pnpm lint`, `pnpm typecheck`, `pnpm test` at repo root — all three must be green before merging. The four new test files (T019–T022) must all pass. No regressions on 003's existing tests.
+- [x] T037 [P] Run `pnpm lint`, `pnpm typecheck`, `pnpm test` at repo root — all three must be green before merging. The four new test files (T019–T022) must all pass. No regressions on 003's existing tests.
 - [ ] T038 [P] Walk through every acceptance scenario in [spec.md §User Scenarios](./spec.md#user-scenarios--testing-mandatory) on a real dev-client build (iOS + Android). Record each pass/fail in the PR description. Coverage: US1 scenarios 1–7, US2 scenarios 1–6, US3 scenarios 1–6, plus the 13 Edge Cases. Specifically exercise: fresh install, cold launch with and without biometric enrollment, biometric cancel vs failure, wrong PIN with the progressive curve, inactivity at 1 / 5 / 10 / 30 min, offline "Esqueci meu PIN", online recovery → data audit, 10-attempt forced recovery, logout → re-login → PIN setup re-triggered. **Also verify FR-022 / SC-012**: on both iOS and Android, foreground the app on 10 representative screens (catalog list, catalog detail, client detail, new-order draft, order detail, receipts list, receipt detail, home, settings, PinSetup mid-flow), press home to background, then open the OS task-switcher — the thumbnail MUST show the privacy mask, not business content, on every screen. Record the check for each screen in the PR description.
 - [ ] T039 Run a filesystem + Keychain audit after a successful PIN setup: on iOS sim, verify `~/Library/Developer/CoreSimulator/.../Library/Keychains/` contains only a PBKDF2 hash entry for `lock.pinCredential` (extract via `security find-generic-password` and confirm the value is a JSON blob with 32-hex `saltHex` + 64-hex `hashHex`, NO plaintext PIN). On Android, via `adb shell run-as com.<pkg>` inspect `shared_prefs/` and verify no plaintext PIN appears. Acceptance of SC-007. Record the audit commands and (redacted) outputs in the PR description.
 - [ ] T040 Verify phone AND tablet rendering per constitution UX5 and plan.md Complexity Tracking entry 2. For each of PinSetupScreen, LockScreen, PinRecoveryConfirmScreen: boot the iOS simulator at iPhone (390×844) and at iPad (820×1180); walk through each screen's states (entering, confirming, biometric fallback, PIN error, offline-recovery warning, countdown during progressive delay). Document pass/fail in the PR description. If a Pencil design pass was run during implementation (optional per research R11), also attach the exported frames under `specs/004-local-lock/design/`.
