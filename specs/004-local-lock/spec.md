@@ -18,7 +18,7 @@
 | PinSetup | Tablet | [pinsetup-tablet.png](./design/pinsetup-tablet.png) | Same contract, 460 pt centered card, 64×64 mark, Inter 30 heading. Maps to User Story 1. |
 | Lock | Phone | [lock-phone.png](./design/lock-phone.png) | Daily cold-start / post-inactivity gate — SALESFORCE wordmark + "Digite seu PIN para continuar." subtitle, "Face ID tentado" pill indicating biometric was attempted, 3-of-6 dots mid-entry, keypad, disabled "Desbloquear" button, "Esqueci meu PIN" ghost button below card. Maps to User Story 1, FR-005–FR-008, FR-013. |
 | Lock | Tablet | [lock-tablet.png](./design/lock-tablet.png) | Same contract, 460 pt centered card. Maps to User Story 1. |
-| PinRecoveryConfirm | Phone | [pinrecoveryconfirm-phone.png](./design/pinrecoveryconfirm-phone.png) | Bottom-sheet modal over the dimmed Lock screen — key icon, "Redefinir PIN" heading, reassurance copy, two bullets ("Requer conexão com a internet", "Clientes, pedidos e rascunhos permanecem"), primary "Continuar" + ghost "Cancelar". Maps to User Story 3, FR-013, FR-014, FR-015. |
+| PinRecoveryConfirm | Phone | [pinrecoveryconfirm-phone.png](./design/pinrecoveryconfirm-phone.png) | Bottom-sheet modal over the dimmed lock screen — key icon, "Redefinir PIN" heading, reassurance copy, two bullets ("Requer conexão com a internet", "Clientes, pedidos e rascunhos permanecem"), primary "Continuar" + ghost "Cancelar". Maps to User Story 3, FR-013, FR-014, FR-015. |
 | PinRecoveryConfirm | Tablet | [pinrecoveryconfirm-tablet.png](./design/pinrecoveryconfirm-tablet.png) | Centered dialog (460 pt) on dimmed backdrop, same contract as phone. Maps to User Story 3. |
 
 ### Design decisions carried into this spec
@@ -125,7 +125,7 @@ A salesperson hasn't opened the app in a week and has genuinely forgotten the fo
 - **FR-008**: The lock screen — both biometric and PIN paths — MUST complete unlock with no network round-trip on the happy path. Unlock MUST work with the device in airplane mode.
 - **FR-009**: The app MUST track a configurable inactivity timeout with a default of 5 minutes. When the elapsed background time since the last foreground interaction exceeds this timeout, the app MUST transition the session to a locked state and, on the next foreground event, MUST present the lock screen.
 - **FR-010**: The inactivity timeout MUST be configurable by the salesperson through an in-app settings control within a reasonable range (see Assumptions for default range). The chosen value MUST persist across cold launches and MUST apply immediately to subsequent background-foreground cycles.
-- **FR-011**: Active foreground interaction by the salesperson (taps, scrolls, text entry) MUST reset the inactivity timer. The app MUST NOT lock itself while the salesperson is actively using it.
+- **FR-011**: Foreground time MUST NOT count toward the inactivity timeout — only time spent in background contributes. The inactivity timer starts when the app transitions to background and is cleared on foreground return (where the expiry check is evaluated). An actively-used or passively-idle foreground app MUST NOT auto-lock from under the salesperson.
 - **FR-012**: After a successful unlock following an inactivity lock (not a cold launch), the app MUST restore the salesperson to the exact screen and in-memory state they were on prior to the lock. Unsaved text in edit fields, scroll positions, selected items, and draft order state MUST survive the lock cycle.
 - **FR-013**: The lock screen MUST expose a "Forgot PIN" affordance (label: Portuguese, owned by UI implementation per constitution §9) that routes into a PIN recovery flow.
 - **FR-014**: The PIN recovery flow MUST require a successful full online re-login against the remote authentication provider (the D5 credentials — e-mail and password). The app MUST NOT provide any device-only PIN reset path. When the device has no internet during recovery, the flow MUST block with a "connect to the internet" message and MUST NOT alter the existing PIN or any local business data.
@@ -136,6 +136,7 @@ A salesperson hasn't opened the app in a week and has genuinely forgotten the fo
 - **FR-019**: The first successful online login after a logout MUST re-trigger the first-run PIN setup flow (FR-001) — a post-logout install is, for D6 purposes, indistinguishable from a fresh install.
 - **FR-020**: The lock screen MUST NOT leak any information about the app's state prior to the lock. No business data, record counts, sync status, last-action text, or screenshot-like previews of the prior screen MUST be visible on the lock screen.
 - **FR-021**: PIN change by a salesperson who still remembers their PIN (without going through the "Forgot PIN" recovery) is OUT OF SCOPE for this feature. The MVP supports rotation only through the recovery flow.
+- **FR-022**: When the app transitions to background (AppState `active → background | inactive`), the UI MUST be masked at the OS level so the task-switcher / multitasking preview does NOT reveal any business data (catalog, clients, orders, receipts, drafts, cached images). The mask MUST be removed automatically on foreground return. This requirement is complementary to FR-020: FR-020 governs the in-app lock screen, FR-022 governs the OS-owned snapshot that sits between a legitimate salesperson's "press home" and the lock-gated return.
 
 ### Key Entities
 
@@ -159,6 +160,7 @@ A salesperson hasn't opened the app in a week and has genuinely forgotten the fo
 - **SC-009**: End-to-end "Forgot PIN" recovery (tap Forgot PIN → online re-login → new PIN setup → unlock) completes in under 90 seconds on a mid-range Android device with a broadband Wi-Fi connection.
 - **SC-010**: After a "Forgot PIN" recovery, 100% of local business records (clients, orders including drafts, order items, payment receipts, cached catalog) present before recovery remain present after. Zero records MUST be lost across 20 scripted recovery cycles.
 - **SC-011**: Across 100 scripted foreground-background cycles with a mix of durations above and below the inactivity timeout, the lock screen triggers correctly on 100% of cycles whose background duration exceeded the timeout, and triggers on 0% of cycles whose background duration was shorter than the timeout.
+- **SC-012**: In the OS task-switcher / multitasking preview, an audit on both iOS and Android of 10 representative screens (catalog list, catalog detail, client detail, new-order draft, order detail, receipts list, receipt detail, home, settings, PinSetup mid-flow) shows a masked thumbnail — no business content readable — for 100% of screens on a mid-range device.
 
 ## Assumptions
 

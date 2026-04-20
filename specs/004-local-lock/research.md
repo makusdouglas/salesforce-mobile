@@ -308,6 +308,27 @@ Not unit-tested: `biometricAdapter` (thin wrapper over an OS API), the React com
 
 ---
 
+## R12 — OS task-switcher snapshot masking
+
+**Decision**: Wrap the root app tree with `react-native-privacy-snapshot`. On `AppState` `active → background | inactive`, the library overlays a masking view (solid color or icon + app name) that is captured by the OS snapshotting pass instead of the last foregrounded business screen. On foreground return the mask removes itself before the first React render.
+
+Integration: a single JSX wrapper in `AppProviders.tsx` above `<SessionProvider>` — no React state to manage, no configuration beyond the optional mask color (use `colors.background` for brand coherence). Auto-linked via `expo prebuild`; no `app.json` plugin entry required in the library's current version.
+
+**Rationale**:
+
+- **FR-020 in spirit, not just letter.** FR-020 bars business data from the lock screen. The OS's own multitasking preview sits *between* the salesperson pressing home and the lock screen re-triggering on foreground return — a gap the lock feature would otherwise ignore. Constitution §7 D6's "lost or stolen device" threat model makes the task-switcher snapshot a real concern.
+- **Library is small and isolated.** ~100 lines of native code (iOS + Android), one JSX integration point, zero interaction with our state machine. Easy to remove or swap for a native alternative later.
+- **Coverage at the right layer.** The alternative — per-screen `onBlur` handlers that render masks — would require touching every screen in the app, including future ones, and is brittle. The root-level snapshot approach is set-and-forget.
+
+**Alternatives considered**:
+
+- **Do nothing; rely on the lock screen.** Rejected — the lock screen is only re-rendered on foreground return, AFTER the OS snapshot has already been captured. FR-022 would not be satisfied.
+- **Custom native implementation** (no dependency) — `AppDelegate.swift` + `Activity.onPause`. Legitimate, but duplicates what `react-native-privacy-snapshot` already ships. Rejected by P3 (MVP simplicity) and P4 (reuse free tools).
+- **Black-out via `expo-screen-capture` `preventScreenCaptureAsync`** — different concern: it blocks screenshots, not task-switcher snapshots. Rejected because the two APIs cover different attacker surfaces and we want the snapshot mask, not screenshot blocking.
+- **Use `react-native-privacy-screen` or similar forks** — equivalent outcomes, less maintained. Sticking with the better-maintained option.
+
+---
+
 ## Summary of decisions → plan updates
 
 - Biometric via `expo-local-authentication` with `disableDeviceFallback: true` (R1).
@@ -321,5 +342,6 @@ Not unit-tested: `biometricAdapter` (thin wrapper over an OS API), the React com
 - Three-state machine (NotSet / Locked / Unlocked) with hidden `backgroundedAtMs` and `failedAttempts` flags (R9).
 - Tests: pinHash, lockStore state machine, inactivity math, lockStorage round-trip (R10).
 - Pencil: fresh frames OR a documented reuse note before implementation, phone + tablet either way (R11).
+- `react-native-privacy-snapshot` wraps the tree to mask the OS task-switcher snapshot — a one-line integration in `AppProviders.tsx` (R12, FR-022).
 
 No unresolved `NEEDS CLARIFICATION` remains.

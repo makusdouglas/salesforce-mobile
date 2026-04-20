@@ -250,7 +250,7 @@ return (
 );
 ```
 
-HomeStack stays mounted across lock transitions. PIN setup and Lock screens are layered on top, not swapped in. This is a render-level fact that the contract pins down to satisfy FR-012 without touching React Navigation.
+HomeStack stays mounted across lock transitions. PIN setup and lock screens are layered on top, not swapped in. This is a render-level fact that the contract pins down to satisfy FR-012 without touching React Navigation.
 
 **Exception**: on `NotSet → Unlocked` (first-run PIN setup completing), HomeStack mounting for the first time is a legitimate mount — there was no prior state to preserve. The layered render still works: HomeStack mounts when the gate first renders it, which is the first time `status === 'Unlocked'`.
 
