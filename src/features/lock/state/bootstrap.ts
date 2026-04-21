@@ -23,9 +23,9 @@ export async function lockBootstrap(): Promise<void> {
     _internalLockStore.setInactivityTimeoutMinutes(preference.minutes);
   }
 
-  if (credential === null) {
-    _internalLockStore.setStatus('NotSet');
-  } else {
-    _internalLockStore.setStatus('Locked');
-  }
+  // Bootstrap is the first transition from the in-memory initial state
+  // (`NotSet`). `NotSet → Locked` is a legal BOOT transition per the 004
+  // state-machine contract but NOT a legal normal transition, so we use
+  // a dedicated setter that bypasses the transition guard.
+  _internalLockStore.bootstrapStatus(credential === null ? 'NotSet' : 'Locked');
 }

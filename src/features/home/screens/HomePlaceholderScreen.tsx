@@ -1,12 +1,21 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import {
+  Alert,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
 import { colors } from '@/app/theme/colors';
 import { authService, useSession } from '@/features/auth';
 import { lockService } from '@/features/lock';
+import { onPullToRefresh, SyncStatusIndicator } from '@/features/sync';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomePlaceholder'>;
 
@@ -17,6 +26,16 @@ export function HomePlaceholderScreen({ navigation }: Props) {
   const [selectedMinutes, setSelectedMinutes] = useState<number>(
     lockService.getInactivityTimeout(),
   );
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await onPullToRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   const confirmLogout = () => {
     Alert.alert('Sair da conta', 'Seus dados permanecem no dispositivo.', [
@@ -41,7 +60,15 @@ export function HomePlaceholderScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <View style={styles.header}>
+        <SyncStatusIndicator style={styles.headerIndicator} />
+      </View>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
         <Text style={styles.heading}>Bem-vindo</Text>
         {email !== null ? <Text style={styles.subtitle}>{email}</Text> : null}
         <Text style={styles.subtitle}>Sua base de vendas fica aqui.</Text>
@@ -91,7 +118,7 @@ export function HomePlaceholderScreen({ navigation }: Props) {
         >
           <Text style={styles.ghostLabel}>Sair</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -101,11 +128,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+  },
+  headerIndicator: {
+    marginStart: 'auto',
+  },
   content: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
+    paddingVertical: 24,
     gap: 12,
   },
   heading: {

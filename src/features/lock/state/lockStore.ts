@@ -100,6 +100,19 @@ export const _internalLockStore = {
     cachedSnapshot = makeSnapshot(state);
     emitSnapshot();
   },
+  /**
+   * Bootstrap-only setter. The state-machine contract explicitly lists
+   * (boot) → NotSet and (boot) → Locked as legal initial transitions
+   * (see specs/004-local-lock/contracts/state-machine.md §State machine).
+   * Normal callers MUST use `setStatus`; only `lockBootstrap()` calls this.
+   */
+  bootstrapStatus(next: 'NotSet' | 'Locked'): void {
+    guardReentrancy();
+    if (state.status === next) return;
+    state = { ...state, status: next };
+    cachedSnapshot = makeSnapshot(state);
+    emitSnapshot();
+  },
   setInactivityTimeoutMinutes(minutes: number): void {
     state = { ...state, inactivityTimeoutMinutes: minutes };
   },
