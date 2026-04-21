@@ -389,7 +389,7 @@
 
 ### Implementation for User Story 4
 
-- [ ] T030 [US4] Create `src/features/sync/triggers/orderSentTrigger.ts` — thin re-export of `syncService.onOrderSent` for test isolation and call-site discoverability. Even though `syncService.onOrderSent` was implemented in Phase 2 (T013), this file exists as the documented entry point the future order-sending feature imports:
+- [X] T030 [US4] Create `src/features/sync/triggers/orderSentTrigger.ts` — thin re-export of `syncService.onOrderSent` for test isolation and call-site discoverability. Even though `syncService.onOrderSent` was implemented in Phase 2 (T013), this file exists as the documented entry point the future order-sending feature imports:
   ```ts
   import { syncService } from '../service/syncService';
   export function onOrderSent(): void {
@@ -397,8 +397,8 @@
   }
   ```
   This indirection is deliberate: it lets future callers `import { onOrderSent } from '@/features/sync'` without reaching into the service singleton, matching the convenience-import style used for `onPullToRefresh`. Depends T013.
-- [ ] T031 [US4] Edit `src/features/sync/index.ts` barrel — add `export { onOrderSent } from './triggers/orderSentTrigger';`. The barrel now exports: `syncService, useSyncStatus, SyncProvider, SyncStatusIndicator, onPullToRefresh, onOrderSent, SyncError, SyncErrorCode (type), SyncStatus (type), SyncTrigger (type), SyncRunResult (type)`. Depends T030.
-- [ ] T032 [P] [US4] Add a short JSDoc block at the top of `src/features/sync/triggers/orderSentTrigger.ts` describing the integration contract for the future order-sending feature. Wording derived from [quickstart.md §(b)](./quickstart.md#b-order-sending-flow-integration-future-feature): "Call immediately after `ordersRepository.markSent(orderId)` resolves. Fire-and-forget. No-op when offline. Do NOT await." **Do NOT modify `src/data/repositories/ordersRepository.ts`** — the trigger is called at the callsite of `markSent()`, not from inside the repo (preserves the data-layer-does-not-know-features rule). **Do NOT create a NOTES.md or any new documentation file** (root CLAUDE.md policy forbids unrequested *.md creation).
+- [X] T031 [US4] Edit `src/features/sync/index.ts` barrel — add `export { onOrderSent } from './triggers/orderSentTrigger';`. The barrel now exports: `syncService, useSyncStatus, SyncProvider, SyncStatusIndicator, onPullToRefresh, onOrderSent, SyncError, SyncErrorCode (type), SyncStatus (type), SyncTrigger (type), SyncRunResult (type)`. Depends T030.
+- [X] T032 [P] [US4] Add a short JSDoc block at the top of `src/features/sync/triggers/orderSentTrigger.ts` describing the integration contract for the future order-sending feature. Wording derived from [quickstart.md §(b)](./quickstart.md#b-order-sending-flow-integration-future-feature): "Call immediately after `ordersRepository.markSent(orderId)` resolves. Fire-and-forget. No-op when offline. Do NOT await." **Do NOT modify `src/data/repositories/ordersRepository.ts`** — the trigger is called at the callsite of `markSent()`, not from inside the repo (preserves the data-layer-does-not-know-features rule). **Do NOT create a NOTES.md or any new documentation file** (root CLAUDE.md policy forbids unrequested *.md creation).
 
 **Checkpoint**: US4 complete. `onOrderSent` is callable from any future feature without reaching into the service. Offline order-sent flows are no-ops; online flows trigger a pass. At this point the full four-trigger set — login, pull-to-refresh, order-sent, follow-up (internal coalesce) — is wired.
 
