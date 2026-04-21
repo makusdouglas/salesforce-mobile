@@ -9,7 +9,7 @@ const WRITE_OPTIONS: SecureStore.SecureStoreOptions = {
 
 export type PinCredential = {
   algo: 'PBKDF2-HMAC-SHA256';
-  iterations: 100000;
+  iterations: 10000;
   saltHex: string;
   hashHex: string;
   version: 1;
@@ -30,7 +30,7 @@ function isPinCredential(value: unknown): value is PinCredential {
   const v = value as Record<string, unknown>;
   return (
     v.algo === 'PBKDF2-HMAC-SHA256' &&
-    v.iterations === 100000 &&
+    v.iterations === 10000 &&
     typeof v.saltHex === 'string' &&
     SALT_REGEX.test(v.saltHex) &&
     typeof v.hashHex === 'string' &&

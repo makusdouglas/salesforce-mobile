@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -204,18 +205,22 @@ export function PinSetupScreen() {
               pressed && canSubmit ? styles.submitPressed : null,
             ]}
           >
-            <Text
-              style={[
-                styles.submitLabel,
-                {
-                  color: canSubmit ? colors.primaryForeground : colors.placeholder,
-                  fontFamily: font.family,
-                  fontSize: tablet ? fontSizes.md : fontSizes.base,
-                },
-              ]}
-            >
-              {step === 'entering' ? 'Avançar' : 'Confirmar'}
-            </Text>
+            {isSubmitting ? (
+              <ActivityIndicator color={colors.primaryForeground} />
+            ) : (
+              <Text
+                style={[
+                  styles.submitLabel,
+                  {
+                    color: canSubmit ? colors.primaryForeground : colors.placeholder,
+                    fontFamily: font.family,
+                    fontSize: tablet ? fontSizes.md : fontSizes.base,
+                  },
+                ]}
+              >
+                {step === 'entering' ? 'Avançar' : 'Confirmar'}
+              </Text>
+            )}
           </Pressable>
         </View>
 

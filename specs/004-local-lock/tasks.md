@@ -42,16 +42,16 @@
 **⚠️ CRITICAL**: No work in Phases 3–5 may begin until all Phase 2 tasks complete.
 
 - [x] T005 [P] Create `src/features/lock/storage/lockStorage.ts` per [contracts/lock-storage.md](./contracts/lock-storage.md). Exports:
-  - Types `PinCredential` (with `algo: 'PBKDF2-HMAC-SHA256'`, `iterations: 100000`, `saltHex`, `hashHex`, `version: 1`) and `InactivityPreference` (`{ minutes: number, version: 1 }`).
+  - Types `PinCredential` (with `algo: 'PBKDF2-HMAC-SHA256'`, `iterations: 10000`, `saltHex`, `hashHex`, `version: 1`) and `InactivityPreference` (`{ minutes: number, version: 1 }`).
   - Object `lockStorage` with four methods: `getPinCredential()`, `setPinCredential(cred)`, `getInactivityPreference()`, `setInactivityPreference(pref)`. All pass `{ keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }` on `setItemAsync`.
   - Standalone function `deletePinCredential(): Promise<void>` (idempotent — no-op if the key is absent). This is the one export legal for auth → lock cross-import (consumed by T032).
   - Read-side validation per [contracts/lock-storage.md §Encoding rules](./contracts/lock-storage.md#encoding-rules): regex `/^[0-9a-f]{32}$/` for `saltHex`, `/^[0-9a-f]{64}$/` for `hashHex`, `version === 1` check. Validation failure returns `null`. `InactivityPreference.minutes` is clamped to `[1, 30]` on read without rewriting the store. Keys are `'lock.pinCredential'` and `'lock.inactivityTimeoutMinutes'`.
 - [x] T006 [P] Create `src/features/lock/crypto/random.ts` — a thin wrapper over `expo-crypto.getRandomBytesAsync`. Export `generateSaltHex(byteLength: number = 16): Promise<string>` that calls `getRandomBytesAsync(byteLength)` and converts the `Uint8Array` result to a lowercase hex string. No retry logic; errors propagate.
 - [x] T007 [P] Create `src/features/lock/crypto/pinHash.ts` — PBKDF2 wrapper. Import `pbkdf2` from `@noble/hashes/pbkdf2` and `sha256` from `@noble/hashes/sha256`. Export:
   - `type PinCredential` re-imported from `@/features/lock/storage/lockStorage`.
-  - `async function hashPin(pin: string, saltHex: string, iterations: number = 100_000): Promise<string>` — runs `pbkdf2(sha256, utf8ToBytes(pin), hexToBytes(saltHex), { c: iterations, dkLen: 32 })` and returns the 64-char lowercase hex string.
+  - `async function hashPin(pin: string, saltHex: string, iterations: number = 10_000): Promise<string>` — runs `pbkdf2(sha256, utf8ToBytes(pin), hexToBytes(saltHex), { c: iterations, dkLen: 32 })` and returns the 64-char lowercase hex string. *(10k chosen for pure-JS UX budget — see research R2.)*
   - `async function verifyPin(pin: string, credential: PinCredential): Promise<boolean>` — recomputes `hashPin(pin, credential.saltHex, credential.iterations)` and compares to `credential.hashHex` via constant-time equality (loop over the hex chars accumulating OR of differences). Never logs the PIN, salt, or hash.
-  - `async function createCredentialFromPin(pin: string): Promise<PinCredential>` — generates a salt via `generateSaltHex(16)`, computes hash, returns `{ algo: 'PBKDF2-HMAC-SHA256', iterations: 100_000, saltHex, hashHex, version: 1 }`.
+  - `async function createCredentialFromPin(pin: string): Promise<PinCredential>` — generates a salt via `generateSaltHex(16)`, computes hash, returns `{ algo: 'PBKDF2-HMAC-SHA256', iterations: 10_000, saltHex, hashHex, version: 1 }`.
   Depends T006.
 - [x] T008 [P] Create `src/features/lock/biometric/biometricAdapter.ts` per [contracts/biometric-adapter.md](./contracts/biometric-adapter.md). Exports:
   - `type BiometricResult = 'success' | 'failed' | 'cancelled' | 'unavailable'`.
@@ -91,7 +91,7 @@
   - `hashPin(pin1, salt, iters)` ≠ `hashPin(pin2, salt, iters)` for distinct PINs.
   - `hashPin(pin, salt1, iters)` ≠ `hashPin(pin, salt2, iters)` for distinct salts.
   - `verifyPin(correctPin, credential)` returns `true`; `verifyPin(wrongPin, credential)` returns `false`.
-  - `createCredentialFromPin(pin)` returns a well-formed `PinCredential` (`algo === 'PBKDF2-HMAC-SHA256'`, `iterations === 100_000`, `version === 1`, salt 32 hex chars, hash 64 hex chars).
+  - `createCredentialFromPin(pin)` returns a well-formed `PinCredential` (`algo === 'PBKDF2-HMAC-SHA256'`, `iterations === 10_000`, `version === 1`, salt 32 hex chars, hash 64 hex chars).
   - Constant-time equality: a test that flips the last byte of `hashHex` in a credential and confirms `verifyPin` still returns `false` without short-circuiting (mechanical — the test just calls and asserts; it does not measure timing).
   Mock `expo-crypto.getRandomBytesAsync` to return a deterministic salt for the creation test (via `jest.mock('expo-crypto', ...)`). Depends T006, T007.
 - [x] T020 [P] Create `src/features/lock/tests/lockStore.test.ts` — unit tests covering every row of [contracts/state-machine.md §State machine](./contracts/state-machine.md#state-machine--the-authoritative-table):

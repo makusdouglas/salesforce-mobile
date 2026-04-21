@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -243,21 +244,25 @@ export function LockScreen() {
               pressed && pin.length >= 4 && !padDisabled ? styles.submitPressed : null,
             ]}
           >
-            <Text
-              style={[
-                styles.submitLabel,
-                {
-                  color:
-                    pin.length >= 4 && !padDisabled
-                      ? colors.primaryForeground
-                      : colors.placeholder,
-                  fontFamily: font.family,
-                  fontSize: tablet ? fontSizes.md : fontSizes.base,
-                },
-              ]}
-            >
-              Desbloquear
-            </Text>
+            {isSubmitting ? (
+              <ActivityIndicator color={colors.primaryForeground} />
+            ) : (
+              <Text
+                style={[
+                  styles.submitLabel,
+                  {
+                    color:
+                      pin.length >= 4 && !padDisabled
+                        ? colors.primaryForeground
+                        : colors.placeholder,
+                    fontFamily: font.family,
+                    fontSize: tablet ? fontSizes.md : fontSizes.base,
+                  },
+                ]}
+              >
+                Desbloquear
+              </Text>
+            )}
           </Pressable>
         </View>
 

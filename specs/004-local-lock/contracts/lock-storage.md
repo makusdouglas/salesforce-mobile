@@ -35,7 +35,7 @@ No other keys are used by this feature. If a future feature needs a new lock-adj
 
 export type PinCredential = {
   algo: 'PBKDF2-HMAC-SHA256';
-  iterations: 100000;
+  iterations: 10000;
   saltHex: string;   // 32 hex chars (16 bytes)
   hashHex: string;   // 64 hex chars (32 bytes)
   version: 1;
@@ -99,7 +99,7 @@ export function deletePinCredential(): Promise<void>;
 - After `JSON.parse`, the wrapper validates:
   - `typeof parsed === 'object' && parsed !== null`
   - `parsed.algo === 'PBKDF2-HMAC-SHA256'`
-  - `parsed.iterations === 100000`
+  - `parsed.iterations === 10000`
   - `typeof parsed.saltHex === 'string' && /^[0-9a-f]{32}$/.test(parsed.saltHex)`
   - `typeof parsed.hashHex === 'string' && /^[0-9a-f]{64}$/.test(parsed.hashHex)`
   - `parsed.version === 1`

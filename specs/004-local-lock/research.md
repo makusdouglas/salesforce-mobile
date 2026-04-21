@@ -29,14 +29,14 @@ Each item below ends with a single decision — no `NEEDS CLARIFICATION` marker 
 
 ## R2 — PIN hashing algorithm and library
 
-**Decision**: Use PBKDF2 with HMAC-SHA-256, 100,000 iterations, 16-byte (128-bit) per-device random salt. Implementation via `@noble/hashes` (pure JS, audited, ~3 KB gzipped, drop-in PBKDF2). Generate the salt via `expo-crypto.getRandomBytesAsync(16)`.
+**Decision**: Use PBKDF2 with HMAC-SHA-256, **10,000 iterations**, 16-byte (128-bit) per-device random salt. Implementation via `@noble/hashes` (pure JS, audited, ~3 KB gzipped, drop-in PBKDF2). Generate the salt via `expo-crypto.getRandomBytesAsync(16)`.
 
 Persisted credential shape (JSON-encoded):
 
 ```ts
 type PinCredential = {
   algo: 'PBKDF2-HMAC-SHA256';
-  iterations: 100000;
+  iterations: 10000;
   saltHex: string;   // 32 hex chars (16 bytes)
   hashHex: string;   // 64 hex chars (32 bytes, the 256-bit PBKDF2 output)
   version: 1;        // schema version; lets future changes migrate
@@ -45,10 +45,11 @@ type PinCredential = {
 
 **Rationale**:
 
-- **PBKDF2 fits the threat model.** A 4–6 digit PIN has 10,000–1,000,000 possible values. An offline attacker with the hash can brute-force it in seconds with *any* fast hash; the real defense is the OS enclave preventing hash exfiltration. PBKDF2 at 100k iterations adds ~150–250 ms per verification attempt on a mid-range phone — enough to make an online (on-device) brute-force attack take hours for 10,000 PINs and prohibitively long combined with the progressive-delay policy (R6), while keeping the legitimate verify under the 200 ms budget in plan.md.
-- **`@noble/hashes` is the right library.** It is the audited, TypeScript-friendly choice for this space; it has no native dependencies; it exposes PBKDF2 directly (`pbkdf2(sha256, pass, salt, { c: 100_000, dkLen: 32 })`).
+- **PBKDF2 fits the threat model.** A 4–6 digit PIN has 10,000–1,000,000 possible values. An offline attacker with the hash can brute-force it in seconds with *any* fast hash; the real defense is the OS enclave preventing hash exfiltration. The iteration count only matters after exfiltration, which in practice requires rooting the device and bypassing `WHEN_UNLOCKED_THIS_DEVICE_ONLY`.
+- **Why 10k and not 100k.** `@noble/hashes` is pure JS and runs on the React Native JS thread (Hermes). On a mid-range Android device, 100k iterations takes ~20–30 s — during which the UI freezes because JS is 100% occupied deriving the key. That is unacceptable UX for a lock that runs once on cold start and on every inactivity return. 10k iterations brings the derivation down to ~2–3 s with a spinner shown in `PinSetupScreen` / `LockScreen`. The security delta versus 100k is ~3.3 bits of brute-force cost — negligible compared to the ~13–20 bits of entropy in the PIN itself, which is the real ceiling. Online brute-force is separately bounded by the progressive-delay policy (R6), which caps achievable attempt rate regardless of hash cost.
+- **`@noble/hashes` is the right library.** It is the audited, TypeScript-friendly choice for this space; it has no native dependencies; it exposes PBKDF2 directly (`pbkdf2Async(sha256, pass, salt, { c: 10_000, dkLen: 32 })`).
 - **`expo-crypto` for salt generation** uses the platform CSPRNG (`SecRandomCopyBytes` on iOS, `SecureRandom` on Android). It is already a first-class Expo package; adding it costs nothing beyond the dependency entry.
-- **Schema `version: 1` in the payload** gives us a one-line migration path if we ever need to bump iterations or switch to argon2id without nuking existing devices.
+- **Schema `version: 1` in the payload** gives us a one-line migration path if we ever need to bump iterations (e.g., if we later adopt `react-native-quick-crypto` for native PBKDF2 and can raise the cost) or switch to argon2id without nuking existing devices.
 
 **Alternatives considered**:
 
@@ -56,7 +57,8 @@ type PinCredential = {
 - **Bcrypt in pure JS** (e.g., `bcryptjs`) — works but is slower per iteration with no proportional gain; cost-factor tuning is more opaque than PBKDF2 iterations. Rejected.
 - **A hand-rolled iterated SHA-256 via `expo-crypto.digestStringAsync` in a loop** — would be *not* PBKDF2 (wrong construction; misses the HMAC layer that prevents length-extension and keyed-vs-unkeyed variants). Rejected for correctness.
 - **SHA-256(salt ‖ pin) with no iterations** — fails the offline-attack hypothetical badly (microseconds per guess). Rejected.
-- **`react-native-quick-crypto`** — native, Node-crypto-compatible, fast. Adds a native dependency for a use case that runs twice per unlock. Rejected by P3.
+- **`react-native-quick-crypto`** — native, Node-crypto-compatible, fast. Would let us raise iterations to 100k+ without the UI freeze. Rejected for now (P3 — adds a native dep for a use case the 10k/pure-JS split already handles adequately). Revisit if a future audit requires higher iteration cost.
+- **100k iterations in pure JS with a spinner** — rejected: ~20–30 s on mid-range Android blocks both PIN setup and every inactivity unlock. UX cost outweighs the marginal security gain (3.3 bits) for a low-entropy PIN.
 
 ---
 
@@ -332,7 +334,7 @@ Not unit-tested: `biometricAdapter` (thin wrapper over an OS API), the React com
 ## Summary of decisions → plan updates
 
 - Biometric via `expo-local-authentication` with `disableDeviceFallback: true` (R1).
-- PIN hashing via `@noble/hashes` PBKDF2-SHA-256 @ 100k iterations with a 16-byte per-device salt from `expo-crypto` (R2).
+- PIN hashing via `@noble/hashes` PBKDF2-SHA-256 @ 10k iterations (chosen for a ~2–3 s UX budget on pure-JS derivation; see R2 for the trade-off) with a 16-byte per-device salt from `expo-crypto` (R2).
 - Two secure-store keys: `lock.pinCredential` (wiped on logout and on PIN recovery) and `lock.inactivityTimeoutMinutes` (preserved on logout) (R3).
 - Inactivity via `AppState` + in-memory `backgroundedAtMs`; no foreground-idle tracking; 1–30 min range, 5 min default (R4).
 - 003 integration: `authService.logout({ preserveEmail?: boolean })` + a post-logout `lockStorage.deletePinCredential()` call — one-line change to 003, directional import (auth → lock.storage) (R5).

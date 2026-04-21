@@ -82,7 +82,7 @@ describe('pinHash (wrapper logic; @noble/hashes mocked)', () => {
   test('createCredentialFromPin returns a well-formed payload', async () => {
     const credential = await createCredentialFromPin('4321');
     expect(credential.algo).toBe('PBKDF2-HMAC-SHA256');
-    expect(credential.iterations).toBe(100_000);
+    expect(credential.iterations).toBe(10_000);
     expect(credential.version).toBe(1);
     expect(credential.saltHex).toMatch(/^[0-9a-f]{32}$/);
     expect(credential.hashHex).toMatch(/^[0-9a-f]{64}$/);

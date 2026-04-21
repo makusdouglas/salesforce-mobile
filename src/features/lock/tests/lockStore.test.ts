@@ -40,7 +40,7 @@ describe('lockStore state machine', () => {
   test('boot → Locked when credential stored', async () => {
     mockedStorage.getPinCredential.mockResolvedValueOnce({
       algo: 'PBKDF2-HMAC-SHA256',
-      iterations: 100000,
+      iterations: 10000,
       saltHex: 'aa'.repeat(16),
       hashHex: 'bb'.repeat(32),
       version: 1,

@@ -47,7 +47,7 @@ const lockService: {
    *
    * On success:
    *   - Generates a 16-byte random salt via expo-crypto.
-   *   - Derives the PBKDF2-HMAC-SHA256 hash (100_000 iterations, dkLen=32).
+   *   - Derives the PBKDF2-HMAC-SHA256 hash (10_000 iterations, dkLen=32).
    *   - Persists { algo, iterations, saltHex, hashHex, version: 1 } to lock.pinCredential.
    *   - Transitions lockStore NotSet → Unlocked.
    *

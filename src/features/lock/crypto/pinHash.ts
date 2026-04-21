@@ -39,10 +39,12 @@ function constantTimeEqualHex(a: string, b: string): boolean {
   return diff === 0;
 }
 
+export const PBKDF2_ITERATIONS = 10_000;
+
 export async function hashPin(
   pin: string,
   saltHex: string,
-  iterations: number = 100_000,
+  iterations: number = PBKDF2_ITERATIONS,
 ): Promise<string> {
   const pinBytes = utf8ToBytes(pin);
   const saltBytes = hexToBytes(saltHex);
@@ -63,10 +65,10 @@ export async function verifyPinHash(
 
 export async function createCredentialFromPin(pin: string): Promise<PinCredential> {
   const saltHex = await generateSaltHex(16);
-  const hashHex = await hashPin(pin, saltHex, 100_000);
+  const hashHex = await hashPin(pin, saltHex, PBKDF2_ITERATIONS);
   return {
     algo: 'PBKDF2-HMAC-SHA256',
-    iterations: 100_000,
+    iterations: PBKDF2_ITERATIONS,
     saltHex,
     hashHex,
     version: 1,

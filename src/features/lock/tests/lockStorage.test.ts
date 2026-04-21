@@ -17,7 +17,7 @@ import {
 
 const VALID_CREDENTIAL: PinCredential = {
   algo: 'PBKDF2-HMAC-SHA256',
-  iterations: 100000,
+  iterations: 10000,
   saltHex: 'a'.repeat(32),
   hashHex: 'b'.repeat(64),
   version: 1,

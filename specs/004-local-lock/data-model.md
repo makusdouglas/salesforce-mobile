@@ -28,7 +28,7 @@ These entities MUST NOT be added to [specs/002-local-data-layer/data-model.md](.
 ```ts
 type PinCredential = {
   algo: 'PBKDF2-HMAC-SHA256';
-  iterations: 100000;
+  iterations: 10000;
   saltHex: string;   // 32 hex chars (16 bytes) — per-device random salt from expo-crypto.getRandomBytesAsync(16)
   hashHex: string;   // 64 hex chars (32 bytes) — PBKDF2 derived-key output, dkLen = 32
   version: 1;        // schema version; lets future changes migrate without nuking existing devices
@@ -38,7 +38,7 @@ type PinCredential = {
 | Field        | Type                      | Notes |
 |--------------|---------------------------|-------|
 | `algo`       | `'PBKDF2-HMAC-SHA256'`    | String literal. Enforces one-algorithm-at-a-time; future versions bump the string AND the version number. |
-| `iterations` | `100000`                  | Integer literal for version 1. Future migrations may raise this. |
+| `iterations` | `10000`                   | Integer literal for version 1. Chosen for pure-JS UX budget (~2–3 s derivation); see research R2. Future migrations may raise this if native PBKDF2 lands. |
 | `saltHex`    | `string` (32 hex chars)   | Base-16-encoded 16-byte random value; unique per device per PIN. |
 | `hashHex`    | `string` (64 hex chars)   | Base-16-encoded 32-byte derived key. Never logged. |
 | `version`    | `1`                       | Integer literal; used by `lockStorage.getPinCredential()` for forward-compatible parsing. |
