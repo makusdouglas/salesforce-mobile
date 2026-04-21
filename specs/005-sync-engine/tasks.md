@@ -230,7 +230,7 @@
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Create `src/features/sync/triggers/loginTrigger.ts` per [contracts/triggers.md §T1](./contracts/triggers.md#t1-logintrigger--post-login--silent-refresh-with-queued-sync):
+- [X] T020 [US1] Create `src/features/sync/triggers/loginTrigger.ts` per [contracts/triggers.md §T1](./contracts/triggers.md#t1-logintrigger--post-login--silent-refresh-with-queued-sync):
   - `src/features/auth/index.ts` intentionally does NOT re-export `sessionStore` or `_internalSessionStore` (verified 2026-04-21 — the 003 barrel header explicitly forbids it). Import them via direct path: `import { sessionStore, _internalSessionStore, type SessionSnapshot } from '@/features/auth/session/session';`. Add a one-line comment at the top of the file: *"Reads the 003 internal `_queuedSync` flag — see [contracts/triggers.md §T1](...). This direct-path import is the only exception; 003's public barrel is used for every other auth concern."*
   - Export `function startLoginTrigger(): () => void`. Implementation:
     ```ts
@@ -257,7 +257,7 @@
     ```
   - Do NOT widen the 003 barrel just for this read.
   - Depends T013.
-- [ ] T021 [US1] Edit `src/features/sync/components/SyncProvider.tsx` — extend the Phase-2 skeleton to also mount `loginTrigger`:
+- [X] T021 [US1] Edit `src/features/sync/components/SyncProvider.tsx` — extend the Phase-2 skeleton to also mount `loginTrigger`:
   ```tsx
   useEffect(() => {
     const stopNet = startNetinfoBridge();
@@ -266,7 +266,7 @@
   }, []);
   ```
   Depends T020.
-- [ ] T022 [US1] Edit `src/app/providers/AppProviders.tsx` — wrap `<LockProvider>`'s children with `<SyncProvider>`. Final shape:
+- [X] T022 [US1] Edit `src/app/providers/AppProviders.tsx` — wrap `<LockProvider>`'s children with `<SyncProvider>`. Final shape:
   ```tsx
   export function AppProviders({ children }) {
     return (
@@ -281,7 +281,7 @@
   }
   ```
   Sync goes INSIDE Lock because triggers should not fire while the app is locked (see plan "Structure Decision"). `<SafeAreaProvider>` stays innermost. Depends T021.
-- [ ] T023 [P] [US1] Create `src/features/sync/tests/loginTrigger.test.ts` — covers [contracts/triggers.md §T1 Tests](./contracts/triggers.md#tests):
+- [X] T023 [P] [US1] Create `src/features/sync/tests/loginTrigger.test.ts` — covers [contracts/triggers.md §T1 Tests](./contracts/triggers.md#tests):
   - Transition `NotAuthenticated → Authenticated` fires `syncService.runSync` exactly once (mock `syncService.runSync`).
   - Transition `Authenticated → Authenticated` with `_queuedSync` going true→false fires exactly once.
   - Transition `Authenticated → Authenticated` with `_queuedSync` staying false does NOT fire.

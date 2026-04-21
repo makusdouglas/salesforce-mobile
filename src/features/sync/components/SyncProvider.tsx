@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 
 import { startNetinfoBridge } from '../connectivity/netinfoBridge';
+import { startLoginTrigger } from '../triggers/loginTrigger';
 
 /**
  * Lifecycle owner for the sync feature.
@@ -12,10 +13,10 @@ import { startNetinfoBridge } from '../connectivity/netinfoBridge';
 export function SyncProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   useEffect(() => {
     const stopNet = startNetinfoBridge();
-    // US1 (T021) adds: const stopLogin = startLoginTrigger();
+    const stopLogin = startLoginTrigger();
     return () => {
       stopNet();
-      // US1 (T021) adds: stopLogin();
+      stopLogin();
     };
   }, []);
 
