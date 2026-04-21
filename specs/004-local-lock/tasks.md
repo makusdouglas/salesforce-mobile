@@ -26,10 +26,10 @@
 
 **Purpose**: Install the three new runtime dependencies (biometrics, CSPRNG, PBKDF2), declare the Expo plugin entry, scaffold the `src/features/lock/` directory tree, and regenerate native projects.
 
-- [ ] T001 Install runtime dependencies: run `pnpm add expo-local-authentication expo-crypto @noble/hashes react-native-privacy-snapshot` at repo root. Verify the resulting `package.json` lists all four under `dependencies`. No new dev dependencies — Jest + ts-jest are already in place from the 003 block.
+- [ ] T001 Install runtime dependencies: run `pnpm add expo-local-authentication expo-crypto @noble/hashes` at repo root. Verify the resulting `package.json` lists all three under `dependencies`. No new dev dependencies — Jest + ts-jest are already in place from the 003 block. *(FR-022 dependency `react-native-privacy-snapshot` was descoped — see research R12.)*
 - [x] T002 [P] Edit `app.json` — append `"expo-local-authentication"` to the `expo.plugins` array. `expo-crypto` and `@noble/hashes` need no plugin entry. Leave `"expo-secure-store"` and other existing plugins untouched.
 - [x] T003 [P] Create the directory skeleton under `src/features/lock/`: `service/`, `state/`, `storage/`, `crypto/`, `biometric/`, `hooks/`, `components/`, `screens/`, `tests/`. No files yet — Phase 2 populates them.
-- [ ] T004 Run `pnpm exec expo prebuild --clean` to regenerate `ios/` and `android/` with the newly-linked native modules (`expo-local-authentication`, `react-native-privacy-snapshot`). `expo-crypto` bundles with the core Expo native module already linked; `@noble/hashes` is pure JS. Commit the regenerated native project files. Depends T001, T002. *Note: one-time local action; subsequent clones rerun via `pnpm install && pnpm exec expo prebuild`.*
+- [ ] T004 Run `pnpm exec expo prebuild --clean` to regenerate `ios/` and `android/` with the newly-linked native module (`expo-local-authentication`). `expo-crypto` bundles with the core Expo native module already linked; `@noble/hashes` is pure JS. Commit the regenerated native project files. Depends T001, T002. *Note: one-time local action; subsequent clones rerun via `pnpm install && pnpm exec expo prebuild`.*
 
 **Checkpoint**: Project builds a dev client; `pnpm lint`, `pnpm typecheck`, and `pnpm test` all pass on the pre-004 codebase.
 
@@ -73,17 +73,9 @@
 - [x] T015 Create `src/features/lock/components/LockProvider.tsx` — React component. On mount: `useEffect(() => { let cancelled = false; (async () => { await lockBootstrap(); if (cancelled) return; setBootstrapped(true); })(); const stopInactivity = startInactivityListener(); return () => { cancelled = true; stopInactivity(); }; }, [])`. If `!bootstrapped`, render `null`. Else render `{children}`. Does NOT inject a React Context. Depends T013, T014.
 - [x] T016 Create `src/features/lock/service/lockService.ts` SKELETON per [contracts/lock-service.md §lockService shape](./contracts/lock-service.md#lockservice-shape). Export `const lockService = { setupPin, verifyPin, unlockWithBiometric, beginPinRecovery, setInactivityTimeout, getInactivityTimeout }`. All methods except `getInactivityTimeout` throw `new Error('not implemented')`. `getInactivityTimeout` returns `_internalLockStore.getInactivityTimeoutMinutes()`. Signatures exactly per the contract. US1 fills in `setupPin`/`verifyPin`/`unlockWithBiometric` (T022); US2 fills in `setInactivityTimeout` (T031); US3 fills in `beginPinRecovery` (T036). Lets the barrel (T017) compile now.
 - [x] T017 Create `src/features/lock/index.ts` — CONSERVATIVE barrel re-exporting **only** what Phase 2 ships: `lockService`, `useLock`, `LockProvider`, `LockError` (value and type `LockErrorCode`), types `LockStatus`, `LockSnapshot`. Does NOT yet re-export `LockGate`, `PinSetupScreen`, `LockScreen`, `PinRecoveryConfirmScreen` (US1/US3 extend the barrel as those screens land). Document at the top: "Design tokens from `@/features/auth/theme/tokens` are the one allowed cross-feature import; internal state (`lockStore`, `_internalLockStore`, `lockStorage`, `biometricAdapter`, `pinHash`, `random`, `bootstrap`, `inactivity`, `useLockFailedAttempts`) is NOT re-exported. `deletePinCredential` is a direct import path for the auth logout integration only (T032)."
-- [x] T018 Edit `src/app/providers/AppProviders.tsx` — wrap the existing provider tree with `<LockProvider>` (inside `<SessionProvider>`) and enable `react-native-privacy-snapshot` imperatively (it ships as a **native module**, not a JSX component — see research R12). A local `src/types/react-native-privacy-snapshot.d.ts` declares the module since the package has no `.d.ts`. Final shape:
+- [x] T018 Edit `src/app/providers/AppProviders.tsx` — wrap the existing provider tree with `<LockProvider>` (inside `<SessionProvider>`). Final shape:
   ```tsx
-  function usePrivacySnapshot(): void {
-    useEffect(() => {
-      PrivacySnapshot.enabled(true);
-      return () => PrivacySnapshot.enabled(false);
-    }, []);
-  }
-
   export function AppProviders({ children }) {
-    usePrivacySnapshot();
     return (
       <SessionProvider>
         <LockProvider>
@@ -93,7 +85,7 @@
     );
   }
   ```
-  The `enabled(true)` call toggles the OS masking behavior for the app's lifetime, so the task-switcher snapshot shows the mask instead of business data (FR-022). LockProvider goes INSIDE SessionProvider because US3's recovery flow uses `authService.logout` — outer-provider initializes first. Depends T015.
+  LockProvider goes INSIDE SessionProvider because US3's recovery flow uses `authService.logout` — outer-provider initializes first. *(FR-022 privacy-snapshot integration was descoped from MVP — see research R12.)* Depends T015.
 - [x] T019 [P] Create `src/features/lock/tests/pinHash.test.ts` — unit tests covering:
   - `hashPin(pin, salt, iters)` produces identical output for identical inputs (determinism).
   - `hashPin(pin1, salt, iters)` ≠ `hashPin(pin2, salt, iters)` for distinct PINs.

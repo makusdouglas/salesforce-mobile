@@ -136,7 +136,7 @@ A salesperson hasn't opened the app in a week and has genuinely forgotten the fo
 - **FR-019**: The first successful online login after a logout MUST re-trigger the first-run PIN setup flow (FR-001) — a post-logout install is, for D6 purposes, indistinguishable from a fresh install.
 - **FR-020**: The lock screen MUST NOT leak any information about the app's state prior to the lock. No business data, record counts, sync status, last-action text, or screenshot-like previews of the prior screen MUST be visible on the lock screen.
 - **FR-021**: PIN change by a salesperson who still remembers their PIN (without going through the "Forgot PIN" recovery) is OUT OF SCOPE for this feature. The MVP supports rotation only through the recovery flow.
-- **FR-022**: When the app transitions to background (AppState `active → background | inactive`), the UI MUST be masked at the OS level so the task-switcher / multitasking preview does NOT reveal any business data (catalog, clients, orders, receipts, drafts, cached images). The mask MUST be removed automatically on foreground return. This requirement is complementary to FR-020: FR-020 governs the in-app lock screen, FR-022 governs the OS-owned snapshot that sits between a legitimate salesperson's "press home" and the lock-gated return.
+- **FR-022**: *(OUT OF SCOPE for MVP)* OS task-switcher / multitasking-preview masking is deferred. The only actively-maintained library compatible with this app's stack failed against React Native's new architecture (`newArchEnabled: true`), and a purpose-built native plugin was judged disproportionate for the MVP threat model. The salesperson in D6's target scenario ("lost or stolen device") is gated by the cold-start lock (FR-005) on re-open; the snapshot window is a narrow residual exposure. Revisit when a new-arch-compatible mask library lands or if audit evidence demands it. Tracked as a post-MVP hardening item.
 
 ### Key Entities
 
@@ -160,7 +160,7 @@ A salesperson hasn't opened the app in a week and has genuinely forgotten the fo
 - **SC-009**: End-to-end "Forgot PIN" recovery (tap Forgot PIN → online re-login → new PIN setup → unlock) completes in under 90 seconds on a mid-range Android device with a broadband Wi-Fi connection.
 - **SC-010**: After a "Forgot PIN" recovery, 100% of local business records (clients, orders including drafts, order items, payment receipts, cached catalog) present before recovery remain present after. Zero records MUST be lost across 20 scripted recovery cycles.
 - **SC-011**: Across 100 scripted foreground-background cycles with a mix of durations above and below the inactivity timeout, the lock screen triggers correctly on 100% of cycles whose background duration exceeded the timeout, and triggers on 0% of cycles whose background duration was shorter than the timeout.
-- **SC-012**: In the OS task-switcher / multitasking preview, an audit on both iOS and Android of 10 representative screens (catalog list, catalog detail, client detail, new-order draft, order detail, receipts list, receipt detail, home, settings, PinSetup mid-flow) shows a masked thumbnail — no business content readable — for 100% of screens on a mid-range device.
+- **SC-012**: *(OUT OF SCOPE for MVP — tied to FR-022 deferral.)* Re-activates when FR-022 is re-scoped with a new-arch-compatible solution.
 
 ## Assumptions
 

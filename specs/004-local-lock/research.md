@@ -308,24 +308,24 @@ Not unit-tested: `biometricAdapter` (thin wrapper over an OS API), the React com
 
 ---
 
-## R12 — OS task-switcher snapshot masking
+## R12 — OS task-switcher snapshot masking *(DEFERRED — post-MVP)*
 
-**Decision**: Enable `react-native-privacy-snapshot` imperatively from `AppProviders.tsx`. The library is a **native module** (not a React component) — its default export exposes `PrivacySnapshot.enabled(flag: boolean)`, which toggles an OS-level overlay captured by the snapshotting pass on `applicationWillResignActive` (iOS) / window FLAG_SECURE (Android). Calling `enabled(true)` once on mount is the entire integration.
+**Decision**: FR-022 is **out of scope for the MVP**. No privacy-snapshot integration ships with this feature.
 
-Integration: a single `useEffect` hook in `AppProviders.tsx` that calls `PrivacySnapshot.enabled(true)` on mount and `enabled(false)` on unmount. No JSX wrapper, no React state, no configuration. A local `src/types/react-native-privacy-snapshot.d.ts` declares the module (the package ships no `.d.ts`). Auto-linked via `expo prebuild`; no `app.json` plugin entry required.
+**Context of deferral**: The originally-chosen library — `react-native-privacy-snapshot` — is a pre-TurboModule package (~2016) that does not expose any bindings under React Native's new architecture. With `newArchEnabled: true` in `app.json` (a project-wide choice inherited from the Expo baseline), `NativeModules.PrivacySnapshot` resolves to `null` at runtime and the intended `PrivacySnapshot.enabled(true)` call is a no-op crash. A full prebuild (`pnpm exec expo prebuild --clean`) followed by a native rebuild confirmed the incompatibility — the module is not linked into either the iOS or Android build because it does not ship a new-arch spec.
 
-**Rationale**:
+**Rationale for descoping (not forcing an alternative)**:
 
-- **FR-020 in spirit, not just letter.** FR-020 bars business data from the lock screen. The OS's own multitasking preview sits *between* the salesperson pressing home and the lock screen re-triggering on foreground return — a gap the lock feature would otherwise ignore. Constitution §7 D6's "lost or stolen device" threat model makes the task-switcher snapshot a real concern.
-- **Library is small and isolated.** ~100 lines of native code (iOS + Android), one JSX integration point, zero interaction with our state machine. Easy to remove or swap for a native alternative later.
-- **Coverage at the right layer.** The alternative — per-screen `onBlur` handlers that render masks — would require touching every screen in the app, including future ones, and is brittle. The root-level snapshot approach is set-and-forget.
+- **Residual risk is narrow.** The D6 threat model ("lost or stolen device", constitution §7) is primarily addressed by FR-005 (cold-start lock) and FR-006 (post-inactivity lock): anyone who gains the device must clear the lock screen to reach business data. The only window FR-022 would close is the OS-captured thumbnail shown in the task-switcher *while the legitimate salesperson is still the last user*. A persistent attacker with the device in hand bypasses the thumbnail trivially by tapping into the app.
+- **Alternatives carry MVP-disproportionate cost.** A purpose-built config plugin (iOS `UIBlurEffect` on `applicationWillResignActive` + Android `FLAG_SECURE`) is tractable but non-trivial native work — outside the MVP envelope for a feature whose primary-value surface (cold-start + inactivity lock + PIN recovery) is already landed. Pure JS overlays via `AppState` have timing gaps on iOS and do not reliably cover the OS snapshot pass.
+- **Room to revisit.** When a new-arch-compatible mask library lands (tracked via Expo/community releases), or if the security audit that accompanies a post-MVP release demands the coverage, FR-022 and SC-012 can be re-activated with a targeted follow-up. The rest of the lock feature is unaffected.
 
-**Alternatives considered**:
+**Alternatives reviewed and not taken at MVP**:
 
-- **Do nothing; rely on the lock screen.** Rejected — the lock screen is only re-rendered on foreground return, AFTER the OS snapshot has already been captured. FR-022 would not be satisfied.
-- **Custom native implementation** (no dependency) — `AppDelegate.swift` + `Activity.onPause`. Legitimate, but duplicates what `react-native-privacy-snapshot` already ships. Rejected by P3 (MVP simplicity) and P4 (reuse free tools).
-- **Black-out via `expo-screen-capture` `preventScreenCaptureAsync`** — different concern: it blocks screenshots, not task-switcher snapshots. Rejected because the two APIs cover different attacker surfaces and we want the snapshot mask, not screenshot blocking.
-- **Use `react-native-privacy-screen` or similar forks** — equivalent outcomes, less maintained. Sticking with the better-maintained option.
+- **`react-native-privacy-snapshot`** — rejected: new-arch incompatibility confirmed empirically.
+- **Custom config plugin (iOS + Android)** — deferred: correct solution, disproportionate for MVP.
+- **`expo-screen-capture` `preventScreenCaptureAsync`** — rejected: different attacker surface (blocks screenshots, not the task-switcher snapshot).
+- **JS-only `AppState` overlay** — rejected: timing-fragile on iOS; does not reliably cover the OS snapshot pass.
 
 ---
 
@@ -342,6 +342,6 @@ Integration: a single `useEffect` hook in `AppProviders.tsx` that calls `Privacy
 - Three-state machine (NotSet / Locked / Unlocked) with hidden `backgroundedAtMs` and `failedAttempts` flags (R9).
 - Tests: pinHash, lockStore state machine, inactivity math, lockStorage round-trip (R10).
 - Pencil: fresh frames OR a documented reuse note before implementation, phone + tablet either way (R11).
-- `react-native-privacy-snapshot` wraps the tree to mask the OS task-switcher snapshot — a one-line integration in `AppProviders.tsx` (R12, FR-022).
+- OS task-switcher snapshot masking (FR-022 / SC-012) is **descoped from MVP** — no library integration ships. See R12 for the deferral rationale.
 
 No unresolved `NEEDS CLARIFICATION` remains.

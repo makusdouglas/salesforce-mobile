@@ -212,9 +212,9 @@ After plumbing the feature in, verify manually against the acceptance scenarios:
 - Does not override the OS biometric prompt or device PIN — those remain the device-owner's.
 - Does not offer a "change PIN" path without going through recovery. MVP scope limit (FR-021).
 
-## Bonus: OS task-switcher masking (FR-022)
+## Out of scope: OS task-switcher masking (FR-022)
 
-A small infrastructural piece that ships with this feature but is orthogonal to the lock state machine: `react-native-privacy-snapshot` wraps the root app tree in `AppProviders.tsx`. When the app goes to background, the library overlays a mask that the OS captures for the multitasking preview — so the task-switcher thumbnail shows the mask, not business data. Zero state to manage; the library self-installs via `expo prebuild`. See [research R12](./research.md#r12--os-task-switcher-snapshot-masking).
+FR-022 (OS task-switcher / multitasking-preview masking) was **descoped from the MVP**. The only pre-existing library for the job (`react-native-privacy-snapshot`) is incompatible with React Native's new architecture, and a custom native plugin was judged disproportionate for the MVP. The residual exposure is narrow — an attacker with the device in hand bypasses the thumbnail trivially by reopening the app, at which point the cold-start / inactivity lock gates them. Revisit when a new-arch-compatible mask library lands or if a security audit demands it. See [research R12](./research.md#r12--os-task-switcher-snapshot-masking-deferred--post-mvp) for the full deferral record.
 
 ---
 

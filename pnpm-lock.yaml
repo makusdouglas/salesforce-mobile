@@ -56,9 +56,6 @@ dependencies:
   react-native:
     specifier: 0.83.4
     version: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
-  react-native-privacy-snapshot:
-    specifier: ^1.0.0
-    version: 1.0.0
   react-native-safe-area-context:
     specifier: ^5.6.2
     version: 5.7.0(react-native@0.83.4)(react@19.2.0)
@@ -7332,10 +7329,6 @@ packages:
     dependencies:
       react: 19.2.0
       react-native: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
-    dev: false
-
-  /react-native-privacy-snapshot@1.0.0:
-    resolution: {integrity: sha512-GxwfZjfhusDfo6ssxnD0PWZHddfVT4jwRii4iwJ02fzAlQg/inoCKf3jjqheVATDSkHxeWwsymeHixyywQfGpw==}
     dev: false
 
   /react-native-safe-area-context@5.7.0(react-native@0.83.4)(react@19.2.0):

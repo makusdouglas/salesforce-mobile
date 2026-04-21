@@ -10,7 +10,7 @@ Install the constitution §7 D6 device-level lock as a self-contained feature th
 ## Technical Context
 
 **Language/Version**: TypeScript 5.9 with `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` (inherited from 001/002/003).
-**Primary Dependencies**: `expo-local-authentication` (biometric prompt), `expo-crypto` (CSPRNG for per-device PIN salt), `@noble/hashes` (audited pure-JS PBKDF2 — see research R2), `react-native-privacy-snapshot` (OS task-switcher snapshot masking — see research R12). Inherits from 003: `@supabase/supabase-js`, `expo-secure-store`, `@react-native-community/netinfo`, `@react-navigation/*`. Dev: existing Jest + ts-jest; no new dev tooling.
+**Primary Dependencies**: `expo-local-authentication` (biometric prompt), `expo-crypto` (CSPRNG for per-device PIN salt), `@noble/hashes` (audited pure-JS PBKDF2 — see research R2). Inherits from 003: `@supabase/supabase-js`, `expo-secure-store`, `@react-native-community/netinfo`, `@react-navigation/*`. Dev: existing Jest + ts-jest; no new dev tooling. *(Note: FR-022 / OS task-switcher snapshot masking was descoped from MVP — see research R12 for the deferral record.)*
 **Storage**:
 - **PIN credential** (`{ hash, salt, iterations, algo }`) — `expo-secure-store`, key `lock.pinCredential`, accessibility `WHEN_UNLOCKED_THIS_DEVICE_ONLY`. New key space, disjoint from 003's `auth.*` keys.
 - **Inactivity timeout preference** (`{ minutes: number }`) — `expo-secure-store`, key `lock.inactivityTimeoutMinutes`. Co-located with the PIN credential only so the lock feature has a single typed wrapper; it is not a secret.
@@ -95,7 +95,7 @@ The lock feature is bounded under `src/features/lock/` and imported through its 
     │   │   ├── RootNavigator.tsx           # MODIFIED — wraps the Home branch with <LockGate>; Relogin modal stays at root level so it can still overlay Home when unlocked
     │   │   └── types.ts                    # MODIFIED — LockStackParamList covers PinSetup, Lock, PinRecoveryConfirm; RootStackParamList unchanged
     │   └── providers/
-    │       └── AppProviders.tsx            # MODIFIED — wraps children with <LockProvider> INSIDE <SessionProvider> (lock depends on session's email for recovery pre-fill); also enables react-native-privacy-snapshot imperatively via a one-line useEffect — PrivacySnapshot.enabled(true) — for FR-022 OS task-switcher masking.
+    │       └── AppProviders.tsx            # MODIFIED — wraps children with <LockProvider> INSIDE <SessionProvider> (lock depends on session's email for recovery pre-fill). (FR-022 privacy-snapshot integration descoped from MVP — see research R12.)
     ├── features/
     │   ├── auth/
     │   │   └── service/
