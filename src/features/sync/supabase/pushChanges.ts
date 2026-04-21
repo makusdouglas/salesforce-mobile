@@ -89,8 +89,7 @@ export async function pushChanges(args: {
   // Defensive guard: drop any changes for read-only (catalog) tables.
   for (const table of Object.keys(changes)) {
     if (READ_ONLY_TABLES.has(table)) {
-      if (__DEV__) {
-        // eslint-disable-next-line no-console
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
         console.warn(
           `[sync] dropping unexpected change for read-only table: ${table}`,
         );

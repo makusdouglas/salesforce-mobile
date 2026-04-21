@@ -23,10 +23,10 @@ type TableName =
   | 'order_items'
   | 'payment_receipts';
 
-const TABLES: ReadonlyArray<{
+const TABLES: readonly {
   name: TableName;
   map: (row: SupabaseRow) => WMDBDirtyRaw;
-}> = [
+}[] = [
   { name: 'salespeople', map: mapSalespersonServerRowToWMDB },
   { name: 'clients', map: mapClientServerRowToWMDB },
   { name: 'products', map: mapProductServerRowToWMDB },

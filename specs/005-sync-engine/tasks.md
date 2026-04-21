@@ -58,9 +58,9 @@
 
 ### Core primitives
 
-- [ ] T003 [P] Create `src/features/sync/service/errors.ts` — export `class SyncError extends Error { readonly code: SyncErrorCode; constructor(code: SyncErrorCode, message?: string) }` and `type SyncErrorCode = 'NETWORK' | 'AUTH_REJECTED' | 'SERVER' | 'PUSH_REJECTED' | 'PULL_REJECTED' | 'ABORTED'`. Constructor sets `this.name = 'SyncError'`. Never carries row contents or Supabase tokens in the message; errors contain the code + a short human-readable summary for dev logs only.
-- [ ] T004 [P] Create `src/features/sync/state/derive.ts` — export the pure function `deriveStatus(s: InternalState): SyncStatus` per [contracts/status-store.md §Derivation rule](./contracts/status-store.md#derivation-rule-derivets-pure). Also export `type InternalState = { _inFlight: boolean; _followUpQueued: boolean; _online: boolean; _lastOutcome: 'initial' | 'ok' | 'failed'; _hasQueuedChanges: boolean }` and `type SyncStatus = 'in-sync' | 'syncing' | 'offline' | 'failed'`. No external dependencies. No React.
-- [ ] T005 Create `src/features/sync/state/syncStatusStore.ts` per [contracts/status-store.md](./contracts/status-store.md):
+- [X] T003 [P] Create `src/features/sync/service/errors.ts` — export `class SyncError extends Error { readonly code: SyncErrorCode; constructor(code: SyncErrorCode, message?: string) }` and `type SyncErrorCode = 'NETWORK' | 'AUTH_REJECTED' | 'SERVER' | 'PUSH_REJECTED' | 'PULL_REJECTED' | 'ABORTED'`. Constructor sets `this.name = 'SyncError'`. Never carries row contents or Supabase tokens in the message; errors contain the code + a short human-readable summary for dev logs only.
+- [X] T004 [P] Create `src/features/sync/state/derive.ts` — export the pure function `deriveStatus(s: InternalState): SyncStatus` per [contracts/status-store.md §Derivation rule](./contracts/status-store.md#derivation-rule-derivets-pure). Also export `type InternalState = { _inFlight: boolean; _followUpQueued: boolean; _online: boolean; _lastOutcome: 'initial' | 'ok' | 'failed'; _hasQueuedChanges: boolean }` and `type SyncStatus = 'in-sync' | 'syncing' | 'offline' | 'failed'`. No external dependencies. No React.
+- [X] T005 Create `src/features/sync/state/syncStatusStore.ts` per [contracts/status-store.md](./contracts/status-store.md):
   - Private module-level `state: InternalState` initialized to `{ _inFlight: false, _followUpQueued: false, _online: false, _lastOutcome: 'initial', _hasQueuedChanges: false }`.
   - Private `listeners: Set<() => void>` and `notifyingDepth = 0`.
   - Private `cachedSnapshot: SyncStatusSnapshot` recomputed on every state change via `deriveStatus(state)`; emits ONLY when `cachedSnapshot.status` actually changes. Freeze the snapshot in `__DEV__`.
@@ -68,11 +68,11 @@
   - Public export `syncStatusStore = { getSnapshot(): SyncStatusSnapshot; subscribe(listener): () => void }`. Subscribe returns an idempotent unsubscribe.
   - Private export `_internalSyncStatusStore = { setInFlight(v), setFollowUpQueued(v), setOnline(v), setLastOutcome(v), setHasQueuedChanges(v), getInternal(), __resetForTests() }`. Every setter calls `guardReentrancy()`, mutates `state`, then calls a single internal `recompute()` that updates `cachedSnapshot` and emits only on status change. `__resetForTests()` zeroes everything and clears listeners.
   Depends T004.
-- [ ] T006 [P] Create `src/features/sync/hooks/useSyncStatus.ts` — `useSyncExternalStore(syncStatusStore.subscribe, syncStatusStore.getSnapshot)` returning `{ status }` only. Matches the 003 `useSession` and 004 `useLock` style. Depends T005.
+- [X] T006 [P] Create `src/features/sync/hooks/useSyncStatus.ts` — `useSyncExternalStore(syncStatusStore.subscribe, syncStatusStore.getSnapshot)` returning `{ status }` only. Matches the 003 `useSession` and 004 `useLock` style. Depends T005.
 
 ### Connectivity
 
-- [ ] T007 Create `src/features/sync/connectivity/netinfoBridge.ts` per [research.md R9](./research.md#r9--offline-detection-reuse-netinfo-subscribe-independently):
+- [X] T007 Create `src/features/sync/connectivity/netinfoBridge.ts` per [research.md R9](./research.md#r9--offline-detection-reuse-netinfo-subscribe-independently):
   - Import `NetInfo, { type NetInfoState }` from `@react-native-community/netinfo`.
   - Private helper `isOnline(state: NetInfoState): boolean` → `state.isConnected === true && state.isInternetReachable === true`. *(Same predicate as 003's `connectivity.ts`.)*
   - Export `function startNetinfoBridge(): () => void` that subscribes to `NetInfo.addEventListener`, debounces the online signal with a 500 ms timer (match 003), and calls `_internalSyncStatusStore.setOnline(nextValue)` only when the debounced value differs from the current `_online`. Returns an unsubscribe that clears the debounce handle and calls NetInfo's own unsubscribe.
@@ -81,17 +81,17 @@
 
 ### Supabase adapters
 
-- [ ] T008 [P] Create `src/features/sync/supabase/mappers.ts` per [contracts/pull-changes.md §Column mapping](./contracts/pull-changes.md#column-mapping-snake_case--camelcase) and [contracts/push-changes.md](./contracts/push-changes.md). For each of the seven tables export two functions:
+- [X] T008 [P] Create `src/features/sync/supabase/mappers.ts` per [contracts/pull-changes.md §Column mapping](./contracts/pull-changes.md#column-mapping-snake_case--camelcase) and [contracts/push-changes.md](./contracts/push-changes.md). For each of the seven tables export two functions:
   - `map<Table>ServerRowToWMDB(row): DirtyRaw` — takes a Supabase row, returns a Watermelon-shaped raw record. Rules: rename server-side `id` to `server_id`; convert `updated_at` and `deleted_at` ISO-8601 strings to `number` (ms since epoch); drop any Postgres-internal columns not declared in [src/data/schema/tables.ts](../../src/data/schema/tables.ts); leave the remaining columns snake_case (matches 002's schema column names exactly — no case conversion needed).
   - `map<Table>WMDBRecordToServerPayload(rec): Record<string, unknown>` — builds an insert/update payload. Rules: omit `id` (local Watermelon id is not sent); omit `server_id`, `_status`, `_changed`, `updated_at` (server authoritative); omit `deleted_at` (set by the delete path, not by this mapper).
   Write one mapper pair per table — `Salespeople`, `Client`, `Product`, `ProductVariant`, `Order`, `OrderItem`, `PaymentReceipt`. Total: 14 functions. Group them in the file with a `// ---- <Entity> ----` divider. No dependencies on other sync-feature files — pure shape transformations.
-- [ ] T009 Create `src/features/sync/protocol/conflictResolver.ts` per [contracts/conflict-resolver.md](./contracts/conflict-resolver.md). Export `function conflictResolver(table: TableName, local: RawRecord, remote: DirtyRaw, resolved: DirtyRaw): DirtyRaw` implementing the exact LWW + tiebreaker rule from the contract:
+- [X] T009 Create `src/features/sync/protocol/conflictResolver.ts` per [contracts/conflict-resolver.md](./contracts/conflict-resolver.md). Export `function conflictResolver(table: TableName, local: RawRecord, remote: DirtyRaw, resolved: DirtyRaw): DirtyRaw` implementing the exact LWW + tiebreaker rule from the contract:
   1. `if (remote.updated_at > local.updated_at) return remote;`
   2. `if (remote.updated_at < local.updated_at) return resolved;` (preserves local's `_changed` via Watermelon's default merge)
   3. `if (remote.server_id !== null && local.server_id !== null && remote.server_id < local.server_id) return remote;`
   4. `return resolved;`
   The function is pure (no imports beyond types). Pseudocode at the top of the file as a comment for readers. Depends T003.
-- [ ] T010 Create `src/features/sync/supabase/pullChanges.ts` per [contracts/pull-changes.md](./contracts/pull-changes.md):
+- [X] T010 Create `src/features/sync/supabase/pullChanges.ts` per [contracts/pull-changes.md](./contracts/pull-changes.md):
   - Import `supabase` from `@/data`; import mappers from `./mappers`; import `SyncError` from `../service/errors`.
   - Export `async function pullChanges({ lastPulledAt }: { lastPulledAt: number | null }): Promise<SyncPullResult>` where `SyncPullResult = { changes: SyncDatabaseChangeSet; timestamp: number }` (re-export the Watermelon type from this file for callers).
   - Implementation:
@@ -102,7 +102,7 @@
     5. Return `{ changes, timestamp: serverNowMs }`.
   No side effects on failure: the function only reads; Watermelon's transaction around `pullChanges` rolls back any partial merge.
   Depends T003, T008.
-- [ ] T011 Create `src/features/sync/supabase/pushChanges.ts` per [contracts/push-changes.md](./contracts/push-changes.md):
+- [X] T011 Create `src/features/sync/supabase/pushChanges.ts` per [contracts/push-changes.md](./contracts/push-changes.md):
   - Import `supabase` from `@/data`; import mappers from `./mappers`; import `SyncError` from `../service/errors`.
   - Export `async function pushChanges({ changes, lastPulledAt }: { changes: SyncDatabaseChangeSet; lastPulledAt: number }): Promise<void>`.
   - Helpers defined in-file:
@@ -117,7 +117,7 @@
 
 ### Pass orchestration + service
 
-- [ ] T012 Create `src/features/sync/protocol/runPass.ts`:
+- [X] T012 Create `src/features/sync/protocol/runPass.ts`:
   - Import `synchronize` from `@nozbe/watermelondb/sync`; import `database` from `@/data`; import `pullChanges` from `../supabase/pullChanges`; import `pushChanges` from `../supabase/pushChanges`; import `conflictResolver` from `./conflictResolver`; import `SyncError` from `../service/errors`; import `authService` from `@/features/auth/service/authService` (for the AUTH_REJECTED handoff — research R10).
   - Export `async function runPass(trigger: SyncTrigger): Promise<SyncRunResult>` where `SyncRunResult = { outcome: 'ok' } | { outcome: 'failed'; code: SyncErrorCode }`. Never rejects; it always returns one of these shapes.
   - Implementation:
@@ -146,7 +146,7 @@
     }
     ```
   - Depends T009, T010, T011.
-- [ ] T013 Create `src/features/sync/service/syncService.ts` per [contracts/sync-service.md §syncService](./contracts/sync-service.md#syncservice):
+- [X] T013 Create `src/features/sync/service/syncService.ts` per [contracts/sync-service.md §syncService](./contracts/sync-service.md#syncservice):
   - Module-level closures: `let _inFlightPromise: Promise<SyncRunResult> | null = null; let _followUpQueued = false;`.
   - `async function runSync({ trigger }: { trigger: SyncTrigger }): Promise<SyncRunResult | { outcome: 'skipped'; reason: 'offline' | 'coalesced' }>`:
     1. If `!_internalSyncStatusStore.getInternal()._online`: return `{ outcome: 'skipped', reason: 'offline' }` synchronously; do NOT set `_inFlight`.
@@ -165,7 +165,7 @@
 
 ### Provider + barrel
 
-- [ ] T014 Create `src/features/sync/components/SyncProvider.tsx` SKELETON per [contracts/sync-service.md §SyncProvider](./contracts/sync-service.md#syncprovider-react-component):
+- [X] T014 Create `src/features/sync/components/SyncProvider.tsx` SKELETON per [contracts/sync-service.md §SyncProvider](./contracts/sync-service.md#syncprovider-react-component):
   ```tsx
   export function SyncProvider({ children }: { children: React.ReactNode }): JSX.Element {
     useEffect(() => {
@@ -180,18 +180,18 @@
   }
   ```
   Does NOT publish React Context. Does NOT mount `loginTrigger` yet — US1 extends this component. Depends T007.
-- [ ] T015 Create `src/features/sync/index.ts` — CONSERVATIVE barrel re-exporting ONLY what Phase 2 ships: `syncService`, `useSyncStatus`, `SyncProvider`, `SyncError` (value and type `SyncErrorCode`), types `SyncStatus`, `SyncTrigger`, `SyncRunResult`. Does NOT yet re-export `SyncStatusIndicator` or `onPullToRefresh` — US2 and US3 extend the barrel as those artifacts land. Document at the top: "Internal modules (`syncStatusStore`, `_internalSyncStatusStore`, `runPass`, `pullChanges`, `pushChanges`, `mappers`, `conflictResolver`, `netinfoBridge`, `loginTrigger`, `pullToRefreshTrigger`, `orderSentTrigger`) are NOT re-exported. External code consumes the public surface only."
+- [X] T015 Create `src/features/sync/index.ts` — CONSERVATIVE barrel re-exporting ONLY what Phase 2 ships: `syncService`, `useSyncStatus`, `SyncProvider`, `SyncError` (value and type `SyncErrorCode`), types `SyncStatus`, `SyncTrigger`, `SyncRunResult`. Does NOT yet re-export `SyncStatusIndicator` or `onPullToRefresh` — US2 and US3 extend the barrel as those artifacts land. Document at the top: "Internal modules (`syncStatusStore`, `_internalSyncStatusStore`, `runPass`, `pullChanges`, `pushChanges`, `mappers`, `conflictResolver`, `netinfoBridge`, `loginTrigger`, `pullToRefreshTrigger`, `orderSentTrigger`) are NOT re-exported. External code consumes the public surface only."
 
 ### Unit tests (Phase 2 slice)
 
-- [ ] T016 [P] Create `src/features/sync/tests/conflictResolver.test.ts` — covers every branch from [contracts/conflict-resolver.md §Rule](./contracts/conflict-resolver.md#rule-constitution-p2--lww-by-timestamp):
+- [X] T016 [P] Create `src/features/sync/tests/conflictResolver.test.ts` — covers every branch from [contracts/conflict-resolver.md §Rule](./contracts/conflict-resolver.md#rule-constitution-p2--lww-by-timestamp):
   - **remote.updated_at > local.updated_at** → returned value deep-equals `remote`.
   - **remote.updated_at < local.updated_at** → returned value deep-equals `resolved` (the Watermelon default merge).
   - **Tie + remote.server_id < local.server_id (lex)** → returned value deep-equals `remote`.
   - **Tie + remote.server_id >= local.server_id** → returned value deep-equals `resolved`.
   - **Tie + both server_ids null** → falls through to returning `resolved` (unreachable in practice, but keep the test as a tripwire for the null-safety branch).
   Pure function; no mocks needed. Depends T009.
-- [ ] T017 [P] Create `src/features/sync/tests/syncStatusStore.test.ts` — covers [contracts/status-store.md §State-transition table](./contracts/status-store.md#state-transition-table):
+- [X] T017 [P] Create `src/features/sync/tests/syncStatusStore.test.ts` — covers [contracts/status-store.md §State-transition table](./contracts/status-store.md#state-transition-table):
   - `deriveStatus` exhaustive: 4 classes (syncing, offline, failed, in-sync) reachable via the combinations in the derivation rule. Cover all 2×2×3 = 12 cases of `(_online, _inFlight, _lastOutcome)` and assert the mapping. Include `_followUpQueued` and `_hasQueuedChanges` variants to confirm they do NOT affect public status.
   - **Invariant 1**: `setInFlight(true)` forces `status === 'syncing'` regardless of other flags.
   - **Invariant 2**: `setInFlight(false)` with `_online === false` forces `status === 'offline'`.
@@ -200,7 +200,7 @@
   - **Reentrancy guard in `__DEV__`**: a listener that calls `setInFlight()` synchronously throws; in production, the call silently no-ops.
   - **`__resetForTests`** clears state and listeners.
   Depends T004, T005. Use `_internalSyncStatusStore.__resetForTests()` in `afterEach`.
-- [ ] T018 [P] Create `src/features/sync/tests/runPass.test.ts` — covers the runSync coalesce semantics and single-in-flight guarantee from [research.md R8](./research.md#r8--overlap-and-coalesce-single-in-flight-with-a-bounded-follow-up):
+- [X] T018 [P] Create `src/features/sync/tests/runPass.test.ts` — covers the runSync coalesce semantics and single-in-flight guarantee from [research.md R8](./research.md#r8--overlap-and-coalesce-single-in-flight-with-a-bounded-follow-up):
   - Mock `runPass` (via `jest.mock('../protocol/runPass')`) to return a Promise that resolves on a test-controlled trigger.
   - **Single in-flight**: fire 3 `syncService.runSync({ trigger: 'login' })` calls in rapid succession while `runPass` is still pending; assert `runPass` was called exactly once and the 2nd and 3rd `runSync` calls returned `{ outcome: 'skipped', reason: 'coalesced' }`.
   - **Follow-up queued**: with `_followUpQueued` now true, resolve `runPass`; assert `runPass` is called a SECOND time automatically (the queued follow-up) with `trigger: 'follow-up'`.
@@ -208,7 +208,7 @@
   - **Offline skip**: with `_online === false`, `runSync` returns `{ outcome: 'skipped', reason: 'offline' }` without calling `runPass`.
   - **Failure keeps local data**: make `runPass` resolve with `{ outcome: 'failed', code: 'NETWORK' }`; assert `_lastOutcome === 'failed'` and `_inFlight === false`; assert that `_hasQueuedChanges` is updated correctly (it's read after every pass, success or failure).
   Use `_internalSyncStatusStore.__resetForTests()` + `syncService.__resetForTests()` in `afterEach`. Mock the `countPendingLocalChanges` helper by mocking `@/data`'s `database.get(...).query(...).fetchCount()` chain. Depends T013.
-- [ ] T019 [P] Create `src/features/sync/tests/pushChanges.test.ts` — covers [contracts/push-changes.md §Idempotency](./contracts/push-changes.md#idempotency) and the error mapping table:
+- [X] T019 [P] Create `src/features/sync/tests/pushChanges.test.ts` — covers [contracts/push-changes.md §Idempotency](./contracts/push-changes.md#idempotency) and the error mapping table:
   - **Mapper correctness**: given a Watermelon raw record for each of the four pushable tables, assert `map<Table>WMDBRecordToServerPayload` drops `id`, `server_id`, `_status`, `_changed`, `updated_at`, `deleted_at` and keeps all business columns.
   - **Insert path**: when a `created[]` row has `server_id === null`, `pushChanges` issues `supabase.from(<table>).insert(payload).select(...).single()` and writes the returned `id` + `updated_at` back to the local raw record.
   - **Update path**: when an `updated[]` row has `server_id !== null`, `pushChanges` issues `supabase.from(<table>).update(payload).eq('id', server_id).select(...).single()`.
