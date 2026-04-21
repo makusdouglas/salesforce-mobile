@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
-Current active plan: [specs/003-online-auth/plan.md](specs/003-online-auth/plan.md)
+Current active plan: [specs/004-local-lock/plan.md](specs/004-local-lock/plan.md)
 
 Read the plan for the technical stack, folder layout, build profiles, and Constitution-Check status of the feature currently in flight. The plan links to the spec, research, data model, contracts, and quickstart.
 <!-- SPECKIT END -->

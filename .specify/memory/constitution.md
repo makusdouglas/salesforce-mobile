@@ -26,10 +26,15 @@ Prior bumps:
     English.
 
 Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md — Constitution Check still
-       derives from this file at plan time; UX5 surfaces automatically.
+  - ✅ .specify/templates/plan-template.md — new "Design Prerequisite"
+       gate added that checks for phone+tablet frame coverage before any
+       implementation task is generated, and requires the Structure
+       Decision to describe the responsive strategy.
   - ✅ .specify/templates/spec-template.md — unaffected.
-  - ✅ .specify/templates/tasks-template.md — unaffected.
+  - ✅ .specify/templates/tasks-template.md — new "Phase 0: Design"
+       added, blocking Phase 1 for UI features; phase dependencies and
+       MVP strategy notes updated to include tablet-simulator verification
+       on every screen task.
   - ✅ .specify/extensions/pencil/commands/speckit.pencil.design.md —
        updated in the same change to generate phone+tablet frames.
   - ✅ .specify/extensions/pencil/pencil-config.yml — updated in the same
