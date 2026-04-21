@@ -16,6 +16,7 @@ export { syncService } from './service/syncService';
 export { SyncError, type SyncErrorCode } from './service/errors';
 export { useSyncStatus } from './hooks/useSyncStatus';
 export { SyncProvider } from './components/SyncProvider';
+export { SyncStatusIndicator } from './components/SyncStatusIndicator';
 export type { SyncStatus } from './state/derive';
 export type { SyncStatusSnapshot } from './state/syncStatusStore';
 export type { SyncTrigger, SyncRunResult } from './protocol/runPass';

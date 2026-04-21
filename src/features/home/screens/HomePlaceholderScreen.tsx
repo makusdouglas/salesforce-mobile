@@ -7,6 +7,7 @@ import type { HomeStackParamList } from '@/app/navigation/types';
 import { colors } from '@/app/theme/colors';
 import { authService, useSession } from '@/features/auth';
 import { lockService } from '@/features/lock';
+import { SyncStatusIndicator } from '@/features/sync';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomePlaceholder'>;
 
@@ -41,6 +42,9 @@ export function HomePlaceholderScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <SyncStatusIndicator style={styles.headerIndicator} />
+      </View>
       <View style={styles.content}>
         <Text style={styles.heading}>Bem-vindo</Text>
         {email !== null ? <Text style={styles.subtitle}>{email}</Text> : null}
@@ -100,6 +104,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+  },
+  headerIndicator: {
+    marginStart: 'auto',
   },
   content: {
     flex: 1,

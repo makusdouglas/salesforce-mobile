@@ -306,7 +306,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Create `src/features/sync/components/SyncStatusIndicator.tsx` per [contracts/indicator-component.md](./contracts/indicator-component.md):
+- [X] T024 [US2] Create `src/features/sync/components/SyncStatusIndicator.tsx` per [contracts/indicator-component.md](./contracts/indicator-component.md):
   - Imports: `useSyncStatus` from `../hooks/useSyncStatus`; `View, Text, ActivityIndicator, StyleSheet` from `react-native`; design tokens from `@/features/auth/theme/tokens` (same one-line cross-feature token import comment that 004 established); icons from `lucide-react-native` (already a transitive dep via 003 — verify in `package.json`; if absent, fall back to Unicode glyphs and log a follow-up — but it is present per 003's assumptions).
   - Props: `{ style?: StyleProp<ViewStyle> }`. No `size`, no `onPress`, no `details`.
   - `const { status } = useSyncStatus();`
@@ -319,8 +319,8 @@
   - No horizontal margin — the host sets it via `style`.
   - Responsive note (inline comment): component renders identically on phone and tablet; dimensions are intrinsic to icon + text, not breakpoint-dependent.
   Depends T005, T006.
-- [ ] T025 [US2] Edit `src/features/sync/index.ts` barrel — add `export { SyncStatusIndicator } from './components/SyncStatusIndicator';`. Depends T024.
-- [ ] T026 [US2] Edit `src/features/home/screens/HomePlaceholderScreen.tsx` — mount the indicator in a header row above the existing placeholder content. Minimum delta:
+- [X] T025 [US2] Edit `src/features/sync/index.ts` barrel — add `export { SyncStatusIndicator } from './components/SyncStatusIndicator';`. Depends T024.
+- [X] T026 [US2] Edit `src/features/home/screens/HomePlaceholderScreen.tsx` — mount the indicator in a header row above the existing placeholder content. Minimum delta:
   ```tsx
   import { SyncStatusIndicator } from '@/features/sync';
   // ...
