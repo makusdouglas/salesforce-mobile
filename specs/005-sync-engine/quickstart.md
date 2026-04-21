@@ -89,7 +89,7 @@ Run the app, log in. On a fresh session the indicator should:
 ```ts
 // In the future order-sending flow
 import { ordersRepository } from '@/data'
-import { syncService } from '@/features/sync'
+import { onOrderSent } from '@/features/sync'
 
 async function sendQuote(orderId: string): Promise<void> {
   // 1. Generate PDF (R4 — local)
@@ -102,13 +102,13 @@ async function sendQuote(orderId: string): Promise<void> {
   await ordersRepository.markSent(orderId)
 
   // 4. Opportunistically sync if online (spec US4)
-  syncService.onOrderSent()
+  onOrderSent()
 }
 ```
 
 Step 4 is synchronous. It never throws; it never blocks. If the device is offline, it's a no-op and the order will sync on the next natural trigger.
 
-**Do NOT await `syncService.onOrderSent()`.** It's fire-and-forget.
+**Do NOT await `onOrderSent()`.** It's fire-and-forget.
 
 ---
 

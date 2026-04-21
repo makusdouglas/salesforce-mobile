@@ -408,11 +408,11 @@
 
 **Purpose**: Final checks before the feature ships.
 
-- [ ] T033 [P] Run `pnpm typecheck` and `pnpm lint` — both green. Fix any warnings introduced by the new feature; do not widen `tsconfig` strictness carve-outs.
-- [ ] T034 [P] Run `pnpm test` — all five new test files green (`conflictResolver`, `syncStatusStore`, `runPass`, `pushChanges`, `loginTrigger`). The full test suite (including 001–004's existing tests) stays green.
+- [X] T033 [P] Run `pnpm typecheck` and `pnpm lint` — both green. Fix any warnings introduced by the new feature; do not widen `tsconfig` strictness carve-outs.
+- [X] T034 [P] Run `pnpm test` — all five new test files green (`conflictResolver`, `syncStatusStore`, `runPass`, `pushChanges`, `loginTrigger`). The full test suite (including 001–004's existing tests) stays green.
 - [ ] T035 Re-run the Supabase schema verification queries from [contracts/supabase-schema.md §5](./contracts/supabase-schema.md#5-verification-checklist-for-the-admin) against the dev project to confirm all seven tables have both new columns and the trigger. Attach the output to the PR description.
 - [ ] T036 Manually walk through [quickstart.md §(a) Verification](./quickstart.md#verification) on both a phone simulator (390×844) and a tablet simulator (820×1180). For each viewport, confirm each of the four indicator states appears correctly and the pull-to-refresh gesture works. This is the UX5 tablet compliance check for the component's placement in its host (the indicator itself is layout-neutral; the check validates the host renders it correctly on both form factors).
-- [ ] T037 [P] Write a short "Integration guide for the order-sending flow" section in [quickstart.md](./quickstart.md) if not already covered — should match §(b) already present there. If it already matches, this task is a review-only pass: confirm the future order-sending feature will find a clear entry point. (Expected outcome: nothing to change; the Phase-1 quickstart.md already covers it.)
+- [X] T037 [P] Write a short "Integration guide for the order-sending flow" section in [quickstart.md](./quickstart.md) if not already covered — should match §(b) already present there. If it already matches, this task is a review-only pass: confirm the future order-sending feature will find a clear entry point. (Expected outcome: nothing to change; the Phase-1 quickstart.md already covers it.)
 
 ---
 
