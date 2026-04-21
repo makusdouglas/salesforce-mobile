@@ -347,7 +347,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Create `src/features/sync/triggers/pullToRefreshTrigger.ts` per [contracts/triggers.md §T2](./contracts/triggers.md#t2-pulltorefreshtrigger--home-screen-gesture-wrapper):
+- [X] T027 [US3] Create `src/features/sync/triggers/pullToRefreshTrigger.ts` per [contracts/triggers.md §T2](./contracts/triggers.md#t2-pulltorefreshtrigger--home-screen-gesture-wrapper):
   ```ts
   import { syncService } from '../service/syncService';
   export async function onPullToRefresh(): Promise<void> {
@@ -355,8 +355,8 @@
   }
   ```
   No branching; the offline short-circuit lives inside `runSync`. Depends T013.
-- [ ] T028 [US3] Edit `src/features/sync/index.ts` barrel — add `export { onPullToRefresh } from './triggers/pullToRefreshTrigger';`. Depends T027.
-- [ ] T029 [US3] Edit `src/features/home/screens/HomePlaceholderScreen.tsx` — wrap the body (below the header row added in T026) in a `<ScrollView refreshControl={...}>` and wire `onPullToRefresh`:
+- [X] T028 [US3] Edit `src/features/sync/index.ts` barrel — add `export { onPullToRefresh } from './triggers/pullToRefreshTrigger';`. Depends T027.
+- [X] T029 [US3] Edit `src/features/home/screens/HomePlaceholderScreen.tsx` — wrap the body (below the header row added in T026) in a `<ScrollView refreshControl={...}>` and wire `onPullToRefresh`:
   ```tsx
   import { onPullToRefresh } from '@/features/sync';
   import { RefreshControl, ScrollView } from 'react-native';
