@@ -30,9 +30,20 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Scaffold the `src/features/sync/` directory tree and land the one operational prerequisite on the Supabase side. No new npm packages.
+**Purpose**: Scaffold the `src/features/sync/` directory tree, land the one operational prerequisite on the Supabase side, and retrofit the 002 data layer so local Watermelon ids are the same UUIDs that Supabase will store as its `id` primary keys. No new npm packages (expo-crypto is already installed via 004).
 
-- [ ] T001 [P] Create the directory skeleton under `src/features/sync/`: `service/`, `state/`, `supabase/`, `protocol/`, `triggers/`, `connectivity/`, `hooks/`, `components/`, `tests/`. No files yet — Phase 2 populates them.
+- [X] T000 Retrofit 002 repositories to assign a client-generated UUID as the Watermelon `id` on every create. Reason: WatermelonDB's sync protocol requires `local.id === server.id`; 002's `collection.create()` auto-generates 16-char random ids that would be rejected by Supabase's `id uuid` columns. Option A from the 005 pre-implementation architecture review. Concretely:
+  1. Create `src/data/ids.ts` exporting `generateId(): string` — wraps `expo-crypto.randomUUID()` (synchronous, native-module-backed). Zero new dependencies — `expo-crypto` was added in 004.
+  2. Export `generateId` from `src/data/index.ts` so consumers outside the data layer (future features needing a pre-created id for FK wiring) can use the same function.
+  3. In each of the five repositories with a `create` method — `salespeopleRepository.ts`, `clientsRepository.ts`, `ordersRepository.ts`, `orderItemsRepository.ts`, `paymentReceiptsRepository.ts` — assign the new id inside the `collection.create((record) => { ... })` callback as the first line: `record._raw.id = generateId();`. Leaves the rest of the create logic untouched.
+  4. Products and product_variants have no `create` method (catalog is admin-only per D2) — no change.
+  5. `applyTouchOnCreate` is unchanged (does not set `id`; still sets `serverId = null` and `updatedAt = Date.now()`).
+  6. One-time dev-DB wipe: after this task lands, uninstall + reinstall the app on the dev device so the local SQLite file is recreated. Any pre-existing test rows have incompatible random ids and would never successfully sync. Production is not affected — the feature has not shipped.
+  7. Update 002's quickstart.md with a one-line note pointing at this retrofit: *"005 prerequisite: repositories assign UUIDs at creation via `generateId()`; see 005 T000."*
+
+  **Checkpoint for T000**: `pnpm typecheck` and `pnpm test` green. A debug `database.get('clients').create((r) => { r._raw.id = generateId(); r.name = 'x'; r.salespersonId = 'y'; })` produces a record whose `.id` is a well-formed UUID v4. No dependency has been added to `package.json`.
+
+- [X] T001 [P] Create the directory skeleton under `src/features/sync/`: `service/`, `state/`, `supabase/`, `protocol/`, `triggers/`, `connectivity/`, `hooks/`, `components/`, `tests/`. No files yet — Phase 2 populates them.
 - [ ] T002 Execute the Supabase-side schema prerequisite per [contracts/supabase-schema.md](./contracts/supabase-schema.md) against the **dev** Supabase project via the dashboard SQL editor: (a) create `public.set_updated_at()` trigger function; (b) create `public.sync_now_ms()` RPC (returns `bigint` — `select extract(epoch from now())*1000`); (c) for each of the seven tables — `salespeople`, `clients`, `products`, `product_variants`, `orders`, `order_items`, `payment_receipts` — add `updated_at timestamptz NOT NULL DEFAULT now()` and `deleted_at timestamptz NULL`, create the two indexes (`*_updated_at_idx` and the partial `*_deleted_at_idx`), and install the `BEFORE UPDATE` trigger `*_set_updated_at`. Run the three verification queries from the contract's §5 and attach the output to the PR description. *(Prod project gets the same treatment before this feature ships to production, not during task execution.)*
 
 **Checkpoint**: `pnpm lint`, `pnpm typecheck`, `pnpm test` green on the pre-005 codebase. Supabase dev project has the two new columns + trigger on all seven tables. Verified `@nozbe/watermelondb` is ≥ 0.28 in `package.json` (the `conflictResolver` option on `synchronize()` landed in 0.27; `sendCreatedAsUpdated` predates that). Current pinned version is `^0.28.0` — no version bump required.

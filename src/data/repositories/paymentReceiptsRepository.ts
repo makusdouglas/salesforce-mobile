@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { database } from '../database';
+import { generateId } from '../ids';
 import PaymentReceipt from '../models/PaymentReceipt';
 import type { PaymentMethod } from '../types';
 
@@ -55,6 +56,7 @@ export const paymentReceiptsRepository = {
     }
     return database.write(async () =>
       collection.create((record) => {
+        record._raw.id = generateId();
         record.orderId = input.orderId;
         record.amount = input.amount;
         record.method = input.method;

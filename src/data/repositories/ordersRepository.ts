@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { database } from '../database';
+import { generateId } from '../ids';
 import Order from '../models/Order';
 import OrderItem from '../models/OrderItem';
 import type { OrderStatus } from '../types';
@@ -58,6 +59,7 @@ export const ordersRepository = {
     }
     return database.write(async () =>
       orders.create((record) => {
+        record._raw.id = generateId();
         record.clientId = input.clientId;
         record.salespersonId = input.salespersonId;
         record.status = 'draft';

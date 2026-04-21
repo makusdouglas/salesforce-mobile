@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { database } from '../database';
+import { generateId } from '../ids';
 import Salesperson from '../models/Salesperson';
 
 import { throwNotFound, throwValidation } from './_errors';
@@ -33,6 +34,7 @@ export const salespeopleRepository = {
     if (!input.email.trim()) throwValidation('email is required', 'email');
     return database.write(async () =>
       collection.create((record) => {
+        record._raw.id = generateId();
         record.name = input.name;
         record.email = input.email;
         applyTouchOnCreate(record);

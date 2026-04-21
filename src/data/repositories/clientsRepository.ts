@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { database } from '../database';
+import { generateId } from '../ids';
 import Client from '../models/Client';
 
 import { throwNotFound, throwValidation } from './_errors';
@@ -47,6 +48,7 @@ export const clientsRepository = {
     if (!input.salespersonId.trim()) throwValidation('salespersonId is required', 'salespersonId');
     return database.write(async () =>
       collection.create((record) => {
+        record._raw.id = generateId();
         record.salespersonId = input.salespersonId;
         record.name = input.name;
         record.taxId = input.taxId ?? null;

@@ -45,3 +45,5 @@ export type {
 } from './repositories/paymentReceiptsRepository';
 
 export { supabase } from './supabase';
+
+export { generateId } from './ids';
