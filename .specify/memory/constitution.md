@@ -1,47 +1,58 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 0.2.0 → 0.3.0
-Bump rationale: MINOR bump. A new UX rule (UX5) is introduced that elevates
-tablet support to a first-class deliverable across design and
-implementation. No principle was removed or redefined; no prior rule's
-meaning was changed.
+Version change: 0.3.0 → 1.0.0
+Bump rationale: MAJOR. D2 is redefined (the catalog is no longer strictly
+read-only in the app — the ADMIN role writes to it). P4 is broadened
+(in-app UI may replace Supabase dashboard when justified). A new principle
+(P6), a new UX rule (UX6), and a new security rule (D7) are introduced.
+Together these remove the app's single-role assumption and establish
+role-based authorization as a first-class concern.
 
 Added:
-  - §5 UX Rules: UX5 — Layouts serve phone and tablet
-    - Every screen must ship phone AND tablet frames in Pencil and must
-      render correctly on both form factors in React Native.
-    - Landscape orientation remains out of scope for the MVP.
+  - §2 Core Principles: P6 — Admin is online-first
+  - §5 UX Rules: UX6 — Dual-role visibility
+  - §7 Security and Authentication: D7 — Role-based authorization
+  - §3 Mandatory Stack: `expo-image-picker` and `expo-image-manipulator`
+    under a new "Required for admin features" grouping
+  - §9 Code Conventions: admin-feature screens live under
+    `src/features/admin/<domain>/`, parallel to
+    `src/features/<domain>/` (seller)
 
-Governance update:
-  - Compliance scope unchanged (§3–§7). UX5 surfaces at Constitution Check
-    via the plan template without schema changes.
+Redefined:
+  - §6 D2 — "Catalog is read-only in the app" → "Catalog is read-only in
+    the app FOR VENDEDOR; ADMIN may create/edit/delete via the in-app
+    admin module." Dashboard remains an escape hatch.
+  - §6 D3 — "A client may be registered by either the salesperson or the
+    admin" → reworded to reflect that admin now registers inside the app.
+  - §2 P4 — "Reuse free tools before building" broadened with an
+    explicit exception: in-app admin UI MAY replace a Supabase dashboard
+    workflow when justified in the feature's plan.
+  - Governance compliance scope expanded from P1–P5 to P1–P6.
 
 Prior bumps:
+  - 0.2.0 → 0.3.0: added §5 UX5 "Layouts serve phone and tablet".
   - 0.1.2 → 0.2.0: added §7 Security & Authentication (D5, D6) and the
     corresponding mandatory dependencies in §3.
   - 0.1.1 → 0.1.2: renamed DB entity/table/column/status identifiers to
-    English to align with §9 (formerly §8) "English in code".
+    English to align with §9 "English in code".
   - 0.1.0 → 0.1.1: full translation of the document from Portuguese to
     English.
 
 Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md — new "Design Prerequisite"
-       gate added that checks for phone+tablet frame coverage before any
-       implementation task is generated, and requires the Structure
-       Decision to describe the responsive strategy.
-  - ✅ .specify/templates/spec-template.md — unaffected.
-  - ✅ .specify/templates/tasks-template.md — new "Phase 0: Design"
-       added, blocking Phase 1 for UI features; phase dependencies and
-       MVP strategy notes updated to include tablet-simulator verification
-       on every screen task.
-  - ✅ .specify/extensions/pencil/commands/speckit.pencil.design.md —
-       updated in the same change to generate phone+tablet frames.
-  - ✅ .specify/extensions/pencil/pencil-config.yml — updated in the same
-       change to declare the target viewports.
+  - ✅ .specify/templates/plan-template.md — new "Role & Authorization
+       Check" gate added. Features that affect role-visible surfaces must
+       declare affected roles, RLS policies introduced, and their
+       offline-impact classification per P6.
+  - ✅ .specify/templates/spec-template.md — header metadata gains an
+       optional "Roles affected" field under the Feature Branch block.
+  - ✅ .specify/templates/tasks-template.md — Phase 1 Setup receives a
+       reminder that admin features MUST include an RLS-policies task
+       before their first screen task.
 
-Follow-up TODOs: none. UX5 pins concrete baseline viewports (phone
-390×844 pt, tablet 820×1180 pt, portrait-only).
+Follow-up TODOs: none. D7 explicitly scopes concrete RLS policies to each
+admin-feature plan (starting with 013-admin-products), so the
+constitution does not enumerate them.
 -->
 
 # External Sales App Constitution
@@ -58,6 +69,11 @@ A mobile app for B2B external salespeople visiting small retailers (corner
 stores and similar) to present a visual catalog, assemble intent orders, send
 quotes by email as PDFs, and record payment receipts. It operates in the
 field, without depending on connectivity.
+
+Starting with v1.0.0 the same app also hosts an admin surface for the
+role that configures the business (products, variants, photos, sellers,
+clients). The admin surface is online-first (see P6) and coexists with the
+salesperson surface via dual-role visibility (see UX6).
 
 ### What it is NOT
 
@@ -79,6 +95,9 @@ only for sync, initial login, and sending email.
 
 **Consequence**: no screen may have a blocking spinner waiting on the
 network. No business operation depends on a server response.
+
+**Scope**: P1 governs VENDEDOR (salesperson) field operations. ADMIN
+registrations may require internet; see P6.
 
 ### P2 — Local database is the source of truth during a session
 
@@ -103,12 +122,44 @@ custom login flow. Supabase Storage replaces upload infrastructure. A custom
 interface MUST only be built when the salesperson needs it — the admin uses
 the stack's native tools.
 
+**Exception (introduced in v1.0.0)**: in-app admin UI MAY replace a
+Supabase dashboard workflow when (a) the admin workflow benefits from the
+mobile UX, or (b) RLS already permits the operation. The justification goes
+in the feature's plan under Constitution Check. The Supabase dashboard
+remains a valid escape hatch for schema-level or bulk operations that the
+in-app UI does not cover.
+
 ### P5 — Salesperson data is sacred
 
 An order built in the field MUST NOT be lost. The risk of losing local data
 (reinstall, device replacement, crash) MUST be mitigated by frequent sync
 when internet is available and by a manual export/emergency backup option
 available in the MVP.
+
+### P6 — Admin is online-first
+
+Operations performed by the ADMIN role (registrations, photo upload,
+catalog changes) MAY require internet. P1 (offline-first) governs VENDEDOR
+field operations, not ADMIN registrations.
+
+**Rationale**: ADMIN workflows involve Storage uploads and authoritative
+writes to shared tables. Making them online-first keeps RBAC, RLS, and
+image upload simple — no push queue, no client-side catalog conflict
+resolution, no divergence between what the admin sees and what the
+Supabase row contains.
+
+**Consequences for admin feature plans:**
+
+- Direct Supabase writes are the default path. Admin code MUST NOT route
+  through WatermelonDB's push queue.
+- Admin screens MAY show a blocking "saving…" spinner while a write is in
+  flight; this does not violate P1 because it is not a field operation.
+- On connectivity loss during an admin flow, the app MUST surface a
+  salesperson-language error (not a stack trace) and let the admin retry
+  when back online. Local drafts of admin forms MAY be preserved to avoid
+  data loss between retries.
+- After any admin write, the feature SHOULD trigger a sync pull so the
+  seller-side local cache propagates the change on next connect.
 
 ## 3. Mandatory Stack
 
@@ -126,6 +177,17 @@ available in the MVP.
 - `expo-local-authentication` for biometric unlock and PIN fallback on app
   open. See §7 D6.
 - TypeScript across all application code
+
+### Required for admin features (introduced in v1.0.0, first used in 013)
+
+- `expo-image-picker` — admin photo selection from camera/library for
+  product and variant images. See §7 D7 and §6 D2.
+- `expo-image-manipulator` — image resize before upload to Supabase
+  Storage, to keep bundle/transfer sizes predictable. See §7 D7.
+
+Each of the two libraries above MUST be introduced in the plan of the
+feature that first uses them (013-admin-products) with a one-line
+justification under Constitution Check.
 
 ### Forbidden in the MVP
 
@@ -146,17 +208,29 @@ it.
 
 ## 4. Architecture Rules
 
-### R1 — WatermelonDB is the single data layer on the client
+### R1 — WatermelonDB is the single data layer on the client (for VENDEDOR)
 
-Components MUST NOT fetch directly from Supabase at runtime. They read from
-WatermelonDB. Sync is a separate process, executed at defined moments (login,
-manual pull-to-refresh, after creating an order when internet is available).
+VENDEDOR components MUST NOT fetch directly from Supabase at runtime. They
+read from WatermelonDB. Sync is a separate process, executed at defined
+moments (login, manual pull-to-refresh, after creating an order when
+internet is available).
+
+**Admin exception (per P6)**: ADMIN screens MAY read and write directly to
+Supabase via the client SDK, because admin operations are online-first and
+need the latest server-side state. Admin code MUST NOT push through
+WatermelonDB; it writes straight to Supabase and triggers a pull so the
+seller-side cache picks the change up on next sync.
 
 ### R2 — Minimalist data model
 
 MVP entities: `salespeople`, `clients`, `products`, `product_variants`,
 `orders`, `order_items`, `payment_receipts`. Nothing beyond that without
 going through a spec.
+
+**v1.0.0 addition**: the `user_roles (user_id, role)` table is added as
+supporting infrastructure for D7. It is not a business entity (no business
+feature lists it), but it is part of the minimal data model the admin
+module assumes. Defined in detail in the plan of 013-admin-products.
 
 ### R3 — Images live in Supabase Storage with local cache
 
@@ -231,6 +305,36 @@ Tablets are a first-class deliverable, not an adaptation after the fact.
 larger catalog browsing; shipping phone-only would force a rework later
 and violate P3 (simplicity) by accumulating hidden tech debt.
 
+### UX6 — Dual-role visibility
+
+A signed-in user carries one or more roles (see §7 D7). The app's visible
+surface MUST be a direct function of those roles, with no mode toggle and
+no context switch:
+
+- A user with only the `seller` role sees the current VENDEDOR home and
+  field flows. The Admin tab is not rendered.
+- A user with only the `admin` role sees only the Admin tab/section. The
+  VENDEDOR home and field flows are not rendered as primary navigation.
+- A user with BOTH roles sees the VENDEDOR app PLUS an extra "Admin" tab
+  in the root navigator. Both surfaces coexist in the same session.
+
+**Required behavior:**
+
+- Role detection runs once per session, right after the user's roles are
+  available in `session_state` (post-login). Navigation tree is built from
+  that snapshot; it MUST NOT re-fetch on every screen.
+- Admin affordances (the tab itself, buttons, links) MUST be hidden —
+  not merely disabled — for users who lack the `admin` role. This is UX
+  affordance, not authorization; RLS enforces actual security (D7).
+- The app MUST NOT surface a "switch to admin mode" control. Dual-role
+  users can navigate from VENDEDOR flows into the Admin tab directly via
+  the tab bar.
+
+**Rationale**: a solo project often means one person wears both hats. A
+toggle adds friction without safety benefit — RLS already prevents a
+non-admin from performing admin operations. Keeping both surfaces visible
+to dual-role users mirrors how they already think about the work.
+
 ## 6. Data and Synchronization Rules
 
 ### D1 — Sync is pull + push, in that order
@@ -239,17 +343,36 @@ When syncing: first pull server changes (catalog, clients registered by the
 admin, orders from other salespeople on the same base), then push local
 changes.
 
-### D2 — Catalog is read-only in the app
+### D2 — Catalog is read-only in the app for VENDEDOR
 
-The salesperson MUST NOT register or edit products. The admin does that via
-the Supabase dashboard. If the salesperson spots a catalog error, they report
-it outside the app (channel TBD, out of MVP scope).
+The VENDEDOR MUST NOT register or edit products or variants. Those
+operations are performed by the ADMIN role via the in-app admin module
+(starting with 013-admin-products) or, for schema-level and bulk tasks,
+via the Supabase dashboard. If the VENDEDOR spots a catalog error in the
+field, they report it to the admin out-of-band (channel TBD, out of MVP
+scope).
 
-### D3 — A client may be registered by either the salesperson or the admin
+**Client enforcement**: the VENDEDOR surface MUST expose zero
+create/edit/delete affordances on `products` or `product_variants` — not
+behind long-press, not in debug menus. See 006-product-catalog.
 
-Duplicate registration conflicts (same CNPJ, for example) MUST be resolved by
-manual merge in the admin dashboard. The MVP does not need automatic
-deduplication.
+**Server enforcement**: RLS on `products` and `product_variants` MUST
+reject any INSERT/UPDATE/DELETE from a user lacking the `admin` role.
+Specific policies are defined in the plan of 013-admin-products.
+
+### D3 — A client may be registered by VENDEDOR or ADMIN
+
+Two entry points:
+
+- **VENDEDOR, in the field, offline**: creates a `client` row in
+  WatermelonDB; the row syncs upstream via the normal push path (D1) when
+  connectivity returns.
+- **ADMIN, in the in-app admin module, online**: writes directly to the
+  Supabase `clients` table via the admin CRUD (see 015-admin-clients).
+
+Duplicate-registration conflicts (same CNPJ) MUST be resolved manually by
+the ADMIN — either via the in-app admin module or via the Supabase
+dashboard. The MVP does not need automatic deduplication.
 
 ### D4 — Orders use simple local statuses
 
@@ -270,9 +393,10 @@ a locally persisted credential.
   `refresh_token` in `expo-secure-store` (Keychain / EncryptedSharedPreferences).
 - The refresh token TTL is **90 days**. Refreshing it extends the window;
   going 90 days without any successful refresh forces a re-login.
-- All business operations (catalog, clients, orders, PDFs, receipts) MUST run
-  offline against the local database. The app MUST NOT validate the token on
-  every action.
+- All VENDEDOR business operations (catalog, clients, orders, PDFs,
+  receipts) MUST run offline against the local database. The app MUST NOT
+  validate the token on every action. ADMIN operations follow P6 and are
+  online-first.
 - When connectivity returns, the app MUST silently refresh the access token
   in background and, if successful, run a sync pass (per D1). The salesperson
   does not see this.
@@ -311,6 +435,46 @@ every cold start (and after a configurable inactivity timeout, MVP default:
   protects catalog and client data from casual access to a lost or stolen
   device.
 
+### D7 — Role-based authorization
+
+Introduced in v1.0.0 to enable the ADMIN surface.
+
+**Role model:**
+
+- A Supabase Auth user MAY carry one or more roles. The MVP defines two:
+  `admin` and `seller`.
+- Roles live in a server-side table `user_roles (user_id uuid references
+  auth.users, role text check (role in ('admin','seller')), primary key
+  (user_id, role))`. The concrete migration is defined in the plan of
+  013-admin-products.
+- After a successful login (D5), the client reads the caller's roles once
+  and mirrors them into the local session state as `session_state.roles[]`.
+  Roles are re-read whenever a new access token is issued.
+
+**Authorization boundary:**
+
+- Supabase Row Level Security is the final authority. Writes to
+  `products`, `product_variants`, `salespeople`, `clients`, and
+  `user_roles` MUST be permitted only when `auth.uid()` carries the
+  role(s) required by the specific policy. Per-table policies are defined
+  in the plan of each admin feature (013, 014, 015).
+- The client hides admin affordances from users without the `admin` role
+  (see UX6). This is UX convenience, not a security control. A
+  non-admin user who bypasses the client and calls Supabase directly MUST
+  be rejected by RLS.
+
+**Bootstrapping the first admin:**
+
+- The first admin row in `user_roles` MUST be seeded via a one-time SQL
+  migration executed by the project owner against Supabase. There is no
+  in-app bootstrap flow. Subsequent admins and sellers are created by an
+  existing admin via 014-admin-sellers.
+
+**Operations requiring elevated privileges** (creating a Supabase Auth
+user, assigning roles to a fresh account) MUST go through a Supabase Edge
+Function that holds the `service_role` key. The client MUST NEVER carry
+`service_role`.
+
 ## 8. Out of Scope in the MVP
 
 Listed explicitly to prevent scope creep:
@@ -327,6 +491,13 @@ Listed explicitly to prevent scope creep:
 - Printing to Bluetooth printers
 - Customer digital signature on the order
 - Multi-tenant / multi-company mode
+- Automatic duplicate-client detection and merge (D3 defers to manual
+  admin action)
+- Admin role self-assignment or self-promotion (D7 requires existing
+  admin action or SQL migration)
+- Bulk import of products/clients via the app (dashboard remains the
+  right tool for bulk)
+- Offline admin mode (P6 fixes admin as online-first)
 
 Reintroducing any of the above MUST require an explicit review of this
 constitution.
@@ -338,19 +509,25 @@ constitution.
   `camelCase`
 - Folder structure by feature, not by type: `src/features/orders/`, not
   globally separated `src/components/` + `src/hooks/`
+- Admin-feature screens live under `src/features/admin/<domain>/`, parallel
+  to `src/features/<domain>/` which belongs to VENDEDOR. Example:
+  `src/features/catalog/` (seller-facing catalog, read-only) and
+  `src/features/admin/products/` (admin-facing products CRUD) coexist.
+  Shared UI primitives remain under `src/components/` as today.
 - Tests: MUST prioritize business-logic tests (discount calculation, PDF
-  generation, sync merge). UI does NOT need exhaustive testing in the MVP.
+  generation, sync merge, RLS policy contracts). UI does NOT need
+  exhaustive testing in the MVP.
 - Commits follow Conventional Commits (`feat:`, `fix:`, `chore:`)
 
 ## Governance
 
 This constitution supersedes any ad-hoc practice. Specs, plans, and tasks
-MUST verify compliance with P1–P5 and with the rules in sections 3–7 before
+MUST verify compliance with P1–P6 and with the rules in sections 3–7 before
 moving forward.
 
 ### Amendments
 
-Any change to a principle (P1–P5) or rule (R, UX, D) MUST follow:
+Any change to a principle (P1–P6) or rule (R, UX, D) MUST follow:
 
 1. A recorded issue or discussion making the reason and impact explicit.
 2. An update to this constitution with a Sync Impact Report at the top.
@@ -361,7 +538,8 @@ Any change to a principle (P1–P5) or rule (R, UX, D) MUST follow:
 ### Versioning of this Constitution
 
 - **MAJOR**: incompatible removal or redefinition of a principle or
-  governance rule (e.g., abandoning offline-first).
+  governance rule (e.g., abandoning offline-first, changing the role
+  model established in D7).
 - **MINOR**: a new principle, a new section, or a material expansion of an
   existing rule.
 - **PATCH**: clarifications, wording fixes, non-semantic refinements
@@ -369,14 +547,17 @@ Any change to a principle (P1–P5) or rule (R, UX, D) MUST follow:
 
 ### Periodic review
 
-A mandatory review after the first spec → plan → tasks → implement cycle for
-the catalog module completes. Subsequent reviews are trigger-based (a new
-feature outside current scope, a new stack element, a data-loss incident).
+A mandatory review already occurred after the catalog module's first full
+spec → plan → tasks → implement cycle (feature 006). Subsequent reviews
+are trigger-based: a new feature outside current scope, a new stack
+element, a data-loss incident, or a role-model change.
 
 ### Compliance in PRs
 
 Every PR MUST declare, in its description, which principles/rules it touches
 and why. Violations without a justification recorded in the plan's
-`Complexity Tracking` section MUST be rejected in review.
+`Complexity Tracking` section MUST be rejected in review. Admin-feature
+PRs MUST additionally declare the RLS policies added or changed, so that
+D7 coverage is reviewable.
 
-**Version**: 0.3.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-04-19
+**Version**: 1.0.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-04-22

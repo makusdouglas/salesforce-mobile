@@ -83,6 +83,12 @@ layout delta. Only now may Phase 1 start.
 
 **Purpose**: Project initialization and basic structure
 
+**⚠️ Role-guarded features (constitution §7 D7)**: when the plan's "Role
+& Authorization Check" gate is NOT marked `N/A`, Phase 1 MUST include an
+RLS-policies task (migration file creating/updating policies for every
+table listed in the gate) BEFORE any screen task in later phases.
+Missing this task is a blocker and will be caught by `/speckit-analyze`.
+
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools

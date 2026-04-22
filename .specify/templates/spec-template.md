@@ -3,6 +3,7 @@
 **Feature Branch**: `[###-feature-name]`  
 **Created**: [DATE]  
 **Status**: Draft  
+**Roles affected**: [e.g., `seller` / `admin` / `admin + seller (dual-role)` / N/A] — omit when the feature is not role-guarded (constitution §7 D7 and §5 UX6)  
 **Input**: User description: "$ARGUMENTS"
 
 ## UI Design *(primordial source — include when the feature has a UI)*
