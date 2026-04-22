@@ -4,6 +4,7 @@ import { type ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { SessionProvider } from '@/features/auth';
+import { CatalogProvider } from '@/features/catalog';
 import { LockProvider } from '@/features/lock';
 import { SyncProvider } from '@/features/sync';
 
@@ -16,7 +17,9 @@ export function AppProviders({ children }: AppProvidersProps) {
     <SessionProvider>
       <LockProvider>
         <SyncProvider>
-          <SafeAreaProvider>{children}</SafeAreaProvider>
+          <CatalogProvider>
+            <SafeAreaProvider>{children}</SafeAreaProvider>
+          </CatalogProvider>
         </SyncProvider>
       </LockProvider>
     </SessionProvider>

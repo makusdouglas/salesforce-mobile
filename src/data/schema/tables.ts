@@ -12,7 +12,7 @@ const syncColumns = [
 ];
 
 export const schema = appSchema({
-  version: 1,
+  version: 2,
   tables: [
     tableSchema({
       name: 'salespeople',
@@ -42,6 +42,7 @@ export const schema = appSchema({
         { name: 'description', type: 'string', isOptional: true },
         { name: 'image_url', type: 'string', isOptional: true },
         { name: 'unit', type: 'string', isOptional: true },
+        { name: 'category', type: 'string', isOptional: true, isIndexed: true },
         ...syncColumns,
       ],
     }),

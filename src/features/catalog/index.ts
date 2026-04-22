@@ -1,0 +1,12 @@
+export { CatalogScreen } from './screens/CatalogScreen';
+export { ProductDetailScreen } from './screens/ProductDetailScreen';
+export { VariantRow } from './components/VariantRow';
+export { CachedImage, type CachedImageProps } from './components/CachedImage';
+export { CatalogEmptyView } from './components/CatalogEmptyView';
+export { CatalogNoMatchesView } from './components/CatalogNoMatchesView';
+export { CatalogProvider } from './components/CatalogProvider';
+export { FilterChipRow } from './components/FilterChipRow';
+export { SearchBar } from './components/SearchBar';
+export { useCatalog } from './hooks/useCatalog';
+export { type ProductDisplayDTO, type VariantDisplayDTO } from './types';
+export { useCachedImage, type CachedImageStatus } from './hooks/useCachedImage';

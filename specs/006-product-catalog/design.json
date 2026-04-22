@@ -1,0 +1,12 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/006-product-catalog/design",
+  "screens": [
+    { "name": "Catalog / Phone", "frame_id": "oE6Po", "screenshot": "specs/006-product-catalog/design/catalog-phone.png" },
+    { "name": "Catalog / Tablet", "frame_id": "R70uK", "screenshot": "specs/006-product-catalog/design/catalog-tablet.png" },
+    { "name": "ProductDetail / Phone", "frame_id": "WCgvx", "screenshot": "specs/006-product-catalog/design/product-detail-phone.png" },
+    { "name": "ProductDetail / Tablet", "frame_id": "ow0Ma", "screenshot": "specs/006-product-catalog/design/product-detail-tablet.png" },
+    { "name": "CatalogEmpty / Phone", "frame_id": "YkrkF", "screenshot": "specs/006-product-catalog/design/catalog-empty-phone.png" },
+    { "name": "CatalogEmpty / Tablet", "frame_id": "74wU8", "screenshot": "specs/006-product-catalog/design/catalog-empty-tablet.png" }
+  ]
+}

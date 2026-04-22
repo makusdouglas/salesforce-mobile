@@ -14,6 +14,7 @@ export default class Product extends Model {
   @field('description') description!: string | null;
   @field('image_url') imageUrl!: string | null;
   @field('unit') unit!: string | null;
+  @field('category') category!: string | null;
 
   @field('server_id') serverId!: string | null;
   @field('updated_at') updatedAt!: number;
