@@ -38,6 +38,9 @@ dependencies:
   expo-dev-client:
     specifier: ^55.0.27
     version: 55.0.27(expo@55.0.15)(typescript@5.9.3)
+  expo-file-system:
+    specifier: ^55.0.17
+    version: 55.0.17(expo@55.0.15)(react-native@0.83.4)
   expo-font:
     specifier: ^55.0.6
     version: 55.0.6(expo@55.0.15)(react-native@0.83.4)(react@19.2.0)
@@ -4406,8 +4409,8 @@ packages:
       expo-dev-menu-interface: 55.0.2(expo@55.0.15)
     dev: false
 
-  /expo-file-system@55.0.16(expo@55.0.15)(react-native@0.83.4):
-    resolution: {integrity: sha512-EetQ/zVFK07Vmz4Yke0fvoES4xVwScTdd0PMoLekuMX7puE4op75pNnEdh1M0AeWzkqLrBoZIaU2ynSrKN5VZg==}
+  /expo-file-system@55.0.17(expo@55.0.15)(react-native@0.83.4):
+    resolution: {integrity: sha512-d27K1cagUOt2BwxwPka9KW8Znu5kN1tnairozCzzCRZviZFtWnBxwFuJ3KU6MAbav/9UhSMkp5Ve/oZ+SR0UgQ==}
     peerDependencies:
       expo: '*'
       react-native: '*'
@@ -4558,7 +4561,7 @@ packages:
       babel-preset-expo: 55.0.17(@babel/core@7.29.0)(@babel/runtime@7.29.2)(expo@55.0.15)(react-refresh@0.14.2)
       expo-asset: 55.0.15(expo@55.0.15)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
       expo-constants: 55.0.14(expo@55.0.15)(react-native@0.83.4)(typescript@5.9.3)
-      expo-file-system: 55.0.16(expo@55.0.15)(react-native@0.83.4)
+      expo-file-system: 55.0.17(expo@55.0.15)(react-native@0.83.4)
       expo-font: 55.0.6(expo@55.0.15)(react-native@0.83.4)(react@19.2.0)
       expo-keep-awake: 55.0.6(expo@55.0.15)(react@19.2.0)
       expo-modules-autolinking: 55.0.17(typescript@5.9.3)

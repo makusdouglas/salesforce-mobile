@@ -73,6 +73,14 @@ export function HomePlaceholderScreen({ navigation }: Props) {
         {email !== null ? <Text style={styles.subtitle}>{email}</Text> : null}
         <Text style={styles.subtitle}>Sua base de vendas fica aqui.</Text>
 
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+          onPress={() => navigation.navigate('Catalog')}
+        >
+          <Text style={styles.buttonLabel}>Ver catálogo</Text>
+        </Pressable>
+
         <View style={styles.settingsBlock}>
           <Text style={styles.settingsLabel}>Bloquear após</Text>
           <View style={styles.segmentRow}>
