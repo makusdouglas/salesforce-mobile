@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { OrdersStackParamList } from '@/app/navigation/types';
 
 import { DiscountControl } from '../components/DiscountControl';
+import { DroppedItemsNotice } from '../components/DroppedItemsNotice';
 import { TotalsBreakdown } from '../components/TotalsBreakdown';
 import { formatBRL } from '../formatting/formatBRL';
 import { useDraftOrder } from '../hooks/useDraftOrder';
@@ -25,7 +26,7 @@ import type { DiscountInput } from '../totals/types';
 type Props = NativeStackScreenProps<OrdersStackParamList, 'OrderSummary'>;
 
 export function OrderSummaryScreen({ navigation, route }: Props) {
-  const { orderId } = route.params;
+  const { orderId, droppedNames } = route.params;
   const viewport = useViewport();
   const isTablet = viewport === 'tablet';
   const { order, isReady, error } = useDraftOrder({ orderId });
@@ -116,6 +117,7 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
           isTablet && styles.bodyContentTablet,
         ]}
       >
+        <DroppedItemsNotice names={droppedNames ?? []} />
         <View style={styles.itemsCard}>
           <View style={styles.itemsHeader}>
             <Text style={styles.itemsHeaderText}>{itemCount} itens</Text>

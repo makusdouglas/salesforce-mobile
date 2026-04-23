@@ -33,7 +33,10 @@ export type OrdersStackParamList = {
     | { orderId: string; clientId?: undefined }
     | { orderId?: undefined; clientId: string };
   AddToOrder: { orderId: string; productId: string; variantId?: string };
-  OrderSummary: { orderId: string };
+  // 010-repeat-last-order: optional droppedNames surfaces items that were
+  // skipped by the availability gate when the draft was cloned from a past
+  // order. The summary renders a non-dismissable notice listing them.
+  OrderSummary: { orderId: string; droppedNames?: string[] };
 };
 
 export type OrdersNavigatorParams =

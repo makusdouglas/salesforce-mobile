@@ -14,6 +14,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
+// 010-repeat-last-order: ordersService now imports `database` directly so
+// that repeat() can run multi-row writes inside a single database.write().
+// The transactional path isn't exercised by THIS test (only repeat.test.ts
+// does), so a minimal no-op mock is sufficient to keep the SQLite adapter
+// out of jest's module graph.
+jest.mock('@/data/database', () => ({
+  database: {
+    write: (fn: () => Promise<unknown>) => fn(),
+    get: () => ({ create: jest.fn() }),
+  },
+}));
+jest.mock('@/data/ids', () => ({ generateId: () => 'gen-id' }));
+jest.mock('@/data/repositories/_touch', () => ({ applyTouchOnCreate: jest.fn() }));
+jest.mock('@/data/repositories/productsRepository', () => ({
+  productsRepository: { findById: jest.fn() },
+}));
+
 jest.mock('@/data/repositories/ordersRepository', () => ({
   ordersRepository: {
     findById: jest.fn(),

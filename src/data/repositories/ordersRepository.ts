@@ -1,6 +1,6 @@
 import { Q } from '@nozbe/watermelondb';
 import { of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 import { database } from '../database';
 import { generateId } from '../ids';
@@ -40,7 +40,13 @@ export const ordersRepository = {
   },
 
   observeByClient(clientId: string) {
-    return orders.query(Q.where('client_id', clientId), notDeleted).observe();
+    // observeWithColumns so status/sent/canceled transitions bubble to the UI
+    // without requiring a screen remount (same class of bug fixed on
+    // orderItemsRepository.observeByOrder). The client-profile history list
+    // relies on these columns to sort rows and render status pills.
+    return orders
+      .query(Q.where('client_id', clientId), notDeleted)
+      .observeWithColumns(['status', 'sent_at_ms', 'canceled_at_ms', 'updated_at']);
   },
 
   observeDraftsForSalesperson(salespersonId: string) {
@@ -52,6 +58,42 @@ export const ordersRepository = {
         Q.sortBy('updated_at', Q.desc),
       )
       .observe();
+  },
+
+  /**
+   * 010-repeat-last-order: emits the client's single most-recent SENT order,
+   * or `null` when no such order exists. Drives the `RepeatHeroCard` on
+   * `ClientProfileScreen`. Draft and canceled orders are intentionally ignored
+   * (see research R-004).
+   */
+  observeLastSentForClient(clientId: string) {
+    return orders
+      .query(
+        Q.where('client_id', clientId),
+        Q.where('status', 'sent' satisfies OrderStatus),
+        notDeleted,
+        Q.sortBy('sent_at_ms', Q.desc),
+        Q.take(1),
+      )
+      .observe()
+      .pipe(map((rows): Order | null => rows[0] ?? null));
+  },
+
+  /**
+   * Non-reactive counterpart of `observeLastSentForClient`, handy in tests
+   * and for one-shot flows.
+   */
+  async findLastSentForClient(clientId: string): Promise<Order | null> {
+    const rows = await orders
+      .query(
+        Q.where('client_id', clientId),
+        Q.where('status', 'sent' satisfies OrderStatus),
+        notDeleted,
+        Q.sortBy('sent_at_ms', Q.desc),
+        Q.take(1),
+      )
+      .fetch();
+    return rows[0] ?? null;
   },
 
   async create(input: OrderCreateInput): Promise<Order> {

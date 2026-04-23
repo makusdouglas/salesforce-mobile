@@ -98,7 +98,11 @@ export function OrderDraftScreen({ navigation, route }: Props) {
     void ordersService
       .cancel({ orderId: order.id })
       .then(() => navigation.getParent()?.navigate('HomePlaceholder'))
-      .catch(() => undefined);
+      .catch((err: unknown) => {
+                  // 010-repeat-last-order debug: previously swallowed silently.
+                  // eslint-disable-next-line no-console
+                  console.warn('[OrderDraft] mutation failed:', err);
+                });
   };
 
   const renderedTopBar = (
@@ -159,12 +163,20 @@ export function OrderDraftScreen({ navigation, route }: Props) {
               onQtyChange={(next) =>
                 void ordersService
                   .updateLineQty({ orderItemId: line.id, quantity: next })
-                  .catch(() => undefined)
+                  .catch((err: unknown) => {
+                  // 010-repeat-last-order debug: previously swallowed silently.
+                  // eslint-disable-next-line no-console
+                  console.warn('[OrderDraft] mutation failed:', err);
+                })
               }
               onRemove={() =>
                 void ordersService
                   .removeLine({ orderItemId: line.id })
-                  .catch(() => undefined)
+                  .catch((err: unknown) => {
+                  // 010-repeat-last-order debug: previously swallowed silently.
+                  // eslint-disable-next-line no-console
+                  console.warn('[OrderDraft] mutation failed:', err);
+                })
               }
               onEditDiscount={() =>
                 setEditingLineId(isEditing ? null : line.id)
@@ -187,7 +199,11 @@ export function OrderDraftScreen({ navigation, route }: Props) {
                         orderItemId: line.id,
                         discount: next,
                       })
-                      .catch(() => undefined)
+                      .catch((err: unknown) => {
+                  // 010-repeat-last-order debug: previously swallowed silently.
+                  // eslint-disable-next-line no-console
+                  console.warn('[OrderDraft] mutation failed:', err);
+                })
                   }
                 />
                 <View style={styles.discountEditorFooter}>
@@ -198,7 +214,11 @@ export function OrderDraftScreen({ navigation, route }: Props) {
                           orderItemId: line.id,
                           discount: null,
                         })
-                        .catch(() => undefined)
+                        .catch((err: unknown) => {
+                  // 010-repeat-last-order debug: previously swallowed silently.
+                  // eslint-disable-next-line no-console
+                  console.warn('[OrderDraft] mutation failed:', err);
+                })
                     }
                     style={({ pressed }) => [
                       styles.linkBtn,
