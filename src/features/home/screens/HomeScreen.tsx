@@ -9,6 +9,7 @@ import { useActiveSalespersonId } from '@/features/clients';
 import { onPullToRefresh, useSyncStatus } from '@/features/sync';
 
 import { GreetingBlock } from '../components/GreetingBlock';
+import { HomeSyncPill } from '../components/HomeSyncPill';
 import { HomeTopBar } from '../components/HomeTopBar';
 import { QuickActionCard } from '../components/QuickActionCard';
 import { RecentActivityCard } from '../components/RecentActivityCard';
@@ -148,7 +149,7 @@ export function HomeScreen({ navigation }: Props) {
       <HomeTopBar
         viewport={viewport}
         onSettingsPress={goSettings}
-        syncPillSlot={<View style={styles.pillPlaceholder} />}
+        syncPillSlot={<HomeSyncPill viewport={viewport} />}
       />
       <View style={styles.body}>
         <GreetingBlock viewport={viewport} greeting={snapshot.greeting} />
@@ -192,10 +193,6 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-  },
-  pillPlaceholder: {
-    width: 100,
-    height: 26,
   },
   sectionActionsPhone: {
     paddingHorizontal: 16,
