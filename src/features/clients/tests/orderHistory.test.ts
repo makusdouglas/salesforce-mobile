@@ -8,6 +8,8 @@ import {
 const baseOrder: OrderLike = {
   id: 'o1',
   createdAtMs: 1_700_000_000_000,
+  sentAtMs: null,
+  canceledAtMs: null,
   status: 'draft',
   discountAmount: 0,
 };
@@ -67,14 +69,53 @@ describe('deriveOrderHistoryRow', () => {
     expect(row.total).toBe(10);
   });
 
-  test('preserves id, createdAtMs, status', () => {
+  test('preserves id, status; uses sentAtMs for sent orders', () => {
     const row = deriveOrderHistoryRow(
-      { id: 'o2', createdAtMs: 42, status: 'sent', discountAmount: 0 },
+      {
+        id: 'o2',
+        createdAtMs: 42,
+        sentAtMs: 99,
+        canceledAtMs: null,
+        status: 'sent',
+        discountAmount: 0,
+      },
       [],
     );
     expect(row.id).toBe('o2');
-    expect(row.createdAtMs).toBe(42);
     expect(row.status).toBe('sent');
+    // effective timestamp: sentAtMs for sent orders (falls through to
+    // createdAtMs when sentAtMs is null, then again for drafts).
+    expect(row.createdAtMs).toBe(99);
+  });
+
+  test('uses canceledAtMs for canceled orders', () => {
+    const row = deriveOrderHistoryRow(
+      {
+        id: 'o3',
+        createdAtMs: 10,
+        sentAtMs: null,
+        canceledAtMs: 55,
+        status: 'canceled',
+        discountAmount: 0,
+      },
+      [],
+    );
+    expect(row.createdAtMs).toBe(55);
+  });
+
+  test('drafts keep createdAtMs as the effective timestamp', () => {
+    const row = deriveOrderHistoryRow(
+      {
+        id: 'o4',
+        createdAtMs: 20,
+        sentAtMs: null,
+        canceledAtMs: null,
+        status: 'draft',
+        discountAmount: 0,
+      },
+      [],
+    );
+    expect(row.createdAtMs).toBe(20);
   });
 });
 

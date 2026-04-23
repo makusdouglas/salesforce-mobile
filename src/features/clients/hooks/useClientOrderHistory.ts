@@ -19,6 +19,8 @@ function toOrderLike(order: Order): OrderLike {
   return {
     id: order.id,
     createdAtMs: order.createdAtMs,
+    sentAtMs: order.sentAtMs,
+    canceledAtMs: order.canceledAtMs,
     status: order.status,
     discountAmount: order.discountAmount,
   };

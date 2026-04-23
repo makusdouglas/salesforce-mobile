@@ -59,7 +59,17 @@ export const orderItemsRepository = {
   },
 
   observeByOrder(orderId: string) {
-    return collection.query(Q.where('order_id', orderId), notDeleted).observe();
+    // Watermelon's plain `.observe()` on a query only re-emits when the
+    // *membership* of the result set changes (row added / soft-deleted).
+    // It does NOT re-emit when a field on an already-matching row changes,
+    // which meant `+`/`-` (quantity) and line-discount edits silently wrote
+    // to the DB without the draft screen refreshing until remount.
+    // `observeWithColumns([...])` wraps `.observe()` with per-field
+    // change propagation for the listed columns — which are exactly the
+    // columns the UI reads.
+    return collection
+      .query(Q.where('order_id', orderId), notDeleted)
+      .observeWithColumns(['quantity', 'unit_price', 'discount_amount', 'discount_mode']);
   },
 
   async findByOrder(orderId: string): Promise<OrderItem[]> {

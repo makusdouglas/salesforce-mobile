@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { type Viewport } from '../hooks/useViewport';
@@ -6,6 +7,11 @@ import { type OrderHistoryRowDTO, type OrderHistoryStatus } from '../types';
 export type OrderHistoryRowProps = {
   readonly row: OrderHistoryRowDTO;
   readonly viewport: Viewport;
+  /**
+   * 010-repeat-last-order: optional slot rendered on the trailing edge
+   * (after the total). Callers pass <RepeatIconButton /> here.
+   */
+  readonly trailing?: ReactNode;
 };
 
 function formatDate(ms: number): string {
@@ -37,7 +43,7 @@ const STATUS: Record<OrderHistoryStatus, StatusStyle> = {
   canceled: { label: 'Cancelado', pillBg: '#FEE2E2', pillFg: '#991B1B' },
 };
 
-export function OrderHistoryRow({ row, viewport }: OrderHistoryRowProps) {
+export function OrderHistoryRow({ row, viewport, trailing }: OrderHistoryRowProps) {
   const isTablet = viewport === 'tablet';
   const isCanceled = row.status === 'canceled';
   const meta = STATUS[row.status];
@@ -67,6 +73,7 @@ export function OrderHistoryRow({ row, viewport }: OrderHistoryRowProps) {
       >
         {formatTotal(row.total)}
       </Text>
+      {trailing ?? null}
     </View>
   );
 }
