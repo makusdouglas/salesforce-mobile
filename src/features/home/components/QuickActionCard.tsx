@@ -35,13 +35,9 @@ export function QuickActionCard(props: Props): React.ReactElement {
           pressed && styles.cardPressed,
         ]}
       >
-        <View
-          style={[styles.iconWrap, card.kind === 'drafts' && styles.iconWrapDrafts]}
-        />
+        <View style={[styles.iconWrap, card.kind === 'drafts' && styles.iconWrapDrafts]} />
         <View style={styles.textWrap}>
-          <Text style={isTablet ? styles.titleTablet : styles.titlePhone}>
-            {card.title}
-          </Text>
+          <Text style={isTablet ? styles.titleTablet : styles.titlePhone}>{card.title}</Text>
           <Text style={isTablet ? styles.subtitleTablet : styles.subtitlePhone}>
             {card.populated.subtitle}
           </Text>
@@ -89,17 +85,13 @@ export function QuickActionCard(props: Props): React.ReactElement {
           onPress={onEmptyCtaPress}
           style={({ pressed }) => [
             styles.ctaBase,
-            card.empty.cta?.kind === 'primary'
-              ? styles.ctaPrimary
-              : styles.ctaSecondary,
+            card.empty.cta?.kind === 'primary' ? styles.ctaPrimary : styles.ctaSecondary,
             pressed && styles.ctaPressed,
           ]}
         >
           <Text
             style={
-              card.empty.cta.kind === 'primary'
-                ? styles.ctaPrimaryLabel
-                : styles.ctaSecondaryLabel
+              card.empty.cta.kind === 'primary' ? styles.ctaPrimaryLabel : styles.ctaSecondaryLabel
             }
           >
             {card.empty.cta.label}

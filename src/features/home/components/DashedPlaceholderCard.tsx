@@ -25,12 +25,8 @@ export function DashedPlaceholderCard(props: Props): React.ReactElement {
     >
       <View style={styles.iconWrap} />
       <View style={styles.textWrap}>
-        <Text style={isTablet ? styles.titleTablet : styles.titlePhone}>
-          {title}
-        </Text>
-        <Text style={isTablet ? styles.subtitleTablet : styles.subtitlePhone}>
-          {subtitle}
-        </Text>
+        <Text style={isTablet ? styles.titleTablet : styles.titlePhone}>{title}</Text>
+        <Text style={isTablet ? styles.subtitleTablet : styles.subtitlePhone}>{subtitle}</Text>
       </View>
     </View>
   );

@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { deriveConfirmModalShape } from './shape';
 
@@ -24,16 +17,8 @@ export type ConfirmModalProps = {
 };
 
 export function ConfirmModal(props: ConfirmModalProps): React.ReactElement | null {
-  const {
-    open,
-    title,
-    body,
-    cancelLabel,
-    primaryLabel,
-    primaryVariant,
-    onCancel,
-    onPrimary,
-  } = props;
+  const { open, title, body, cancelLabel, primaryLabel, primaryVariant, onCancel, onPrimary } =
+    props;
 
   const { width } = useWindowDimensions();
   const isTablet = width >= TABLET_MIN_WIDTH;
@@ -56,22 +41,13 @@ export function ConfirmModal(props: ConfirmModalProps): React.ReactElement | nul
 
   return (
     <Modal transparent animationType="fade" visible onRequestClose={backdropTap}>
-      <Pressable
-        accessibilityLabel="Fechar"
-        onPress={backdropTap}
-        style={styles.backdrop}
-      >
+      <Pressable accessibilityLabel="Fechar" onPress={backdropTap} style={styles.backdrop}>
         <Pressable onPress={() => {}} style={[styles.card, cardStyle]}>
           <View style={styles.textWrap}>
             <Text style={titleStyle}>{title}</Text>
             {body !== undefined ? <Text style={bodyStyle}>{body}</Text> : null}
           </View>
-          <View
-            style={[
-              styles.btnRow,
-              isTablet ? styles.btnRowTablet : styles.btnRowPhone,
-            ]}
-          >
+          <View style={[styles.btnRow, isTablet ? styles.btnRowTablet : styles.btnRowPhone]}>
             {shape.showCancel ? (
               <Pressable
                 accessibilityRole="button"
@@ -98,9 +74,7 @@ export function ConfirmModal(props: ConfirmModalProps): React.ReactElement | nul
                 pressed && styles.btnPressed,
               ]}
             >
-              <Text
-                style={[styles.btnPrimaryLabel, { color: shape.primaryTextColor }]}
-              >
+              <Text style={[styles.btnPrimaryLabel, { color: shape.primaryTextColor }]}>
                 {primaryLabel}
               </Text>
             </Pressable>

@@ -1,7 +1,4 @@
-import {
-  _internalSyncStatusStore,
-  syncStatusStore,
-} from '@/features/sync/state/syncStatusStore';
+import { _internalSyncStatusStore, syncStatusStore } from '@/features/sync/state/syncStatusStore';
 
 beforeEach(() => {
   _internalSyncStatusStore.__resetForTests();

@@ -14,9 +14,9 @@ describe('deriveSyncPillState', () => {
   });
 
   test('in-sync + lastOkAt null → falls back to "syncing" (semantic fallback)', () => {
-    expect(
-      deriveSyncPillState({ status: 'in-sync', lastOkAt: null, nowMs: NOW }),
-    ).toEqual({ kind: 'syncing' });
+    expect(deriveSyncPillState({ status: 'in-sync', lastOkAt: null, nowMs: NOW })).toEqual({
+      kind: 'syncing',
+    });
   });
 
   test('in-sync + very old lastOkAt → still "in-sync" with "há N d"', () => {
@@ -30,18 +30,18 @@ describe('deriveSyncPillState', () => {
   });
 
   test('syncing → "syncing" regardless of lastOkAt', () => {
-    expect(
-      deriveSyncPillState({ status: 'syncing', lastOkAt: null, nowMs: NOW }),
-    ).toEqual({ kind: 'syncing' });
-    expect(
-      deriveSyncPillState({ status: 'syncing', lastOkAt: NOW - 1000, nowMs: NOW }),
-    ).toEqual({ kind: 'syncing' });
+    expect(deriveSyncPillState({ status: 'syncing', lastOkAt: null, nowMs: NOW })).toEqual({
+      kind: 'syncing',
+    });
+    expect(deriveSyncPillState({ status: 'syncing', lastOkAt: NOW - 1000, nowMs: NOW })).toEqual({
+      kind: 'syncing',
+    });
   });
 
   test('offline → "offline" regardless of lastOkAt', () => {
-    expect(
-      deriveSyncPillState({ status: 'offline', lastOkAt: null, nowMs: NOW }),
-    ).toEqual({ kind: 'offline' });
+    expect(deriveSyncPillState({ status: 'offline', lastOkAt: null, nowMs: NOW })).toEqual({
+      kind: 'offline',
+    });
     expect(
       deriveSyncPillState({
         status: 'offline',
@@ -52,9 +52,9 @@ describe('deriveSyncPillState', () => {
   });
 
   test('failed → "failed" regardless of lastOkAt', () => {
-    expect(
-      deriveSyncPillState({ status: 'failed', lastOkAt: null, nowMs: NOW }),
-    ).toEqual({ kind: 'failed' });
+    expect(deriveSyncPillState({ status: 'failed', lastOkAt: null, nowMs: NOW })).toEqual({
+      kind: 'failed',
+    });
     expect(
       deriveSyncPillState({
         status: 'failed',

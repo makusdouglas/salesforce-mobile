@@ -1,12 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
@@ -60,11 +54,7 @@ export function SettingsScreen({ navigation }: Props) {
                     pressed && styles.buttonPressed,
                   ]}
                 >
-                  <Text
-                    style={
-                      active ? styles.segmentLabelActive : styles.segmentLabelInactive
-                    }
-                  >
+                  <Text style={active ? styles.segmentLabelActive : styles.segmentLabelInactive}>
                     {minutes} min
                   </Text>
                 </Pressable>

@@ -20,9 +20,7 @@ const PRIMARY_DEFAULT = '#18181B';
 const PRIMARY_DESTRUCTIVE = '#DC2626';
 const PRIMARY_TEXT = '#FFFFFF';
 
-export function deriveConfirmModalShape(
-  input: ConfirmModalShapeInput,
-): ConfirmModalShape {
+export function deriveConfirmModalShape(input: ConfirmModalShapeInput): ConfirmModalShape {
   const showCancel = input.cancelLabel !== undefined;
   const primaryFill =
     input.primaryVariant === 'destructive' ? PRIMARY_DESTRUCTIVE : PRIMARY_DEFAULT;

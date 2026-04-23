@@ -36,9 +36,7 @@ function makeSnapshot(s: InternalState): SyncStatusSnapshot {
 
 function guardReentrancy(): void {
   if (typeof __DEV__ !== 'undefined' && __DEV__ && notifyingDepth > 0) {
-    throw new Error(
-      'syncStatusStore: transitions must not happen inside subscriber callbacks',
-    );
+    throw new Error('syncStatusStore: transitions must not happen inside subscriber callbacks');
   }
 }
 
@@ -59,10 +57,7 @@ function emit(): void {
 
 function recompute(): void {
   const next = makeSnapshot(state);
-  if (
-    next.status === cachedSnapshot.status &&
-    next.lastOkAt === cachedSnapshot.lastOkAt
-  ) {
+  if (next.status === cachedSnapshot.status && next.lastOkAt === cachedSnapshot.lastOkAt) {
     return;
   }
   cachedSnapshot = next;

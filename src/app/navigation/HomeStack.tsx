@@ -31,21 +31,13 @@ export function HomeStack() {
         component={SettingsScreen}
         options={{ title: 'Configurações' }}
       />
-      <Stack.Screen
-        name="Catalog"
-        component={CatalogScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="Catalog" component={CatalogScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="ProductDetail"
         component={ProductDetailScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Clients"
-        component={ClientsScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="Clients" component={ClientsScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="ClientForm"
         component={ClientFormScreen}

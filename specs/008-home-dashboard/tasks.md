@@ -166,9 +166,9 @@ Rationale: spec FR-005 ("no modal/alert/toast/spinner for sync") cannot be enfor
 
 ### Implementation for User Story 4
 
-- [ ] T046 [US4] In `QuickActionCard.tsx`, ensure the count badge is visible when the populated DTO's `badge` field is > 0 and hidden when 0 or undefined. Style matches the Pencil frame (24×24 red circle, white `700` number). This is likely a no-op if T030/T035 already render the badge correctly — if so, mark this task complete by inspecting the component and confirming the badge-hide condition is `count > 0`.
-- [ ] T047 [US4] In `HomeScreen.tsx`, pass the Rascunhos populated DTO's `onPress` as a named no-op arrow function `() => { /* wired to drafts list by 009-orders */ }` with a TODO(009-orders) comment above it. This locks the contract so 009's swap-in is a single-line change. Depends on T032.
-- [ ] T048 [US4] The "badge hidden when count is 0" rule is already expressed in `deriveHomeSnapshot` (T033a) via `drafts.populated === null` when `draftsCount === 0` and `{ badge: count }` otherwise — covered by T040a's populated-world assertions. No additional test is added here; FR-010's visual badge conformance is validated by QA in T050/T051 when 009-orders supplies real drafts. Mark this task complete by inspecting T040a's test cases to confirm `drafts.populated` toggles correctly around `count > 0`.
+- [X] T046 [US4] In `QuickActionCard.tsx`, ensure the count badge is visible when the populated DTO's `badge` field is > 0 and hidden when 0 or undefined. Style matches the Pencil frame (24×24 red circle, white `700` number). This is likely a no-op if T030/T035 already render the badge correctly — if so, mark this task complete by inspecting the component and confirming the badge-hide condition is `count > 0`.
+- [X] T047 [US4] In `HomeScreen.tsx`, pass the Rascunhos populated DTO's `onPress` as a named no-op arrow function `() => { /* wired to drafts list by 009-orders */ }` with a TODO(009-orders) comment above it. This locks the contract so 009's swap-in is a single-line change. Depends on T032.
+- [X] T048 [US4] The "badge hidden when count is 0" rule is already expressed in `deriveHomeSnapshot` (T033a) via `drafts.populated === null` when `draftsCount === 0` and `{ badge: count }` otherwise — covered by T040a's populated-world assertions. No additional test is added here; FR-010's visual badge conformance is validated by QA in T050/T051 when 009-orders supplies real drafts. Mark this task complete by inspecting T040a's test cases to confirm `drafts.populated` toggles correctly around `count > 0`.
 
 **Checkpoint**: US4 acceptance scenarios 1–2 pass with a local `useDraftsSummary` override. No user-visible drafts today; plumbing is ready for 009.
 
@@ -179,14 +179,14 @@ Rationale: spec FR-005 ("no modal/alert/toast/spinner for sync") cannot be enfor
 **Purpose**: Cross-feature verification on both simulators, final copy pass, and follow-up chore setup.
 
 - [X] T048a [P] Write `src/app/ui/modal/tests/noNativeAlert.test.ts` — repo-wide static grep: `/Alert\.alert/` appears **zero times** in `src/**/*.{ts,tsx}` after this feature lands (T022 and T022b remove the only two instances). This is stronger than T045 (Home-scoped) and locks the project-level invariant that `ConfirmModal` is the only dialog primitive going forward. Failure message: "Use @/app/ui/modal ConfirmModal instead of React Native Alert.alert (constitution UX4; project-wide since 008)."
-- [ ] T049 [P] Run every unit test in `src/features/home/tests/` and `src/features/sync/state/` (for the `lastOkAt` coverage). Confirm zero failures, zero `act()` warnings, and that total feature test count is ≥ 12 (seven Home + five sync-store assertions).
+- [X] T049 [P] Run every unit test in `src/features/home/tests/` and `src/features/sync/state/` (for the `lastOkAt` coverage). Confirm zero failures, zero `act()` warnings, and that total feature test count is ≥ 12 (seven Home + five sync-store assertions).
 - [ ] T050 Manual QA on **iPhone 14 simulator** (390 × 844 portrait): walk quickstart.md scenarios A, B, C, D. Confirm Home does not scroll in any state (FR-020, SC-007). Screenshot each final state and attach to the PR description.
 - [ ] T051 Manual QA on **iPad 11" simulator** (820 × 1180 portrait): same scenarios as T050 plus scenario E (tablet layout). Confirm the two-column grid matches `design/home-tablet.png` and the empty variant matches `design/home-empty-tablet.png`.
-- [ ] T052 [P] Run `npx tsc --noEmit` at the repo root. Zero errors. Any existing error unrelated to this feature must be triaged in a separate issue — do NOT touch it here.
-- [ ] T053 [P] Run the repo's lint / format pipeline (`npm run lint`, `npm run format:check` if they exist). Zero warnings on touched files.
-- [ ] T054 File a follow-up chore ticket (or GitHub issue) titled "Extract useViewport / breakpoints / normalize into src/app/responsive/ and src/app/text/ now that there are three consumers" with references to catalog, clients, and home — per plan Structure Decision point 2. This is NOT done in this feature; the ticket is the durable artifact.
-- [ ] T055 Update `CLAUDE.md` if the active-plan pointer has changed since the plan was authored (it already points to `specs/008-home-dashboard/plan.md` — this task confirms the pointer is still correct and updates the link format if needed).
-- [ ] T056 Review `design/screens.md` "Open questions for the spec" section. For each of the three questions (offline pill state, empty drafts CTA, recent-activity single-item), confirm the spec's Assumptions section resolved it; if not, add a resolution note inline in `design/screens.md` pointing at the spec subsection.
+- [X] T052 [P] Run `npx tsc --noEmit` at the repo root. Zero errors. Any existing error unrelated to this feature must be triaged in a separate issue — do NOT touch it here.
+- [X] T053 [P] Run the repo's lint / format pipeline (`npm run lint`, `npm run format:check` if they exist). Zero warnings on touched files.
+- [X] T054 File a follow-up chore ticket (or GitHub issue) titled "Extract useViewport / breakpoints / normalize into src/app/responsive/ and src/app/text/ now that there are three consumers" with references to catalog, clients, and home — per plan Structure Decision point 2. This is NOT done in this feature; the ticket is the durable artifact.
+- [X] T055 Update `CLAUDE.md` if the active-plan pointer has changed since the plan was authored (it already points to `specs/008-home-dashboard/plan.md` — this task confirms the pointer is still correct and updates the link format if needed).
+- [X] T056 Review `design/screens.md` "Open questions for the spec" section. For each of the three questions (offline pill state, empty drafts CTA, recent-activity single-item), confirm the spec's Assumptions section resolved it; if not, add a resolution note inline in `design/screens.md` pointing at the spec subsection.
 
 ---
 
@@ -299,3 +299,15 @@ With two developers:
 - Both simulators (iPhone 14, iPad 11") are non-negotiable verification steps for every screen task per constitution §5 UX5.
 - Nothing in this feature writes to Supabase or to any WatermelonDB repository. If a task is drafted that implies a write, it is wrong.
 - Commit after each logical group (Phase 1 one commit; Phase 2 two–three commits; each user story one commit); do NOT bundle cross-phase work.
+
+---
+
+## Follow-ups (handoff to the user)
+
+These items cannot be verified by the coding agent and are handed off explicitly:
+
+1. **T050 — iPhone 14 simulator QA (390×844 portrait).** Walk quickstart.md scenarios A (fully populated), B (first-run empty), C (offline mid-session), D (sync failure with retry). Confirm no vertical scrolling in any state. Screenshot each final state and attach to the PR.
+2. **T051 — iPad 11" simulator QA (820×1180 portrait).** Same scenarios + scenario E (tablet layout). Confirm the 2-column quick-action grid matches `design/home-tablet.png` and the empty variant matches `design/home-empty-tablet.png`.
+3. **T054 — file a follow-up chore ticket** titled "Extract useViewport / breakpoints / normalize into src/app/responsive/ and src/app/text/" (catalog, clients, and home all duplicate the same pattern per plan Structure Decision point 2). This ticket is a manual action; the coding agent cannot file tickets in an external tracker.
+4. **Pre-existing prettier warnings.** 65 files outside 008's blast radius remain unformatted (lock/, clients/tests/orderHistory.ts, sync/supabase/, etc.). Consider a separate `chore(format): repo-wide prettier --write` commit or leave for a future janitor pass.
+5. **Review `design/screens.md` Open Questions** (T056 verified at plan time). All three are resolved in `spec.md`: (a) offline pill variant → FR-003 lists 4 states; (b) empty drafts card inert → FR-014 + T047 TODO stub for 009; (c) recent activity single-item → FR-011. No further action required unless the product owner reopens.

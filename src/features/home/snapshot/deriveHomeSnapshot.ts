@@ -2,10 +2,7 @@ import type { SyncStatusSnapshot } from '@/features/sync';
 
 import { homeCopy } from '../copy/copy';
 import { deriveGreetingName } from '../greeting/deriveGreetingName';
-import {
-  deriveSyncPillState,
-  type SyncPillStateDTO,
-} from '../sync/deriveSyncPillState';
+import { deriveSyncPillState, type SyncPillStateDTO } from '../sync/deriveSyncPillState';
 import type { RecentActivityDTO } from '../types';
 
 /**
@@ -139,10 +136,7 @@ export function deriveHomeSnapshot(input: DeriveHomeSnapshotInput): HomeSnapshot
 
   const firstName = deriveGreetingName(email);
   const isFirstRun =
-    catalog.count === 0 &&
-    clients.count === 0 &&
-    drafts.count === 0 &&
-    recentActivity === null;
+    catalog.count === 0 && clients.count === 0 && drafts.count === 0 && recentActivity === null;
 
   const syncPill = deriveSyncPillState({
     status: sync.status,

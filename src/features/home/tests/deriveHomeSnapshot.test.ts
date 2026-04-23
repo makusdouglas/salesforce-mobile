@@ -9,9 +9,7 @@ function sync(overrides: Partial<SyncStatusSnapshot> = {}): SyncStatusSnapshot {
   return { status: 'in-sync', lastOkAt: NOW - 2 * 60_000, ...overrides };
 }
 
-function baseInput(
-  overrides: Partial<Parameters<typeof deriveHomeSnapshot>[0]> = {},
-) {
+function baseInput(overrides: Partial<Parameters<typeof deriveHomeSnapshot>[0]> = {}) {
   return {
     email: 'markus@local.dev',
     sync: sync(),
@@ -92,9 +90,7 @@ describe('deriveHomeSnapshot — first-run empty world (FR-018)', () => {
       }),
     );
     expect(snap.greeting.title).toBe('Bem-vindo, markus');
-    expect(snap.greeting.subtitle).toBe(
-      'Vamos preparar tudo para sua primeira visita.',
-    );
+    expect(snap.greeting.subtitle).toBe('Vamos preparar tudo para sua primeira visita.');
     expect(snap.sectionActionsLabel).toBe('Comece por aqui');
   });
 
@@ -103,8 +99,7 @@ describe('deriveHomeSnapshot — first-run empty world (FR-018)', () => {
     expect(snap.catalog.empty).toEqual({
       variant: 'solid',
       title: 'Seu catálogo ainda está vazio',
-      subtitle:
-        'Assim que a sincronização terminar, os produtos aparecem aqui.',
+      subtitle: 'Assim que a sincronização terminar, os produtos aparecem aqui.',
       cta: { kind: 'primary', label: 'Sincronizar agora' },
     });
   });

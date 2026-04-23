@@ -30,8 +30,7 @@ export const homeCopy = {
       populatedSubtitle: (count: number) =>
         count === 1 ? '1 produto disponível' : `${count} produtos disponíveis`,
       emptyTitle: 'Seu catálogo ainda está vazio',
-      emptySubtitle:
-        'Assim que a sincronização terminar, os produtos aparecem aqui.',
+      emptySubtitle: 'Assim que a sincronização terminar, os produtos aparecem aqui.',
       emptyCtaLabel: 'Sincronizar agora',
     },
     clients: {
@@ -39,8 +38,7 @@ export const homeCopy = {
       populatedSubtitle: (count: number) =>
         count === 1 ? '1 loja cadastrada' : `${count} lojas cadastradas`,
       emptyTitle: 'Cadastre sua primeira loja',
-      emptySubtitle:
-        'Você precisa de pelo menos uma loja para montar um pedido.',
+      emptySubtitle: 'Você precisa de pelo menos uma loja para montar um pedido.',
       emptyCtaLabel: 'Nova loja',
     },
     drafts: {
@@ -48,16 +46,14 @@ export const homeCopy = {
       populatedSubtitle: (count: number) =>
         count === 1 ? '1 pedido em andamento' : `${count} pedidos em andamento`,
       emptyTitle: 'Nenhum rascunho por enquanto',
-      emptySubtitle:
-        'Quando começar um pedido no catálogo, ele fica salvo aqui.',
+      emptySubtitle: 'Quando começar um pedido no catálogo, ele fica salvo aqui.',
     },
   },
 
   recentActivity: {
     populatedTitlePrefix: 'Pedido enviado — ',
     emptyTitle: 'Seu último pedido enviado aparecerá aqui',
-    emptySubtitle:
-      'Depois de enviar o primeiro pedido, você vê o resumo dele neste lugar.',
+    emptySubtitle: 'Depois de enviar o primeiro pedido, você vê o resumo dele neste lugar.',
   },
 
   syncPill: {
@@ -78,7 +74,7 @@ export const homeCopy = {
  */
 export function allHomeCopyStrings(): readonly string[] {
   const samples = ['Márcio', 'Ana', 'João']; // exercise the dynamic-name variants
-  const counts = [0, 1, 2, 17];              // exercise the plural variants
+  const counts = [0, 1, 2, 17]; // exercise the plural variants
   const ageLabels = ['agora', 'há 2 min', 'há 3 h', 'há 1 d'];
 
   const out: string[] = [

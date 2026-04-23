@@ -33,11 +33,7 @@ export function RecentActivityCard(props: Props): React.ReactElement {
 
   if (activity === null) {
     return (
-      <DashedPlaceholderCard
-        viewport={viewport}
-        title={empty.title}
-        subtitle={empty.subtitle}
-      />
+      <DashedPlaceholderCard viewport={viewport} title={empty.title} subtitle={empty.subtitle} />
     );
   }
 

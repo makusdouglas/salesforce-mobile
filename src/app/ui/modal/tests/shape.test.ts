@@ -36,15 +36,16 @@ describe('deriveConfirmModalShape', () => {
   });
 
   test('no cancelLabel + destructive → single red button (edge case)', () => {
-    expect(
-      deriveConfirmModalShape({ primaryVariant: 'destructive' }),
-    ).toMatchObject({ showCancel: false, primaryFill: '#DC2626' });
+    expect(deriveConfirmModalShape({ primaryVariant: 'destructive' })).toMatchObject({
+      showCancel: false,
+      primaryFill: '#DC2626',
+    });
   });
 
   test('no variant specified → default', () => {
-    expect(
-      deriveConfirmModalShape({ cancelLabel: 'Cancelar' }),
-    ).toMatchObject({ primaryFill: '#18181B' });
+    expect(deriveConfirmModalShape({ cancelLabel: 'Cancelar' })).toMatchObject({
+      primaryFill: '#18181B',
+    });
   });
 
   test('empty input → info default', () => {

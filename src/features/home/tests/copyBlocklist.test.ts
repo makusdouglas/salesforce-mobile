@@ -9,7 +9,7 @@ import { allHomeCopyStrings } from '../copy/copy';
 
 const BLOCKLIST = [
   'erro',
-  'falha',      // blocked in copy but allowed in the pill's "Falha ao sincronizar" string — not empty-state copy though, so we narrow the scan below
+  'falha', // blocked in copy but allowed in the pill's "Falha ao sincronizar" string — not empty-state copy though, so we narrow the scan below
   'null',
   'undefined',
   'sem dados',

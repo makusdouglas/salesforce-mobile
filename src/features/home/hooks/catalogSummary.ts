@@ -8,8 +8,6 @@
 
 export type CatalogSummary = { readonly count: number };
 
-export function deriveCatalogSummary(
-  products: readonly { readonly id: string }[],
-): CatalogSummary {
+export function deriveCatalogSummary(products: readonly { readonly id: string }[]): CatalogSummary {
   return { count: products.length };
 }

@@ -96,27 +96,15 @@ export function HomeScreen({ navigation }: Props) {
     <View style={styles.tabletGrid}>
       <View style={[styles.tabletRow, { gap: cardGap }]}>
         <View style={styles.tabletCell}>
-          <QuickActionCard
-            card={snapshot.catalog}
-            viewport={viewport}
-            {...catalogHandlers}
-          />
+          <QuickActionCard card={snapshot.catalog} viewport={viewport} {...catalogHandlers} />
         </View>
         <View style={styles.tabletCell}>
-          <QuickActionCard
-            card={snapshot.clients}
-            viewport={viewport}
-            {...clientsHandlers}
-          />
+          <QuickActionCard card={snapshot.clients} viewport={viewport} {...clientsHandlers} />
         </View>
       </View>
       <View style={[styles.tabletRow, { gap: cardGap, marginTop: cardGap }]}>
         <View style={styles.tabletCell}>
-          <QuickActionCard
-            card={snapshot.drafts}
-            viewport={viewport}
-            {...draftsHandlers}
-          />
+          <QuickActionCard card={snapshot.drafts} viewport={viewport} {...draftsHandlers} />
         </View>
         {/* Neutral spacer balances the 2-column grid per design/home-tablet.png */}
         <View style={styles.tabletCell} />
@@ -126,21 +114,9 @@ export function HomeScreen({ navigation }: Props) {
 
   const quickActionsPhone = (
     <View style={[styles.phoneStack, { gap: cardGap }]}>
-      <QuickActionCard
-        card={snapshot.catalog}
-        viewport={viewport}
-        {...catalogHandlers}
-      />
-      <QuickActionCard
-        card={snapshot.clients}
-        viewport={viewport}
-        {...clientsHandlers}
-      />
-      <QuickActionCard
-        card={snapshot.drafts}
-        viewport={viewport}
-        {...draftsHandlers}
-      />
+      <QuickActionCard card={snapshot.catalog} viewport={viewport} {...catalogHandlers} />
+      <QuickActionCard card={snapshot.clients} viewport={viewport} {...clientsHandlers} />
+      <QuickActionCard card={snapshot.drafts} viewport={viewport} {...draftsHandlers} />
     </View>
   );
 
@@ -154,24 +130,16 @@ export function HomeScreen({ navigation }: Props) {
       <View style={styles.body}>
         <GreetingBlock viewport={viewport} greeting={snapshot.greeting} />
 
-        <View
-          style={isTablet ? styles.sectionActionsTablet : styles.sectionActionsPhone}
-        >
+        <View style={isTablet ? styles.sectionActionsTablet : styles.sectionActionsPhone}>
           <Text style={sectionLabelStyle}>
-            {isTablet
-              ? snapshot.sectionActionsLabel.toUpperCase()
-              : snapshot.sectionActionsLabel}
+            {isTablet ? snapshot.sectionActionsLabel.toUpperCase() : snapshot.sectionActionsLabel}
           </Text>
           {isTablet ? quickActionsTablet : quickActionsPhone}
         </View>
 
-        <View
-          style={isTablet ? styles.sectionRecentTablet : styles.sectionRecentPhone}
-        >
+        <View style={isTablet ? styles.sectionRecentTablet : styles.sectionRecentPhone}>
           <Text style={sectionLabelStyle}>
-            {isTablet
-              ? snapshot.sectionRecentLabel.toUpperCase()
-              : snapshot.sectionRecentLabel}
+            {isTablet ? snapshot.sectionRecentLabel.toUpperCase() : snapshot.sectionRecentLabel}
           </Text>
           <RecentActivityCard
             viewport={viewport}

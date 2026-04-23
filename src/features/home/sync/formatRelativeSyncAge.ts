@@ -15,10 +15,7 @@ const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 
-export function formatRelativeSyncAge(
-  thenMs: number,
-  nowMs: number = Date.now(),
-): string {
+export function formatRelativeSyncAge(thenMs: number, nowMs: number = Date.now()): string {
   const ageMs = Math.max(0, nowMs - thenMs);
   if (ageMs < MINUTE_MS) return 'agora';
   if (ageMs < HOUR_MS) {

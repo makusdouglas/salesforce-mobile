@@ -24,13 +24,8 @@ export function HomeTopBar(props: Props): React.ReactElement {
   const { viewport, onSettingsPress, syncPillSlot } = props;
   const isTablet = viewport === 'tablet';
   return (
-    <View
-      style={[styles.container, isTablet ? styles.containerTablet : styles.containerPhone]}
-    >
-      <Text
-        accessibilityRole="header"
-        style={isTablet ? styles.titleTablet : styles.titlePhone}
-      >
+    <View style={[styles.container, isTablet ? styles.containerTablet : styles.containerPhone]}>
+      <Text accessibilityRole="header" style={isTablet ? styles.titleTablet : styles.titlePhone}>
         {homeCopy.screenTitle}
       </Text>
       <View style={styles.right}>

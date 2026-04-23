@@ -5,10 +5,7 @@ import { onPullToRefresh, useSyncStatus } from '@/features/sync';
 
 import { homeCopy } from '../copy/copy';
 import type { Viewport } from '../hooks/useViewport';
-import {
-  deriveSyncPillState,
-  type SyncPillStateDTO,
-} from '../sync/deriveSyncPillState';
+import { deriveSyncPillState, type SyncPillStateDTO } from '../sync/deriveSyncPillState';
 
 type Props = {
   readonly viewport: Viewport;
@@ -56,17 +53,9 @@ export function HomeSyncPill({ viewport }: Props): React.ReactElement {
       ]}
     >
       <View
-        style={[
-          isTablet ? styles.dotTablet : styles.dotPhone,
-          { backgroundColor: palette.dot },
-        ]}
+        style={[isTablet ? styles.dotTablet : styles.dotPhone, { backgroundColor: palette.dot }]}
       />
-      <Text
-        style={[
-          isTablet ? styles.labelTablet : styles.labelPhone,
-          { color: palette.label },
-        ]}
-      >
+      <Text style={[isTablet ? styles.labelTablet : styles.labelPhone, { color: palette.label }]}>
         {label}
       </Text>
     </Pressable>

@@ -14,9 +14,7 @@ export function GreetingBlock(props: Props): React.ReactElement {
   const isTablet = viewport === 'tablet';
   return (
     <View style={isTablet ? styles.wrapTablet : styles.wrapPhone}>
-      <Text style={isTablet ? styles.titleTablet : styles.titlePhone}>
-        {greeting.title}
-      </Text>
+      <Text style={isTablet ? styles.titleTablet : styles.titlePhone}>{greeting.title}</Text>
       <Text style={isTablet ? styles.subtitleTablet : styles.subtitlePhone}>
         {greeting.subtitle}
       </Text>

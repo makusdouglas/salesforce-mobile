@@ -10,8 +10,6 @@ describe('deriveClientsSummary', () => {
   });
 
   test('populated array → count matches length', () => {
-    expect(
-      deriveClientsSummary([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }]),
-    ).toEqual({ count: 3 });
+    expect(deriveClientsSummary([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }])).toEqual({ count: 3 });
   });
 });

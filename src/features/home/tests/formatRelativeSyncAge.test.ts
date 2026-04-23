@@ -29,9 +29,7 @@ describe('formatRelativeSyncAge', () => {
 
   test('1–23 h → "há N h"', () => {
     expect(formatRelativeSyncAge(ago(3 * 60 * 60_000), NOW)).toBe('há 3 h');
-    expect(formatRelativeSyncAge(ago(23 * 60 * 60_000 + 59 * 60_000), NOW)).toBe(
-      'há 23 h',
-    );
+    expect(formatRelativeSyncAge(ago(23 * 60 * 60_000 + 59 * 60_000), NOW)).toBe('há 23 h');
   });
 
   test('24 h exactly → "há 1 d"', () => {
