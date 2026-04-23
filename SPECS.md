@@ -158,11 +158,23 @@ Registrar recebimento (valor, método, data, foto opcional do comprovante), uplo
 
 ---
 
+### 13. Orders Overview & Accounting Summary `[core]` `[ui]`
+
+Tela única para o vendedor consolidar **todos** os seus pedidos (rascunho / enviado / cancelado) com filtros por status, mês e busca, mais uma faixa de resumo para prestação de contas (faturado, recebido, pendente). Status de pagamento é **derivado** das `payment_receipts` (feature 12) — nenhum novo valor de status é introduzido (respeita D4). Inclui uma tela secundária `OrderDetail` somente-leitura para pedidos `sent` / `canceled`, que também destrava o TODO em `HomeScreen.tsx:111` (tap no card "Atividade recente") e o gancho da feature 10 (Repeat Last Order) para abrir detalhe antes de clonar.
+
+```
+/speckit-specify Implement an orders overview screen for the salesperson that consolidates all their orders for reconciliation per constitution UX1, UX3, and D4. Screen lists every order owned by the logged seller (any status) with tap-first filters: status chips (Rascunhos / Pendente pagamento / Pago / Cancelados), month selector (current month default, scrub prev/next), and free-text search by client name or order number. Each row shows client, total, status chip, relevant timestamp (updated for drafts, sent_at for sent, canceled_at for canceled), and a paid/pending indicator derived from payment_receipts: sum of receipts.amount ≥ order.total → "Pago"; 0 < sum < total → "Parcial"; sum = 0 on a sent order → "Pendente"; canceled is its own terminal label; draft is its own terminal label. A summary band at the top of the list MUST show, aggregated over the active filter window: orders count, total billed (sum of totals of sent orders only), total received (sum of payment_receipts.amount within the month, across sent orders), and total pending (billed − received, floored at 0). Tapping a row opens OrderDraft for drafts and a new read-only OrderDetail screen for sent/canceled — same visual layout as OrderSummary but every mutation control is absent or disabled; the screen is reachable from three entry points: (a) this orders list, (b) Home "Atividade recente" card (replaces the stub at HomeScreen.tsx:111), (c) client profile order history (feature 7). No new status enum value — "Pago / Pendente / Parcial" are UI-only derivations, never written to orders.status. Offline-first; reads only from WatermelonDB via repositories — no Supabase calls on this surface. Add the list as a fourth entry point on Home (new QuickActionCard "Pedidos") in addition to "Rascunhos em andamento".
+```
+
+> **Pencil hook**: **accept** — OrdersListScreen (com chips de filtro + mês + busca + faixa de resumo), OrderDetail read-only, empty states por filtro, phone + tablet.
+
+---
+
 ## Fase 4 — Módulo Admin
 
 > Introduzida na constitution v1.0.0. O papel ADMIN traz para dentro do app cadastros que antes viviam no Supabase dashboard. ADMIN é online-first (P6) e convive com VENDEDOR via dual-role visibility (UX6).
 
-### 13. Admin Role Foundation + Products CRUD `[admin]` `[ui]`
+### 14. Admin Role Foundation + Products CRUD `[admin]` `[ui]`
 
 Primeira feature admin — carrega a fundação RBAC (tabela `user_roles`, propagação de roles na sessão, aba Admin role-guarded no root navigator, hook `useUserRoles`) mais o CRUD completo de produtos/variantes com upload de foto. As features seguintes (14, 15) consomem essa fundação.
 
@@ -174,24 +186,24 @@ Primeira feature admin — carrega a fundação RBAC (tabela `user_roles`, propa
 
 ---
 
-### 14. Admin Sellers Management `[admin]` `[ui]`
+### 15. Admin Sellers Management `[admin]` `[ui]`
 
 CRUD de vendedores pelo admin. Criar vendedor = criar usuário Supabase Auth via Edge Function (o client nunca carrega service_role), registrar em `salespeople` e atribuir role `seller` em `user_roles`. Desativar preserva histórico e revoga apenas a role.
 
 ```
-/speckit-specify Implement admin-side seller management on top of the foundation shipped in feature 13. Admin screens for listing existing sellers, creating a new seller (name, email, initial password or passwordless invite), editing (name, active/inactive flag), and deactivating a seller. Creating a seller requires creating a Supabase Auth user — which needs the service_role key and therefore MUST go through an Edge Function (admin-create-seller) invoked by the client; the client never holds service_role. The Edge Function also inserts the matching row in salespeople and assigns role 'seller' in user_roles atomically. Deactivation flips an active flag and revokes the 'seller' role but preserves the salespeople row for historical order references. RLS ensures only role 'admin' can invoke the Edge Function and write to salespeople or user_roles.
+/speckit-specify Implement admin-side seller management on top of the foundation shipped in feature 14. Admin screens for listing existing sellers, creating a new seller (name, email, initial password or passwordless invite), editing (name, active/inactive flag), and deactivating a seller. Creating a seller requires creating a Supabase Auth user — which needs the service_role key and therefore MUST go through an Edge Function (admin-create-seller) invoked by the client; the client never holds service_role. The Edge Function also inserts the matching row in salespeople and assigns role 'seller' in user_roles atomically. Deactivation flips an active flag and revokes the 'seller' role but preserves the salespeople row for historical order references. RLS ensures only role 'admin' can invoke the Edge Function and write to salespeople or user_roles.
 ```
 
 > **Pencil hook**: **accept** — AdminSellerList, AdminSellerForm, confirmação de deactivate.
 
 ---
 
-### 15. Admin Clients Management `[admin]` `[ui]`
+### 16. Admin Clients Management `[admin]` `[ui]`
 
 CRUD admin-side de clientes. Complementa D3 (vendedor cria clientes em campo) permitindo admin editar qualquer cliente, inclusive os criados por vendedores. Busca rápida com filtro por vendedor-dono. Merge de duplicatas continua out-of-scope per D3.
 
 ```
-/speckit-specify Implement admin-side client management on top of the foundation shipped in feature 13. Admin screens for listing all clients across all sellers, creating a client (same fields as the seller-side flow in feature 7: store name, CNPJ, address, contact, notes), editing any client regardless of who created it, and marking a client as inactive. RLS: role 'admin' can SELECT/INSERT/UPDATE/DELETE any row in clients; role 'seller' retains the existing rules (create any, edit only their own). Admin edits sync down to the owning seller's device on the next pull (feature 5). Duplicate-CNPJ merging remains out of scope per constitution D3 — the admin can manually resolve duplicates by editing/deleting rows. The admin client list MUST support fast search (tap-first filters for seller-owner and status, text search for name/CNPJ).
+/speckit-specify Implement admin-side client management on top of the foundation shipped in feature 14. Admin screens for listing all clients across all sellers, creating a client (same fields as the seller-side flow in feature 7: store name, CNPJ, address, contact, notes), editing any client regardless of who created it, and marking a client as inactive. RLS: role 'admin' can SELECT/INSERT/UPDATE/DELETE any row in clients; role 'seller' retains the existing rules (create any, edit only their own). Admin edits sync down to the owning seller's device on the next pull (feature 5). Duplicate-CNPJ merging remains out of scope per constitution D3 — the admin can manually resolve duplicates by editing/deleting rows. The admin client list MUST support fast search (tap-first filters for seller-owner and status, text search for name/CNPJ).
 ```
 
 > **Pencil hook**: **accept** — AdminClientList com filtro por vendedor, AdminClientForm.
@@ -200,7 +212,7 @@ CRUD admin-side de clientes. Complementa D3 (vendedor cria clientes em campo) pe
 
 ## Fase 5 — Resiliência
 
-### 16. Emergency Export / Local Backup (P5) `[infra]` `[light-ui]`
+### 17. Emergency Export / Local Backup (P5) `[infra]` `[light-ui]`
 
 Export manual do WatermelonDB em formato legível (JSON/ZIP) compartilhável via share sheet, para mitigar reinstall/crash/troca de device.
 
@@ -234,8 +246,9 @@ Export manual do WatermelonDB em formato legível (JSON/ZIP) compartilhável via
 10. Repeat Last Order                           [core/ui]
 11. Order PDF + Email Intent                    [core/ui]
 12. Payment Receipts                            [core/ui]
-13. Admin Role Foundation + Products CRUD       [admin/ui]
-14. Admin Sellers Management                    [admin/ui]
-15. Admin Clients Management                    [admin/ui]
-16. Emergency Export                            [infra/light-ui]
+13. Orders Overview & Accounting Summary        [core/ui]
+14. Admin Role Foundation + Products CRUD       [admin/ui]
+15. Admin Sellers Management                    [admin/ui]
+16. Admin Clients Management                    [admin/ui]
+17. Emergency Export                            [infra/light-ui]
 ```

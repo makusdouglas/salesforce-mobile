@@ -1,7 +1,7 @@
 import { Model, type Query, type Relation } from '@nozbe/watermelondb';
 import { children, field, relation } from '@nozbe/watermelondb/decorators';
 
-import type { OrderStatus } from '../types';
+import type { DiscountMode, OrderStatus } from '../types';
 import type Client from './Client';
 import type OrderItem from './OrderItem';
 import type PaymentReceipt from './PaymentReceipt';
@@ -21,13 +21,26 @@ export default class Order extends Model {
   @field('salesperson_id') salespersonId!: string;
   @field('status') status!: OrderStatus;
   @field('discount_amount') discountAmount!: number;
+  // Interpreted together with discountAmount: 'amount' means BRL, 'percent'
+  // means a percentage value 0..100. Rows written before 009-order-assembly
+  // do not exist in prod; the getter below defends against NULL anyway.
+  @field('discount_mode') _discountMode!: string | null;
   @field('notes') notes!: string | null;
   @field('created_at_ms') createdAtMs!: number;
   @field('sent_at_ms') sentAtMs!: number | null;
+  @field('canceled_at_ms') canceledAtMs!: number | null;
   @field('pdf_uri') pdfUri!: string | null;
 
   @field('server_id') serverId!: string | null;
   @field('updated_at') updatedAt!: number;
+
+  get discountMode(): DiscountMode {
+    return this._discountMode === 'percent' ? 'percent' : 'amount';
+  }
+
+  set discountMode(value: DiscountMode) {
+    this._discountMode = value;
+  }
 
   @relation('clients', 'client_id') client!: Relation<Client>;
   @relation('salespeople', 'salesperson_id') salesperson!: Relation<Salesperson>;

@@ -16,19 +16,36 @@ import { useCatalogCacheWarmer } from '../hooks/useCatalogCacheWarmer';
 import { useCatalogFilter } from '../hooks/useCatalogFilter';
 import { useViewport } from '../hooks/useViewport';
 
+import { OrderContextSummaryBar } from './OrderContextSummaryBar';
+
 type Props = NativeStackScreenProps<HomeStackParamList, 'Catalog'>;
 
-export function CatalogScreen({ navigation }: Props) {
+export function CatalogScreen({ navigation, route }: Props) {
   const { products, hasAny } = useCatalog();
   const viewport = useViewport();
   const { status } = useSyncStatus();
   const filter = useCatalogFilter(products);
+  // 009-order-assembly: when the catalog is opened in "order context",
+  // the sticky bottom summary bar is rendered and ProductDetail swaps its
+  // primary CTA to "Adicionar ao pedido" (see route param forwarding below).
+  const inOrderId = route.params?.inOrderId ?? null;
 
   useCatalogCacheWarmer();
 
   const handleProductPress = (productId: string) => {
-    navigation.navigate('ProductDetail', { productId });
+    navigation.navigate('ProductDetail', {
+      productId,
+      ...(inOrderId !== null ? { inOrderId } : {}),
+    });
   };
+
+  const handleSummaryBackToOrder = useCallback(() => {
+    if (inOrderId === null) return;
+    navigation.navigate('Orders', {
+      screen: 'OrderDraft',
+      params: { orderId: inOrderId },
+    });
+  }, [inOrderId, navigation]);
 
   const handleSyncPress = useCallback(async () => {
     // Offline is communicated inline by the SyncStatusIndicator pill per
@@ -96,6 +113,12 @@ export function CatalogScreen({ navigation }: Props) {
           )}
         </>
       )}
+      {inOrderId !== null ? (
+        <OrderContextSummaryBar
+          orderId={inOrderId}
+          onPress={handleSummaryBackToOrder}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

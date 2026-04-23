@@ -35,7 +35,15 @@ export function ClientProfileScreen({ navigation, route }: Props) {
   const client = useObservableClient(clientId);
   const history = useClientOrderHistory(clientId);
 
-  const handleNewOrder = () => navigation.navigate('NewOrder', { clientId });
+  // 009-order-assembly: "Novo pedido" now enters the OrdersStack and creates
+  // the draft inside the OrderDraft screen (via useDraftOrder). The old
+  // NewOrderStubScreen is still registered for back-compat links but not
+  // reachable from the UI anymore.
+  const handleNewOrder = () =>
+    navigation.navigate('Orders', {
+      screen: 'OrderDraft',
+      params: { clientId },
+    });
   const handleBack = () => navigation.goBack();
 
   if (client === null) {
