@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
@@ -13,6 +14,7 @@ import { HomeSyncPill } from '../components/HomeSyncPill';
 import { HomeTopBar } from '../components/HomeTopBar';
 import { QuickActionCard } from '../components/QuickActionCard';
 import { RecentActivityCard } from '../components/RecentActivityCard';
+import { useActiveSalespersonName } from '../hooks/useActiveSalespersonName';
 import { useCatalogSummary } from '../hooks/useCatalogSummary';
 import { useClientsSummary } from '../hooks/useClientsSummary';
 import { useDraftsSummary } from '../hooks/useDraftsSummary';
@@ -30,16 +32,17 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'HomePlaceholder'>;
  * and `syncStatusStore` (sync state) through the summary hooks; React
  * re-renders, the snapshot is recomputed, cards pick up the new shape.
  *
- * Root element is intentionally a <View>, NOT a <ScrollView>. Home MUST
- * NOT scroll on the phone reference viewport per spec FR-020.
- *
- * The sync-pill slot is a <View /> placeholder until Phase 5 (US3) lands
- * the real HomeSyncPill component.
+ * Body is a <ScrollView> with `contentContainerStyle={{ flexGrow: 1 }}`
+ * to host <RefreshControl>. The content fits the phone reference viewport
+ * so there is no visible scroll (spec FR-020); the ScrollView exists
+ * purely so the pull-to-refresh gesture works — the only way the seller
+ * has to force a sync from Home.
  */
 export function HomeScreen({ navigation }: Props) {
   const viewport = useViewport();
   const { email } = useSession();
   const activeSp = useActiveSalespersonId();
+  const salespersonName = useActiveSalespersonName(activeSp.salespersonId);
   const sync = useSyncStatus();
   const catalog = useCatalogSummary();
   const clients = useClientsSummary(activeSp.salespersonId);
@@ -47,6 +50,7 @@ export function HomeScreen({ navigation }: Props) {
   const recentActivity = useLastSentOrder();
 
   const snapshot = deriveHomeSnapshot({
+    name: salespersonName,
     email,
     sync,
     nowMs: Date.now(),
@@ -55,6 +59,16 @@ export function HomeScreen({ navigation }: Props) {
     drafts,
     recentActivity,
   });
+
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await onPullToRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   const isTablet = viewport === 'tablet';
   const sectionLabelStyle = isTablet ? styles.sectionLabelTablet : styles.sectionLabelPhone;
@@ -127,7 +141,11 @@ export function HomeScreen({ navigation }: Props) {
         onSettingsPress={goSettings}
         syncPillSlot={<HomeSyncPill viewport={viewport} />}
       />
-      <View style={styles.body}>
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.bodyContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+      >
         <GreetingBlock viewport={viewport} greeting={snapshot.greeting} />
 
         <View style={isTablet ? styles.sectionActionsTablet : styles.sectionActionsPhone}>
@@ -149,7 +167,7 @@ export function HomeScreen({ navigation }: Props) {
             onPress={goRecentActivityPlaceholder}
           />
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -161,6 +179,9 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
+  },
+  bodyContent: {
+    flexGrow: 1,
   },
   sectionActionsPhone: {
     paddingHorizontal: 16,

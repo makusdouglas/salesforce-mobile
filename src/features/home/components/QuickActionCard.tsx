@@ -1,8 +1,27 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Viewport } from '../hooks/useViewport';
-import type { QuickActionCardDTO } from '../snapshot/deriveHomeSnapshot';
+import type { QuickActionCardDTO, QuickActionCardKind } from '../snapshot/deriveHomeSnapshot';
+
+const ICON_FOR_KIND: Record<QuickActionCardKind, keyof typeof Ionicons.glyphMap> = {
+  catalog: 'cube-outline',
+  clients: 'storefront-outline',
+  drafts: 'create-outline',
+};
+
+const ICON_COLOR_FOR_KIND: Record<QuickActionCardKind, string> = {
+  catalog: '#0A0A0A',
+  clients: '#0A0A0A',
+  drafts: '#92400E',
+};
+
+const ICON_COLOR_DASHED: Record<QuickActionCardKind, string> = {
+  catalog: '#0A0A0A',
+  clients: '#0A0A0A',
+  drafts: '#A1A1AA',
+};
 
 type Props = {
   readonly card: QuickActionCardDTO;
@@ -23,6 +42,9 @@ export function QuickActionCard(props: Props): React.ReactElement {
   const { card, viewport, onPress, onEmptyCtaPress } = props;
   const isTablet = viewport === 'tablet';
 
+  const iconSize = isTablet ? 26 : 22;
+  const iconName = ICON_FOR_KIND[card.kind];
+
   if (card.populated !== null) {
     return (
       <Pressable
@@ -35,7 +57,9 @@ export function QuickActionCard(props: Props): React.ReactElement {
           pressed && styles.cardPressed,
         ]}
       >
-        <View style={[styles.iconWrap, card.kind === 'drafts' && styles.iconWrapDrafts]} />
+        <View style={[styles.iconWrap, card.kind === 'drafts' && styles.iconWrapDrafts]}>
+          <Ionicons name={iconName} size={iconSize} color={ICON_COLOR_FOR_KIND[card.kind]} />
+        </View>
         <View style={styles.textWrap}>
           <Text style={isTablet ? styles.titleTablet : styles.titlePhone}>{card.title}</Text>
           <Text style={isTablet ? styles.subtitleTablet : styles.subtitlePhone}>
@@ -47,7 +71,7 @@ export function QuickActionCard(props: Props): React.ReactElement {
             <Text style={styles.badgeLabel}>{card.populated.badge}</Text>
           </View>
         ) : null}
-        <Text style={styles.chevron}>›</Text>
+        <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
       </Pressable>
     );
   }
@@ -72,7 +96,9 @@ export function QuickActionCard(props: Props): React.ReactElement {
             styles.iconWrapEmpty,
             card.kind === 'drafts' && dashed && styles.iconWrapDashed,
           ]}
-        />
+        >
+          <Ionicons name={iconName} size={20} color={ICON_COLOR_DASHED[card.kind]} />
+        </View>
         <View style={styles.textWrap}>
           <Text style={styles.emptyTitle}>{card.empty.title}</Text>
           <Text style={styles.emptySubtitle}>{card.empty.subtitle}</Text>
@@ -89,6 +115,12 @@ export function QuickActionCard(props: Props): React.ReactElement {
             pressed && styles.ctaPressed,
           ]}
         >
+          <Ionicons
+            name={card.empty.cta.kind === 'primary' ? 'refresh' : 'add'}
+            size={16}
+            color={card.empty.cta.kind === 'primary' ? '#FFFFFF' : '#0A0A0A'}
+            style={styles.ctaIcon}
+          />
           <Text
             style={
               card.empty.cta.kind === 'primary' ? styles.ctaPrimaryLabel : styles.ctaSecondaryLabel
@@ -153,6 +185,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 10,
     backgroundColor: '#F4F4F5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconWrapDrafts: {
     backgroundColor: '#FEF3C7',
@@ -227,6 +261,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  ctaIcon: {
+    marginTop: 1,
   },
   ctaPrimary: {
     backgroundColor: '#18181B',

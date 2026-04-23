@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -52,7 +53,9 @@ export function RecentActivityCard(props: Props): React.ReactElement {
         pressed && styles.cardPressed,
       ]}
     >
-      <View style={styles.iconWrap} />
+      <View style={styles.iconWrap}>
+        <Ionicons name="send" size={18} color="#047857" />
+      </View>
       <View style={styles.textWrap}>
         <Text
           numberOfLines={1}
@@ -63,7 +66,7 @@ export function RecentActivityCard(props: Props): React.ReactElement {
         </Text>
         <Text style={isTablet ? styles.metaTablet : styles.metaPhone}>{meta}</Text>
       </View>
-      {isTablet ? <Text style={styles.chevron}>›</Text> : null}
+      {isTablet ? <Ionicons name="chevron-forward" size={22} color="#A1A1AA" /> : null}
     </Pressable>
   );
 }
@@ -95,6 +98,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textWrap: {
     flex: 1,
@@ -121,10 +126,5 @@ const styles = StyleSheet.create({
     color: '#71717A',
     fontFamily: 'Inter',
     fontSize: 13,
-  },
-  chevron: {
-    color: '#A1A1AA',
-    fontSize: 22,
-    lineHeight: 22,
   },
 });

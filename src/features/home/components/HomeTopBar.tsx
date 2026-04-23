@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -37,7 +38,7 @@ export function HomeTopBar(props: Props): React.ReactElement {
           hitSlop={12}
           style={({ pressed }) => [styles.gear, pressed && styles.gearPressed]}
         >
-          <Text style={styles.gearGlyph}>⚙︎</Text>
+          <Ionicons name="settings-outline" size={22} color="#52525B" />
         </Pressable>
       </View>
     </View>
@@ -83,10 +84,6 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  gearGlyph: {
-    color: '#52525B',
-    fontSize: 20,
   },
   gearPressed: {
     opacity: 0.6,

@@ -1,11 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { onPullToRefresh, useSyncStatus } from '@/features/sync';
 
 import { homeCopy } from '../copy/copy';
+import { useTick } from '../hooks/useTick';
 import type { Viewport } from '../hooks/useViewport';
 import { deriveSyncPillState, type SyncPillStateDTO } from '../sync/deriveSyncPillState';
+
+const PILL_TICK_MS = 30_000;
 
 type Props = {
   readonly viewport: Viewport;
@@ -22,10 +26,14 @@ type Props = {
  */
 export function HomeSyncPill({ viewport }: Props): React.ReactElement {
   const snapshot = useSyncStatus();
+  // Re-render every 30 s so the "há N min" age stays current between store
+  // emissions (the store only emits on status/lastOkAt transitions, which
+  // can be sparse during an idle session).
+  const nowMs = useTick(PILL_TICK_MS);
   const state = deriveSyncPillState({
     status: snapshot.status,
     lastOkAt: snapshot.lastOkAt,
-    nowMs: Date.now(),
+    nowMs,
   });
   const palette = palettes[state.kind];
   const label = labelFor(state);
@@ -52,9 +60,13 @@ export function HomeSyncPill({ viewport }: Props): React.ReactElement {
         pressed && interactive && styles.pillPressed,
       ]}
     >
-      <View
-        style={[isTablet ? styles.dotTablet : styles.dotPhone, { backgroundColor: palette.dot }]}
-      />
+      {state.kind === 'failed' ? (
+        <Ionicons name="refresh" size={isTablet ? 14 : 12} color={palette.label} />
+      ) : (
+        <View
+          style={[isTablet ? styles.dotTablet : styles.dotPhone, { backgroundColor: palette.dot }]}
+        />
+      )}
       <Text style={[isTablet ? styles.labelTablet : styles.labelPhone, { color: palette.label }]}>
         {label}
       </Text>

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -23,7 +24,9 @@ export function DashedPlaceholderCard(props: Props): React.ReactElement {
       accessibilityLabel={`${title}. ${subtitle}`}
       style={[styles.card, isTablet ? styles.cardTablet : styles.cardPhone]}
     >
-      <View style={styles.iconWrap} />
+      <View style={styles.iconWrap}>
+        <Ionicons name="send-outline" size={18} color="#A1A1AA" />
+      </View>
       <View style={styles.textWrap}>
         <Text style={isTablet ? styles.titleTablet : styles.titlePhone}>{title}</Text>
         <Text style={isTablet ? styles.subtitleTablet : styles.subtitlePhone}>{subtitle}</Text>
@@ -57,6 +60,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: '#F4F4F5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textWrap: {
     flex: 1,

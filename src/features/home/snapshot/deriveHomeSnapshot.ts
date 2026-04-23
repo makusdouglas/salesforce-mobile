@@ -64,6 +64,8 @@ export type HomeSnapshotDTO = {
 };
 
 export type DeriveHomeSnapshotInput = {
+  /** Salesperson's real name (from the salespeople table). Preferred over email. */
+  readonly name: string | null;
   readonly email: string | null;
   readonly sync: SyncStatusSnapshot;
   readonly nowMs: number;
@@ -132,9 +134,9 @@ function buildDraftsCard(count: number): QuickActionCardDTO {
 }
 
 export function deriveHomeSnapshot(input: DeriveHomeSnapshotInput): HomeSnapshotDTO {
-  const { email, sync, nowMs, catalog, clients, drafts, recentActivity } = input;
+  const { name, email, sync, nowMs, catalog, clients, drafts, recentActivity } = input;
 
-  const firstName = deriveGreetingName(email);
+  const firstName = deriveGreetingName({ name, email });
   const isFirstRun =
     catalog.count === 0 && clients.count === 0 && drafts.count === 0 && recentActivity === null;
 

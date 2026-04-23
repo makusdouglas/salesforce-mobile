@@ -11,6 +11,7 @@ function sync(overrides: Partial<SyncStatusSnapshot> = {}): SyncStatusSnapshot {
 
 function baseInput(overrides: Partial<Parameters<typeof deriveHomeSnapshot>[0]> = {}) {
   return {
+    name: 'Márcio Souza',
     email: 'markus@local.dev',
     sync: sync(),
     nowMs: NOW,
@@ -41,10 +42,15 @@ describe('deriveHomeSnapshot — populated world', () => {
     expect(snap.sectionActionsLabel).toBe('Ações rápidas');
   });
 
-  test('greeting uses populated variant with first name from email', () => {
+  test('greeting uses populated variant with first name from salesperson name', () => {
     const snap = deriveHomeSnapshot(baseInput());
-    expect(snap.greeting.title).toBe('Olá, markus');
+    expect(snap.greeting.title).toBe('Olá, Márcio');
     expect(snap.greeting.subtitle).toBe('Tudo pronto para suas visitas de hoje.');
+  });
+
+  test('greeting falls back to email local part when name is null', () => {
+    const snap = deriveHomeSnapshot(baseInput({ name: null }));
+    expect(snap.greeting.title).toBe('Olá, markus');
   });
 
   test('sync pill kind is "in-sync" with formatted age label', () => {
@@ -89,7 +95,7 @@ describe('deriveHomeSnapshot — first-run empty world (FR-018)', () => {
         recentActivity: null,
       }),
     );
-    expect(snap.greeting.title).toBe('Bem-vindo, markus');
+    expect(snap.greeting.title).toBe('Bem-vindo, Márcio');
     expect(snap.greeting.subtitle).toBe('Vamos preparar tudo para sua primeira visita.');
     expect(snap.sectionActionsLabel).toBe('Comece por aqui');
   });
@@ -126,14 +132,15 @@ describe('deriveHomeSnapshot — first-run empty world (FR-018)', () => {
 });
 
 describe('deriveHomeSnapshot — edge cases', () => {
-  test('null email → greeting falls back to bare "Olá" (populated)', () => {
-    const snap = deriveHomeSnapshot(baseInput({ email: null }));
+  test('null name + null email → greeting falls back to bare "Olá" (populated)', () => {
+    const snap = deriveHomeSnapshot(baseInput({ name: null, email: null }));
     expect(snap.greeting.title).toBe('Olá');
   });
 
-  test('null email + first-run → "Bem-vindo"', () => {
+  test('null name + null email + first-run → "Bem-vindo"', () => {
     const snap = deriveHomeSnapshot(
       baseInput({
+        name: null,
         email: null,
         catalog: { count: 0 },
         clients: { count: 0 },
@@ -182,7 +189,7 @@ describe('deriveHomeSnapshot — edge cases', () => {
         recentActivity: ORDER,
       }),
     );
-    expect(snap.greeting.title).toBe('Olá, markus');
+    expect(snap.greeting.title).toBe('Olá, Márcio');
     expect(snap.sectionActionsLabel).toBe('Ações rápidas');
   });
 });
