@@ -76,6 +76,14 @@ export function HomePlaceholderScreen({ navigation }: Props) {
         <Pressable
           accessibilityRole="button"
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+          onPress={() => navigation.navigate('Clients')}
+        >
+          <Text style={styles.buttonLabel}>Ver clientes</Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
           onPress={() => navigation.navigate('Catalog')}
         >
           <Text style={styles.buttonLabel}>Ver catálogo</Text>
@@ -117,6 +125,15 @@ export function HomePlaceholderScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('DataLayerSmoke')}
           >
             <Text style={styles.buttonLabel}>[dev] Data-Layer Smoke</Text>
+          </Pressable>
+        ) : null}
+        {__DEV__ ? (
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+            onPress={() => navigation.navigate('DatabaseInspector')}
+          >
+            <Text style={styles.buttonLabel}>[dev] DB Inspector</Text>
           </Pressable>
         ) : null}
         <Pressable

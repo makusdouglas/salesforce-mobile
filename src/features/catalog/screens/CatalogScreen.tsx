@@ -4,13 +4,13 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
+import { SearchBar } from '@/components/SearchBar';
 import { onPullToRefresh, SyncStatusIndicator, useSyncStatus } from '@/features/sync';
 
 import { CatalogEmptyView } from '../components/CatalogEmptyView';
 import { CatalogNoMatchesView } from '../components/CatalogNoMatchesView';
 import { FilterChipRow } from '../components/FilterChipRow';
 import { ProductGrid } from '../components/ProductGrid';
-import { SearchBar } from '../components/SearchBar';
 import { useCatalog } from '../hooks/useCatalog';
 import { useCatalogCacheWarmer } from '../hooks/useCatalogCacheWarmer';
 import { useCatalogFilter } from '../hooks/useCatalogFilter';
@@ -80,7 +80,7 @@ export function CatalogScreen({ navigation }: Props) {
             <SearchBar
               value={filter.query}
               onChangeText={filter.setQuery}
-              viewport={viewport}
+              placeholder="Buscar produto"
             />
             <FilterChipRow
               products={products}

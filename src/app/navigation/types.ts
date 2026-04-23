@@ -11,8 +11,13 @@ export type AuthStackParamList = {
 export type HomeStackParamList = {
   HomePlaceholder: undefined;
   DataLayerSmoke: undefined;
+  DatabaseInspector: undefined;
   Catalog: undefined;
   ProductDetail: { productId: string };
+  Clients: undefined;
+  ClientForm: undefined;
+  ClientProfile: { clientId: string };
+  NewOrder: { clientId: string };
 };
 
 declare global {

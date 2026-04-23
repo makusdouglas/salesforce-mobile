@@ -28,7 +28,7 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
       onPress={() => onPress(product.id)}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
-      <CachedImage source={product.imageUrl} style={styles.image} />
+      <CachedImage source={product.imageUrl} style={styles.image} resizeMode='contain' />
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={1}>
           {product.name}

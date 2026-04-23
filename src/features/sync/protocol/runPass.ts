@@ -37,6 +37,9 @@ export async function runPass(_trigger: SyncTrigger): Promise<SyncRunResult> {
     });
     return { outcome: 'ok' };
   } catch (err) {
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+      console.warn('[sync] runPass failed', err);
+    }
     if (err instanceof SyncError) {
       if (err.code === 'AUTH_REJECTED') {
         // Hand off to auth — do NOT retry inside the same pass.

@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { Image, type ImageResizeMode, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { useCachedImage } from '../hooks/useCachedImage';
@@ -31,7 +32,7 @@ export function CachedImage({
         />
       ) : (
         <View style={styles.placeholderInner}>
-          <View style={styles.iconBox} />
+          <Feather name="package" size={48} color="#71717A" />
         </View>
       )}
     </View>

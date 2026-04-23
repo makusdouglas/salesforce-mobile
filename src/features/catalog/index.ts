@@ -6,7 +6,6 @@ export { CatalogEmptyView } from './components/CatalogEmptyView';
 export { CatalogNoMatchesView } from './components/CatalogNoMatchesView';
 export { CatalogProvider } from './components/CatalogProvider';
 export { FilterChipRow } from './components/FilterChipRow';
-export { SearchBar } from './components/SearchBar';
 export { useCatalog } from './hooks/useCatalog';
 export { type ProductDisplayDTO, type VariantDisplayDTO } from './types';
 export { useCachedImage, type CachedImageStatus } from './hooks/useCachedImage';
