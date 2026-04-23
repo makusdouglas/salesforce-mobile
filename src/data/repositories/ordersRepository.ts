@@ -6,7 +6,7 @@ import { database } from '../database';
 import { generateId } from '../ids';
 import Order from '../models/Order';
 import OrderItem from '../models/OrderItem';
-import type { OrderStatus } from '../types';
+import type { DiscountMode, OrderStatus } from '../types';
 
 import { throwNotFound, throwStateTransition, throwValidation } from './_errors';
 import { applyTouchOnCreate, applyTouchOnSoftDelete, applyTouchOnUpdate } from './_touch';
@@ -19,11 +19,13 @@ export interface OrderCreateInput {
   clientId: string;
   salespersonId: string;
   discountAmount?: number;
+  discountMode?: DiscountMode;
   notes?: string;
 }
 
 export interface OrderUpdatePatch {
   discountAmount?: number;
+  discountMode?: DiscountMode;
   notes?: string | null;
   pdfUri?: string | null;
 }
@@ -47,6 +49,7 @@ export const ordersRepository = {
         Q.where('salesperson_id', salespersonId),
         Q.where('status', 'draft' satisfies OrderStatus),
         notDeleted,
+        Q.sortBy('updated_at', Q.desc),
       )
       .observe();
   },
@@ -64,9 +67,11 @@ export const ordersRepository = {
         record.salespersonId = input.salespersonId;
         record.status = 'draft';
         record.discountAmount = input.discountAmount ?? 0;
+        record.discountMode = input.discountMode ?? 'amount';
         record.notes = input.notes ?? null;
         record.createdAtMs = Date.now();
         record.sentAtMs = null;
+        record.canceledAtMs = null;
         record.pdfUri = null;
         applyTouchOnCreate(record);
       }),
@@ -79,9 +84,14 @@ export const ordersRepository = {
     if (patch.discountAmount !== undefined && patch.discountAmount < 0) {
       throwValidation('discountAmount cannot be negative', 'discountAmount');
     }
+    // Draft-only mutation gate. R5 + D4: sent/canceled orders are immutable.
+    if (record.status !== 'draft') {
+      throwStateTransition('order', record.status, 'mutate');
+    }
     return database.write(async () =>
       record.update((r) => {
         if (patch.discountAmount !== undefined) r.discountAmount = patch.discountAmount;
+        if (patch.discountMode !== undefined) r.discountMode = patch.discountMode;
         if (patch.notes !== undefined) r.notes = patch.notes;
         if (patch.pdfUri !== undefined) r.pdfUri = patch.pdfUri;
         applyTouchOnUpdate(r);
@@ -92,7 +102,7 @@ export const ordersRepository = {
   async markSent(id: string): Promise<Order> {
     const record = await orders.find(id).catch(() => null);
     if (!record) throwNotFound('order', id);
-    if (record.status === 'canceled') {
+    if (record.status !== 'draft') {
       throwStateTransition('order', record.status, 'sent');
     }
     return database.write(async () =>
@@ -110,9 +120,13 @@ export const ordersRepository = {
     if (record.status === 'canceled') {
       return record;
     }
+    if (record.status !== 'draft') {
+      throwStateTransition('order', record.status, 'canceled');
+    }
     return database.write(async () =>
       record.update((r) => {
         r.status = 'canceled';
+        r.canceledAtMs = Date.now();
         applyTouchOnUpdate(r);
       }),
     );

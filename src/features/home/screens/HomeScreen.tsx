@@ -105,9 +105,10 @@ export function HomeScreen({ navigation }: Props) {
   const syncNow = (): void => {
     void onPullToRefresh();
   };
-  // TODO(009-orders): replace with navigation to the drafts list.
-  const goDraftsPlaceholder = (): void => {};
-  // TODO(009-orders): replace with navigation to the sent-order detail.
+  const goDraftsPlaceholder = (): void => {
+    navigation.navigate('DraftsList');
+  };
+  // TODO(010-orders): replace with navigation to the sent-order detail.
   const goRecentActivityPlaceholder = (): void => {};
 
   const catalogHandlers = {

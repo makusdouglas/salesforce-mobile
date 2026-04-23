@@ -12,7 +12,7 @@ const syncColumns = [
 ];
 
 export const schema = appSchema({
-  version: 2,
+  version: 3,
   tables: [
     tableSchema({
       name: 'salespeople',
@@ -63,9 +63,14 @@ export const schema = appSchema({
         { name: 'salesperson_id', type: 'string', isIndexed: true },
         { name: 'status', type: 'string', isIndexed: true },
         { name: 'discount_amount', type: 'number' },
+        // 009-order-assembly (schema v3). Interpreted together with
+        // `discount_amount`: 'amount' → BRL; 'percent' → 0..100.
+        { name: 'discount_mode', type: 'string' },
         { name: 'notes', type: 'string', isOptional: true },
         { name: 'created_at_ms', type: 'number' },
         { name: 'sent_at_ms', type: 'number', isOptional: true },
+        // 009-order-assembly (schema v3). Stamped on draft→canceled.
+        { name: 'canceled_at_ms', type: 'number', isOptional: true },
         { name: 'pdf_uri', type: 'string', isOptional: true },
         ...syncColumns,
       ],
@@ -78,6 +83,8 @@ export const schema = appSchema({
         { name: 'quantity', type: 'number' },
         { name: 'unit_price', type: 'number' },
         { name: 'discount_amount', type: 'number' },
+        // 009-order-assembly (schema v3). See `orders.discount_mode`.
+        { name: 'discount_mode', type: 'string' },
         ...syncColumns,
       ],
     }),

@@ -1,6 +1,7 @@
 import { Model, type Relation } from '@nozbe/watermelondb';
 import { field, relation } from '@nozbe/watermelondb/decorators';
 
+import type { DiscountMode } from '../types';
 import type Order from './Order';
 import type ProductVariant from './ProductVariant';
 
@@ -17,10 +18,19 @@ export default class OrderItem extends Model {
   @field('quantity') quantity!: number;
   @field('unit_price') unitPrice!: number;
   @field('discount_amount') discountAmount!: number;
+  @field('discount_mode') _discountMode!: string | null;
 
   @field('server_id') serverId!: string | null;
   @field('updated_at') updatedAt!: number;
 
   @relation('orders', 'order_id') order!: Relation<Order>;
   @relation('product_variants', 'product_variant_id') variant!: Relation<ProductVariant>;
+
+  get discountMode(): DiscountMode {
+    return this._discountMode === 'percent' ? 'percent' : 'amount';
+  }
+
+  set discountMode(value: DiscountMode) {
+    this._discountMode = value;
+  }
 }

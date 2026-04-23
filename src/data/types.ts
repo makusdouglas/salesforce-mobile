@@ -1,5 +1,7 @@
 export type SyncStatus = 'created' | 'updated' | 'deleted' | 'synced';
 export type OrderStatus = 'draft' | 'sent' | 'canceled';
+/** 009-order-assembly: discount stored on Order / OrderItem. */
+export type DiscountMode = 'amount' | 'percent';
 export type PaymentMethod = 'cash' | 'pix' | 'transfer' | 'card' | 'other';
 
 export type DataLayerErrorCode = 'VALIDATION' | 'NOT_FOUND' | 'FOREIGN_KEY' | 'STATE_TRANSITION';

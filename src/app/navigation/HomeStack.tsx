@@ -9,8 +9,9 @@ import {
   ClientsScreen,
   NewOrderStubScreen,
 } from '@/features/clients';
-import { HomeScreen, SettingsScreen } from '@/features/home';
+import { DraftsListScreen, HomeScreen, SettingsScreen } from '@/features/home';
 
+import { OrdersStack } from './OrdersStack';
 import type { HomeStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -51,6 +52,17 @@ export function HomeStack() {
       <Stack.Screen
         name="NewOrder"
         component={NewOrderStubScreen}
+        options={{ headerShown: false }}
+      />
+      {/* 009-order-assembly: nested stack for OrderDraft / AddToOrder / OrderSummary. */}
+      <Stack.Screen
+        name="Orders"
+        component={OrdersStack}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DraftsList"
+        component={DraftsListScreen}
         options={{ headerShown: false }}
       />
       {__DEV__ ? (

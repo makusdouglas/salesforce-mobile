@@ -15,6 +15,8 @@ import { toVariantDTO } from '../hooks/useCatalog';
 import { useViewport } from '../hooks/useViewport';
 import { deriveProductDTO, type ProductDisplayDTO } from '../types';
 
+import { OrderContextSummaryBar } from './OrderContextSummaryBar';
+
 type Props = NativeStackScreenProps<HomeStackParamList, 'ProductDetail'>;
 
 function useProduct(productId: string): { product: ProductDisplayDTO | null; loading: boolean } {
@@ -69,9 +71,26 @@ function sortVariantsByLabel(variants: readonly ProductDisplayDTO['variants'][nu
 
 export function ProductDetailScreen({ navigation, route }: Props) {
   const { productId } = route.params;
+  // 009-order-assembly: when present, the screen is in "add-to-order" mode.
+  const inOrderId = route.params.inOrderId ?? null;
   const { product, loading } = useProduct(productId);
   const viewport = useViewport();
   const isTablet = viewport === 'tablet';
+
+  const handleAddToOrder = () => {
+    if (inOrderId === null) return;
+    navigation.navigate('Orders', {
+      screen: 'AddToOrder',
+      params: { orderId: inOrderId, productId },
+    });
+  };
+  const handleBackToOrder = () => {
+    if (inOrderId === null) return;
+    navigation.navigate('Orders', {
+      screen: 'OrderDraft',
+      params: { orderId: inOrderId },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -120,9 +139,46 @@ export function ProductDetailScreen({ navigation, route }: Props) {
           </View>
         </ScrollView>
       )}
+      {inOrderId !== null && product !== null ? (
+        <View style={ctaStyles.footer}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Adicionar ao pedido"
+            onPress={handleAddToOrder}
+            style={({ pressed }) => [
+              ctaStyles.btn,
+              pressed && ctaStyles.pressed,
+            ]}
+          >
+            <Text style={ctaStyles.btnText}>Adicionar ao pedido</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {inOrderId !== null ? (
+        <OrderContextSummaryBar orderId={inOrderId} onPress={handleBackToOrder} />
+      ) : null}
     </SafeAreaView>
   );
 }
+
+const ctaStyles = StyleSheet.create({
+  footer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E4E4E7',
+  },
+  btn: {
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#171717',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnText: { color: '#FAFAFA', fontSize: 14, fontWeight: '600' },
+  pressed: { opacity: 0.6 },
+});
 
 function InfoPanel({
   product,
