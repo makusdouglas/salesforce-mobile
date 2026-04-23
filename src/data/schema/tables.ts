@@ -12,7 +12,7 @@ const syncColumns = [
 ];
 
 export const schema = appSchema({
-  version: 3,
+  version: 4,
   tables: [
     tableSchema({
       name: 'salespeople',
@@ -72,6 +72,22 @@ export const schema = appSchema({
         // 009-order-assembly (schema v3). Stamped on draft→canceled.
         { name: 'canceled_at_ms', type: 'number', isOptional: true },
         { name: 'pdf_uri', type: 'string', isOptional: true },
+        // 011-order-email-delivery (schema v4). '#YYYY-NNNN' human-readable
+        // order number. NULL until the salesperson taps Enviar por email.
+        // Indexed so sync-time conflict reconciliation can query existing
+        // numbers for the year cheaply.
+        { name: 'order_number', type: 'string', isOptional: true, isIndexed: true },
+        ...syncColumns,
+      ],
+    }),
+    tableSchema({
+      // 011-order-email-delivery (schema v4). Local-only per-year order
+      // number allocator. NOT synced to Supabase (see plan.md R9). Watermelon
+      // `id` is set to `String(year)` so findByYear is an O(1) collection.find.
+      name: 'order_number_counters',
+      columns: [
+        { name: 'year', type: 'number' },
+        { name: 'next_value', type: 'number' },
         ...syncColumns,
       ],
     }),

@@ -5,6 +5,7 @@ import {
   Client,
   Order,
   OrderItem,
+  OrderNumberCounter,
   PaymentReceipt,
   Product,
   ProductVariant,
@@ -13,5 +14,14 @@ import {
 
 export const database = new Database({
   adapter,
-  modelClasses: [Salesperson, Client, Product, ProductVariant, Order, OrderItem, PaymentReceipt],
+  modelClasses: [
+    Salesperson,
+    Client,
+    Product,
+    ProductVariant,
+    Order,
+    OrderItem,
+    OrderNumberCounter,
+    PaymentReceipt,
+  ],
 });

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   AddToOrderScreen,
   OrderDraftScreen,
+  OrderSentScreen,
   OrderSummaryScreen,
 } from '@/features/orders';
 
@@ -20,6 +21,7 @@ export function OrdersStack() {
         options={{ presentation: 'modal' }}
       />
       <Stack.Screen name="OrderSummary" component={OrderSummaryScreen} />
+      <Stack.Screen name="OrderSent" component={OrderSentScreen} />
     </Stack.Navigator>
   );
 }
