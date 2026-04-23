@@ -33,6 +33,33 @@
 
 [Gates determined based on constitution file]
 
+## Role & Authorization Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+**Does this feature expose or touch role-guarded surfaces?** Answer "yes"
+when the feature (a) introduces or modifies a screen under
+`src/features/admin/`, (b) writes to a table covered by D7 RLS
+(`products`, `product_variants`, `salespeople`, `clients`, `user_roles`),
+(c) changes which roles can see an affordance, or (d) calls an Edge
+Function that holds `service_role`. Answer "no" for features scoped
+entirely to VENDEDOR surfaces that only read from WatermelonDB.
+
+- **If YES** — fill every row below; leave no cell blank. At least one
+  task in tasks.md MUST create or modify the RLS policies enumerated
+  here, and that task MUST land in Phase 1 Setup before any screen task
+  for this feature.
+- **If NO** — record "N/A (no role-guarded surfaces)" and skip the table.
+
+| Check | Value / Status | Notes |
+|-------|----------------|-------|
+| Roles affected (admin / seller / dual-role) | | |
+| New or modified RLS policies (per table) | | Reference the migration file |
+| Edge Functions introduced (service_role usage) | [✅ / none] | Name the function; confirm service_role stays server-side |
+| Offline classification per P6 (online-required / offline-first / mixed) | | Admin flows default to online-required; mixed flows must justify below |
+| Client-side affordance visibility rule (UX6) | | Which role(s) see which surface |
+| Dual-role user impact | | How a user with both roles navigates this feature |
+
 ## Design Prerequisite
 
 *GATE: Must pass before any implementation task is generated.*

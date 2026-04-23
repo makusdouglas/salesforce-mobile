@@ -1,6 +1,6 @@
 # SPECS — Backlog de `/speckit-specify`
 
-Lista priorizada de prompts para gerar as specs deste MVP, derivada da [constitution v0.2.0](.specify/memory/constitution.md). Cada bloco é uma `/speckit-specify` independente.
+Lista priorizada de prompts para gerar as specs deste MVP, derivada da [constitution v1.0.0](.specify/memory/constitution.md). Cada bloco é uma `/speckit-specify` independente.
 
 **Como usar**: rode os blocos **em ordem** (cada um assume o anterior pronto). Para features com UI, aceite o prompt do hook `speckit.pencil.design` — as telas no [layout.pen](./layout.pen) viram a fonte primordial da spec.
 
@@ -158,9 +158,49 @@ Registrar recebimento (valor, método, data, foto opcional do comprovante), uplo
 
 ---
 
-## Fase 4 — Resiliência
+## Fase 4 — Módulo Admin
 
-### 13. Emergency Export / Local Backup (P5) `[infra]` `[light-ui]`
+> Introduzida na constitution v1.0.0. O papel ADMIN traz para dentro do app cadastros que antes viviam no Supabase dashboard. ADMIN é online-first (P6) e convive com VENDEDOR via dual-role visibility (UX6).
+
+### 13. Admin Role Foundation + Products CRUD `[admin]` `[ui]`
+
+Primeira feature admin — carrega a fundação RBAC (tabela `user_roles`, propagação de roles na sessão, aba Admin role-guarded no root navigator, hook `useUserRoles`) mais o CRUD completo de produtos/variantes com upload de foto. As features seguintes (14, 15) consomem essa fundação.
+
+```
+/speckit-specify Implement the ADMIN role foundation and the products/variants CRUD per constitution v1.0.0 D7, UX6, P6. Foundation: create a user_roles(user_id, role) table in Supabase, seed the first admin via manual migration, expose roles in the session state post-login, add a role-guarded "Admin" tab in the root navigator that appears only when the signed-in user carries role 'admin'. Dual-role users (admin + seller) see both the seller home and the Admin tab simultaneously (UX6) — no mode toggle. CRUD: admin screens for listing and creating/editing products (name, description, category, base price, image) and their variants (attributes, price). Images are chosen via expo-image-picker, resized via expo-image-manipulator, uploaded directly to Supabase Storage, and the resulting URL is stored on the product row. Writes go straight to Supabase via the client — ADMIN operations are online-required (P6) and do NOT use WatermelonDB's push queue. RLS policies MUST enforce that only role 'admin' can INSERT/UPDATE/DELETE on products and product_variants. After any admin write, trigger a sync pull so the seller-side local cache (feature 5) propagates the change.
+```
+
+> **Pencil hook**: **accept** — AdminHome, AdminProductList, AdminProductForm, AdminVariantList, AdminVariantForm, image picker flow. Phone + tablet para cada (UX5).
+
+---
+
+### 14. Admin Sellers Management `[admin]` `[ui]`
+
+CRUD de vendedores pelo admin. Criar vendedor = criar usuário Supabase Auth via Edge Function (o client nunca carrega service_role), registrar em `salespeople` e atribuir role `seller` em `user_roles`. Desativar preserva histórico e revoga apenas a role.
+
+```
+/speckit-specify Implement admin-side seller management on top of the foundation shipped in feature 13. Admin screens for listing existing sellers, creating a new seller (name, email, initial password or passwordless invite), editing (name, active/inactive flag), and deactivating a seller. Creating a seller requires creating a Supabase Auth user — which needs the service_role key and therefore MUST go through an Edge Function (admin-create-seller) invoked by the client; the client never holds service_role. The Edge Function also inserts the matching row in salespeople and assigns role 'seller' in user_roles atomically. Deactivation flips an active flag and revokes the 'seller' role but preserves the salespeople row for historical order references. RLS ensures only role 'admin' can invoke the Edge Function and write to salespeople or user_roles.
+```
+
+> **Pencil hook**: **accept** — AdminSellerList, AdminSellerForm, confirmação de deactivate.
+
+---
+
+### 15. Admin Clients Management `[admin]` `[ui]`
+
+CRUD admin-side de clientes. Complementa D3 (vendedor cria clientes em campo) permitindo admin editar qualquer cliente, inclusive os criados por vendedores. Busca rápida com filtro por vendedor-dono. Merge de duplicatas continua out-of-scope per D3.
+
+```
+/speckit-specify Implement admin-side client management on top of the foundation shipped in feature 13. Admin screens for listing all clients across all sellers, creating a client (same fields as the seller-side flow in feature 7: store name, CNPJ, address, contact, notes), editing any client regardless of who created it, and marking a client as inactive. RLS: role 'admin' can SELECT/INSERT/UPDATE/DELETE any row in clients; role 'seller' retains the existing rules (create any, edit only their own). Admin edits sync down to the owning seller's device on the next pull (feature 5). Duplicate-CNPJ merging remains out of scope per constitution D3 — the admin can manually resolve duplicates by editing/deleting rows. The admin client list MUST support fast search (tap-first filters for seller-owner and status, text search for name/CNPJ).
+```
+
+> **Pencil hook**: **accept** — AdminClientList com filtro por vendedor, AdminClientForm.
+
+---
+
+## Fase 5 — Resiliência
+
+### 16. Emergency Export / Local Backup (P5) `[infra]` `[light-ui]`
 
 Export manual do WatermelonDB em formato legível (JSON/ZIP) compartilhável via share sheet, para mitigar reinstall/crash/troca de device.
 
@@ -194,5 +234,8 @@ Export manual do WatermelonDB em formato legível (JSON/ZIP) compartilhável via
 10. Repeat Last Order                           [core/ui]
 11. Order PDF + Email Intent                    [core/ui]
 12. Payment Receipts                            [core/ui]
-13. Emergency Export                            [infra/light-ui]
+13. Admin Role Foundation + Products CRUD       [admin/ui]
+14. Admin Sellers Management                    [admin/ui]
+15. Admin Clients Management                    [admin/ui]
+16. Emergency Export                            [infra/light-ui]
 ```
