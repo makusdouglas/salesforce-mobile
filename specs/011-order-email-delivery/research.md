@@ -61,6 +61,13 @@ All technical-context unknowns were resolved against constitution §3/§4 and de
 - **Decision**: the sync push layer (`src/data/sync/push/ordersPush.ts`) omits `pdf_path` from the outbound Supabase payload. `order_number` IS pushed.
 - **Rationale**: `pdf_path` is an absolute device path that is meaningless on another installation; syncing it would pollute the remote row and confuse a future reader. `order_number` must sync for the uniqueness constraint to have any teeth across devices.
 
+## R11 — `expo-sharing` result semantics (Android limitation)
+
+- **Decision**: treat any non-throwing resolve from `Sharing.shareAsync` as "sent" for the no-email share-fallback path. Do not attempt to distinguish cancel vs. success on Android.
+- **Rationale**: `expo-sharing` returns `Promise<void>` with no result code on Android (the OS does not expose one). Attempting to detect cancel via focus-change heuristics would be brittle and user-hostile. Accepting the Android false-positive ("user tapped Cancel on the share sheet but the app still marks the order `sent`") is preferable to leaving drafts in a stuck state — the salesperson can still cancel the order manually if they dismissed unintentionally, and the common case (actually shared) is the vast majority.
+- **Alternatives considered**: (a) show an "enviou?" confirmation prompt on return from share sheet — rejected, adds a tap and burdens every no-email flow; (b) platform-branch with iOS using `UIActivityViewController` completion handler to detect cancel — rejected, would need a native module and breaks P3.
+- **Scope**: applies to the no-email share-fallback path only. The mail-composer path uses `MailComposerResult.SENT` and DOES distinguish cancel on both platforms.
+
 ## R10 — `OrderSent` screen navigation on "Concluir"
 
 - **Decision**: `navigation.navigate('ClientProfile', { clientId })`, matching the existing post-send target in 009.

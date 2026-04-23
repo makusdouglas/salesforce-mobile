@@ -15,7 +15,7 @@ Additive schema changes only. No new business entities; one supporting-infrastru
 | `discount_amount` | int (cents) | no | existing (009) |
 | `discount_mode` | text | no | existing (009) |
 | `created_at_ms` | int | no | existing |
-| `sent_at_ms` | int | yes | existing (009) — populated for the first time by this feature |
+| `sent_at_ms` | int | yes | existing (009); this feature writes it in concert with the new `order_number` + `pdf_path` fields whenever the order transitions to `sent` |
 | `canceled_at_ms` | int | yes | existing (009) |
 | **`order_number`** | text | yes | **NEW** — `#YYYY-NNNN`. Non-null once the order has passed send-intent. Unique across the seller's devices after sync reconciliation. |
 | **`pdf_path`** | text | yes | **NEW** — absolute device path to the persisted PDF. Non-null once the PDF has been materialized. **Device-local only; excluded from Supabase sync.** |

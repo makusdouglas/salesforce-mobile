@@ -118,7 +118,7 @@ A salesperson needs to re-send or review the PDF of an order they already sent e
 
 ### Key Entities
 
-- **Order** *(existing from 009)*: Gains three new persisted fields — `order_number` (string, `#YYYY-NNNN` format), `pdf_path` (string, on-device file path), and `sent_at_ms` (already present in 009, now actually populated on successful send).
+- **Order** *(existing from 009)*: Gains two new persisted fields — `order_number` (string, `#YYYY-NNNN` format) and `pdf_path` (string, on-device file path). The existing `sent_at_ms` column is written in concert with these two fields on every successful transition to `sent`. See [data-model.md](./data-model.md).
 - **Order Number Counter** *(new)*: A per-year counter source. Each calendar year has its own next-value pool; on send-intent the next value is allocated and marked used locally. Sync reconciles collisions deterministically. Not user-visible.
 - **Generated PDF** *(derived artifact, not a DB entity)*: A file on device storage referenced by `pdf_path`. Treated as disposable/regenerable — truth lives on the order row.
 
