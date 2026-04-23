@@ -1,15 +1,37 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
-import { type Viewport } from '../hooks/useViewport';
+// Viewport split — mirrors the project-wide 768 pt breakpoint convention.
+const TABLET_MIN_WIDTH = 768;
 
 export type SearchBarProps = {
-  value: string;
-  onChangeText: (value: string) => void;
-  viewport: Viewport;
+  readonly value: string;
+  readonly onChangeText: (next: string) => void;
+  readonly placeholder: string;
+  readonly accessibilityLabel?: string;
 };
 
-export function SearchBar({ value, onChangeText, viewport }: SearchBarProps) {
-  const isTablet = viewport === 'tablet';
+/**
+ * Shared tap-first search input used by feature list screens.
+ * Auto-detects phone vs tablet via {@link useWindowDimensions} — callers
+ * just pass the Portuguese `placeholder` that matches the content domain
+ * ("Buscar cliente", "Buscar produto", etc.).
+ */
+export function SearchBar({
+  value,
+  onChangeText,
+  placeholder,
+  accessibilityLabel,
+}: SearchBarProps) {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= TABLET_MIN_WIDTH;
 
   return (
     <View
@@ -23,16 +45,16 @@ export function SearchBar({ value, onChangeText, viewport }: SearchBarProps) {
         },
       ]}
     >
-      <View style={styles.iconSlot}>
-        <View style={styles.searchIcon} />
-      </View>
+      <Feather name="search" size={isTablet ? 18 : 16} color="#71717A" />
       <TextInput
         value={value}
         onChangeText={onChangeText}
-        placeholder="Buscar produto"
-        placeholderTextColor="#71717A"
+        placeholder={placeholder}
+        placeholderTextColor="#A1A1AA"
         autoCorrect={false}
         autoCapitalize="none"
+        returnKeyType="search"
+        accessibilityLabel={accessibilityLabel ?? placeholder}
         style={[styles.input, { fontSize: isTablet ? 15 : 14 }]}
       />
       {value.length > 0 ? (
@@ -56,17 +78,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E4E4E7',
-  },
-  iconSlot: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  searchIcon: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: '#71717A',
   },
   input: {
     flex: 1,

@@ -1,69 +1,52 @@
 import React from 'react';
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 
-// Design tokens — this is the one allowed cross-feature import.
-import { colors, fontSizes } from '@/features/auth/theme/tokens';
-
 import { useSyncStatus } from '../hooks/useSyncStatus';
+import type { SyncStatus } from '../state/derive';
 
-// Local palette extensions. The auth tokens are minimal shadcn-style
-// (no success/warning). Kept scoped to this component rather than
-// reaching across into the auth feature to widen its palette.
-const SUCCESS = '#059669'; // emerald-600
-const WARNING = '#D97706'; // amber-600
-const TERTIARY = colors.placeholder; // lighter gray for offline / quieter states
+// Viewport split: dot-only on phone (tight 390 pt portrait), dot + label on
+// tablet where there's horizontal room for the word. Matches the convention
+// documented in specs/007-client-registration/design/screens.md and applies
+// project-wide so catalog / clients / home look consistent.
+const TABLET_MIN_WIDTH = 768;
+
+type StatusMeta = {
+  readonly color: string;
+  readonly label: string;
+};
+
+const STATUS: Record<SyncStatus, StatusMeta> = {
+  'in-sync': { color: '#16A34A', label: 'Dados em dia' },
+  syncing: { color: '#F59E0B', label: 'Sincronizando…' },
+  offline: { color: '#A1A1AA', label: 'Sem internet' },
+  failed: { color: '#DC2626', label: 'Falha ao sincronizar' },
+};
 
 type Props = {
-  style?: StyleProp<ViewStyle>;
+  readonly style?: StyleProp<ViewStyle>;
 };
 
 export function SyncStatusIndicator({ style }: Props): React.ReactElement {
   const { status } = useSyncStatus();
-
-  let icon: React.ReactNode;
-  let label: string;
-  let color: string;
-
-  switch (status) {
-    case 'in-sync':
-      icon = <Text style={[styles.glyph, { color: SUCCESS }]}>✓</Text>;
-      label = 'Dados em dia';
-      color = colors.mutedForeground;
-      break;
-    case 'syncing':
-      icon = (
-        <ActivityIndicator size="small" color={colors.mutedForeground} />
-      );
-      label = 'Sincronizando…';
-      color = colors.mutedForeground;
-      break;
-    case 'offline':
-      icon = <Text style={[styles.glyph, { color: TERTIARY }]}>⊘</Text>;
-      label = 'Sem internet';
-      color = TERTIARY;
-      break;
-    case 'failed':
-      icon = <Text style={[styles.glyph, { color: WARNING }]}>⚠</Text>;
-      label = 'Falha ao sincronizar';
-      color = WARNING;
-      break;
-  }
+  const { width } = useWindowDimensions();
+  const isTablet = width >= TABLET_MIN_WIDTH;
+  const meta = STATUS[status];
 
   return (
     <View
       accessibilityRole="text"
-      accessibilityLabel={label}
+      accessibilityLabel={meta.label}
       style={[styles.row, style]}
     >
-      {icon}
-      <Text style={[styles.label, { color }]}>{label}</Text>
+      <View style={[styles.dot, { backgroundColor: meta.color }]} />
+      {isTablet ? <Text style={styles.label}>{meta.label}</Text> : null}
     </View>
   );
 }
@@ -73,13 +56,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: 32,
-    columnGap: 4,
+    columnGap: 8,
   },
-  glyph: {
-    fontSize: fontSizes.lg,
-    lineHeight: 20,
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   label: {
-    fontSize: fontSizes.base,
+    fontSize: 13,
+    color: '#52525B',
   },
 });

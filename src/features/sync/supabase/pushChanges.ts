@@ -87,11 +87,25 @@ export async function pushChanges(args: {
   const { changes } = args;
 
   // Defensive guard: drop any changes for read-only (catalog) tables.
+  // Watermelon passes entries for every registered collection — including
+  // empty ones — so only warn when something was actually mutated locally.
   for (const table of Object.keys(changes)) {
     if (READ_ONLY_TABLES.has(table)) {
-      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+      const c = changes[table];
+      const hasChanges =
+        c !== undefined &&
+        (c.created.length > 0 || c.updated.length > 0 || c.deleted.length > 0);
+      if (hasChanges && typeof __DEV__ !== 'undefined' && __DEV__) {
         console.warn(
           `[sync] dropping unexpected change for read-only table: ${table}`,
+          {
+            created: c!.created.length,
+            updated: c!.updated.length,
+            deleted: c!.deleted.length,
+            sampleIds: [...c!.created, ...c!.updated]
+              .slice(0, 3)
+              .map((r) => r.id),
+          },
         );
       }
       delete changes[table];
@@ -99,6 +113,14 @@ export async function pushChanges(args: {
   }
 
   // Process tables sequentially in referential-integrity order.
+  // Use allSettled at the record level so that a single failed row does not
+  // prevent the mutations from successful rows (rec.server_id / rec.updated_at)
+  // from taking effect — Watermelon persists those mutations only if pushChanges
+  // resolves without throwing. If any record failed, we re-throw ONE error at
+  // the very end so the sync outcome is still `failed`, but the ones that
+  // succeeded keep their synced metadata.
+  const failures: unknown[] = [];
+
   for (const table of PUSH_ORDER) {
     const tableChanges = changes[table];
     if (!tableChanges) continue;
@@ -110,7 +132,7 @@ export async function pushChanges(args: {
     // The insert payload includes `id` so the server accepts our uuid.
     const inserts = tableChanges.created.filter((r) => r.server_id === null);
     if (inserts.length > 0) {
-      await Promise.all(
+      const results = await Promise.allSettled(
         inserts.map(async (rec) => {
           const payload = { ...toPayload(rec), id: rec.id };
           const { data, error } = await supabase
@@ -128,6 +150,9 @@ export async function pushChanges(args: {
           );
         }),
       );
+      for (const r of results) {
+        if (r.status === 'rejected') failures.push(r.reason);
+      }
     }
 
     // Some `created[]` records may already have a server_id — treat as idempotent
@@ -137,7 +162,7 @@ export async function pushChanges(args: {
 
     const updates = [...tableChanges.updated, ...seededCreated];
     if (updates.length > 0) {
-      await Promise.all(
+      const results = await Promise.allSettled(
         updates.map(async (rec) => {
           if (rec.server_id === null) {
             // Shouldn't reach here, but safeguard
@@ -158,13 +183,16 @@ export async function pushChanges(args: {
           }
         }),
       );
+      for (const r of results) {
+        if (r.status === 'rejected') failures.push(r.reason);
+      }
     }
 
     // Deletes: rows marked deleted locally. We only propagate if a server_id
     // exists; rows that were created + deleted before first sync have nothing
     // to tell the server about.
     if (tableChanges.deleted.length > 0) {
-      await Promise.all(
+      const results = await Promise.allSettled(
         tableChanges.deleted.map(async (serverId) => {
           // Watermelon's sync changeset gives us the Watermelon `id` for
           // deleted rows. With T000, local.id === server.id, so we can use
@@ -176,6 +204,22 @@ export async function pushChanges(args: {
           if (error) throw classifyError(error);
         }),
       );
+      for (const r of results) {
+        if (r.status === 'rejected') failures.push(r.reason);
+      }
     }
+  }
+
+  if (failures.length > 0) {
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+      console.warn('[sync] pushChanges: failures', failures);
+    }
+    // Throw the first failure so runPass classifies the outcome. Successful
+    // mutations have already been applied to their raws and Watermelon will
+    // still see them — BUT only if this function resolves. Since we have to
+    // throw to signal overall failure, the successful rows won't be marked
+    // synced in this pass; the next pull will heal them via conflictResolver.
+    const first = failures[0];
+    throw first instanceof Error ? first : new SyncError('PUSH_REJECTED', String(first));
   }
 }

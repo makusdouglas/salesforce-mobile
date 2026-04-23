@@ -112,6 +112,7 @@ export function mapProductServerRowToWMDB(row: SupabaseRow): WMDBDirtyRaw {
     description: row.description ?? null,
     image_url: row.image_url ?? null,
     unit: row.unit ?? null,
+    category: row.category ?? null,
   };
 }
 

@@ -261,6 +261,94 @@ export function DataLayerSmokeScreen() {
     setAudit(results);
   };
 
+  /**
+   * Dev-only repair: rows in read-only catalog tables (salespeople, products,
+   * product_variants) must always be `_status='synced'` — they only enter the
+   * local DB via pullChanges. A historical bug in conflictResolver returned
+   * the raw `remote` object (no `_status` field) on LWW-remote-wins, which
+   * silently marked those rows as `_status='created'`. On the next push
+   * WatermelonDB surfaced them as pending creates, the push guard dropped
+   * them, and they never healed. This button force-normalizes those rows.
+   */
+  const repairReadOnlySyncState = async () => {
+    const readOnly = ['salespeople', 'products', 'product_variants'] as const;
+    console.log('--- [SmokeScreen] REPAIR START ---');
+    try {
+      await database.write(async () => {
+        for (const table of readOnly) {
+          const collection = database.get(table);
+          const rows = (await collection
+            .query()
+            .fetch()) as unknown as { id: string; syncStatus: string; _raw: { _status: string; _changed: string } }[];
+          let fixed = 0;
+          for (const r of rows) {
+            if (r.syncStatus !== 'synced') {
+              await (r as unknown as { update: (fn: (r: { _raw: { _status: string; _changed: string } }) => void) => Promise<void> }).update((rec) => {
+                rec._raw._status = 'synced';
+                rec._raw._changed = '';
+              });
+              fixed += 1;
+            }
+          }
+          console.log(`[repair] ${table}: normalized ${fixed}/${rows.length} rows`);
+        }
+      });
+      setStatus('Repair complete — tap Audit to verify, then pull-to-refresh.');
+    } catch (err) {
+      console.error('[repair] failed', err);
+      setStatus(`repair failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    console.log('--- [SmokeScreen] REPAIR END ---');
+  };
+
+  /**
+   * Dev-only nuke: purge locally-created rows that never reached the server.
+   * Targets writable tables (clients, orders, order_items, payment_receipts)
+   * plus phantom salespeople left behind by the old DataLayerSmokeScreen seed.
+   * A row is "phantom" when `_status !== 'synced'` — the server doesn't know
+   * about it, so removing it locally is a no-op from the server's POV.
+   *
+   * Use this when a local FK points at a salesperson that never made it to
+   * Supabase — the push fails with `clients_salesperson_id_fkey` forever.
+   */
+  const purgeUnsyncedWritableRows = async () => {
+    const writable = [
+      'payment_receipts',
+      'order_items',
+      'orders',
+      'clients',
+      'salespeople',
+    ] as const;
+    console.log('--- [SmokeScreen] PURGE START ---');
+    try {
+      await database.write(async () => {
+        for (const table of writable) {
+          const collection = database.get(table);
+          const rows = (await collection
+            .query()
+            .fetch()) as unknown as {
+              id: string;
+              syncStatus: string;
+              destroyPermanently: () => Promise<void>;
+            }[];
+          let purged = 0;
+          for (const r of rows) {
+            if (r.syncStatus !== 'synced') {
+              await r.destroyPermanently();
+              purged += 1;
+            }
+          }
+          console.log(`[purge] ${table}: purged ${purged}/${rows.length} rows`);
+        }
+      });
+      setStatus('Purge complete — pull-to-refresh and re-create clients.');
+    } catch (err) {
+      console.error('[purge] failed', err);
+      setStatus(`purge failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    console.log('--- [SmokeScreen] PURGE END ---');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -323,6 +411,20 @@ updated_at=${order.updatedAt}`
           >
             <Text style={styles.buttonLabel}>Audit all tables (row counts + sync cols)</Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+            onPress={repairReadOnlySyncState}
+          >
+            <Text style={styles.buttonLabel}>Repair read-only sync state (force synced)</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.button, styles.buttonDanger, pressed && styles.buttonPressed]}
+            onPress={purgeUnsyncedWritableRows}
+          >
+            <Text style={styles.buttonLabel}>Purge local unsynced writable rows (DESTRUCTIVE)</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -349,6 +451,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
   },
+  buttonDanger: { backgroundColor: '#DC2626' },
   buttonPressed: { opacity: 0.8 },
   buttonLabel: {
     color: '#ffffff',

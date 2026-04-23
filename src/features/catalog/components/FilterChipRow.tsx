@@ -48,6 +48,7 @@ export function FilterChipRow({
       horizontal
       keyExtractor={(item) => item}
       showsHorizontalScrollIndicator={false}
+      style={styles.scroll}
       contentContainerStyle={styles.row}
       renderItem={({ item }) => {
         const isTodos = item === TODOS_SENTINEL;
@@ -92,8 +93,13 @@ export function FilterChipRow({
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   row: {
     paddingVertical: 4,
+    paddingHorizontal: 16,
     alignItems: 'center',
   },
   chip: {
