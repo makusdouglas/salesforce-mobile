@@ -12,6 +12,7 @@ function state(overrides: Partial<InternalState>): InternalState {
     _online: false,
     _lastOutcome: 'initial',
     _hasQueuedChanges: false,
+    _lastOkAt: null,
     ...overrides,
   };
 }

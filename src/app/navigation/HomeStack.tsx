@@ -9,7 +9,7 @@ import {
   ClientsScreen,
   NewOrderStubScreen,
 } from '@/features/clients';
-import { HomePlaceholderScreen } from '@/features/home/screens/HomePlaceholderScreen';
+import { HomeScreen, SettingsScreen } from '@/features/home';
 
 import type { HomeStackParamList } from './types';
 
@@ -18,10 +18,18 @@ const Stack = createNativeStackNavigator<HomeStackParamList>();
 export function HomeStack() {
   return (
     <Stack.Navigator>
+      {/* Route name 'HomePlaceholder' is preserved for back-compat with
+          auth/lock post-action navigation (see research.md R-002). The
+          component is the new HomeScreen. */}
       <Stack.Screen
         name="HomePlaceholder"
-        component={HomePlaceholderScreen}
-        options={{ title: 'Início' }}
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ title: 'Configurações' }}
       />
       <Stack.Screen
         name="Catalog"

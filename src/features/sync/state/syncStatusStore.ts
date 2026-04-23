@@ -1,6 +1,13 @@
 import { deriveStatus, type InternalState, type SyncStatus } from './derive';
 
-export type SyncStatusSnapshot = { status: SyncStatus };
+export type SyncStatusSnapshot = {
+  readonly status: SyncStatus;
+  /**
+   * Wall-clock ms of the last successful sync pass. `null` when no sync has
+   * succeeded yet in this session. NOT cleared on failure.
+   */
+  readonly lastOkAt: number | null;
+};
 
 function initialState(): InternalState {
   return {
@@ -9,6 +16,7 @@ function initialState(): InternalState {
     _online: false,
     _lastOutcome: 'initial',
     _hasQueuedChanges: false,
+    _lastOkAt: null,
   };
 }
 
@@ -18,7 +26,10 @@ const listeners = new Set<() => void>();
 let notifyingDepth = 0;
 
 function makeSnapshot(s: InternalState): SyncStatusSnapshot {
-  const snapshot: SyncStatusSnapshot = { status: deriveStatus(s) };
+  const snapshot: SyncStatusSnapshot = {
+    status: deriveStatus(s),
+    lastOkAt: s._lastOkAt,
+  };
   if (typeof __DEV__ !== 'undefined' && __DEV__) Object.freeze(snapshot);
   return snapshot;
 }
@@ -48,7 +59,12 @@ function emit(): void {
 
 function recompute(): void {
   const next = makeSnapshot(state);
-  if (next.status === cachedSnapshot.status) return;
+  if (
+    next.status === cachedSnapshot.status &&
+    next.lastOkAt === cachedSnapshot.lastOkAt
+  ) {
+    return;
+  }
   cachedSnapshot = next;
   emit();
 }
@@ -85,14 +101,24 @@ export const _internalSyncStatusStore = {
   },
   setLastOutcome(v: 'ok' | 'failed'): void {
     guardReentrancy();
-    if (state._lastOutcome === v) return;
-    state = { ...state, _lastOutcome: v };
+    if (state._lastOutcome === v && v !== 'ok') return;
+    if (v === 'ok') {
+      state = { ...state, _lastOutcome: v, _lastOkAt: Date.now() };
+    } else {
+      state = { ...state, _lastOutcome: v };
+    }
     recompute();
   },
   setHasQueuedChanges(v: boolean): void {
     guardReentrancy();
     state = { ...state, _hasQueuedChanges: v };
     // internal-only; does not affect public status
+  },
+  setLastOkAt(ms: number | null): void {
+    guardReentrancy();
+    if (state._lastOkAt === ms) return;
+    state = { ...state, _lastOkAt: ms };
+    recompute();
   },
   getInternal(): InternalState {
     return state;

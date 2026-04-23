@@ -10,6 +10,7 @@ export type AuthStackParamList = {
 
 export type HomeStackParamList = {
   HomePlaceholder: undefined;
+  Settings: undefined;
   DataLayerSmoke: undefined;
   DatabaseInspector: undefined;
   Catalog: undefined;
