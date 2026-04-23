@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -69,6 +69,22 @@ export function HomeScreen({ navigation }: Props) {
       setRefreshing(false);
     }
   }, []);
+
+  // Cold-start auto-sync: when the app opens with a persisted session,
+  // `startLoginTrigger` does NOT fire (it only fires on transitions into
+  // Authenticated). Without this, the pill would stay at "Sincronizado"
+  // without an age label indefinitely until the user pulls to refresh.
+  // Here we detect the shape on Home's first mount (online, in-sync,
+  // never-synced-this-session) and fire one silent sync so the label
+  // fills in with "agora" and then ticks forward.
+  const coldStartFired = useRef(false);
+  useEffect(() => {
+    if (coldStartFired.current) return;
+    if (sync.status !== 'in-sync') return;
+    if (sync.lastOkAt !== null) return;
+    coldStartFired.current = true;
+    void onPullToRefresh();
+  }, [sync.status, sync.lastOkAt]);
 
   const isTablet = viewport === 'tablet';
   const sectionLabelStyle = isTablet ? styles.sectionLabelTablet : styles.sectionLabelPhone;

@@ -59,6 +59,8 @@ export const homeCopy = {
   syncPill: {
     inSyncLabel: (ageLabel: string) => `Sincronizado · ${ageLabel}`,
     inSyncA11y: (ageLabel: string) => `Sincronizado ${ageLabel}`,
+    inSyncLabelNoAge: 'Sincronizado',
+    inSyncA11yNoAge: 'Sincronizado',
     syncingLabel: 'Sincronizando…',
     syncingA11y: 'Sincronizando',
     offlineLabel: 'Sem conexão',
@@ -103,6 +105,8 @@ export function allHomeCopyStrings(): readonly string[] {
     homeCopy.recentActivity.emptySubtitle,
     homeCopy.syncPill.syncingLabel,
     homeCopy.syncPill.syncingA11y,
+    homeCopy.syncPill.inSyncLabelNoAge,
+    homeCopy.syncPill.inSyncA11yNoAge,
     homeCopy.syncPill.offlineLabel,
     homeCopy.syncPill.offlineA11y,
     homeCopy.syncPill.failedLabel,

@@ -13,9 +13,10 @@ describe('deriveSyncPillState', () => {
     ).toEqual({ kind: 'in-sync', ageLabel: 'há 2 min' });
   });
 
-  test('in-sync + lastOkAt null → falls back to "syncing" (semantic fallback)', () => {
+  test('in-sync + lastOkAt null → "in-sync" with ageLabel null (no sync this session yet)', () => {
     expect(deriveSyncPillState({ status: 'in-sync', lastOkAt: null, nowMs: NOW })).toEqual({
-      kind: 'syncing',
+      kind: 'in-sync',
+      ageLabel: null,
     });
   });
 

@@ -111,7 +111,9 @@ const palettes: Record<SyncPillStateDTO['kind'], Palette> = {
 function labelFor(state: SyncPillStateDTO): string {
   switch (state.kind) {
     case 'in-sync':
-      return homeCopy.syncPill.inSyncLabel(state.ageLabel);
+      return state.ageLabel === null
+        ? homeCopy.syncPill.inSyncLabelNoAge
+        : homeCopy.syncPill.inSyncLabel(state.ageLabel);
     case 'syncing':
       return homeCopy.syncPill.syncingLabel;
     case 'offline':
@@ -124,7 +126,9 @@ function labelFor(state: SyncPillStateDTO): string {
 function a11yLabelFor(state: SyncPillStateDTO): string {
   switch (state.kind) {
     case 'in-sync':
-      return homeCopy.syncPill.inSyncA11y(state.ageLabel);
+      return state.ageLabel === null
+        ? homeCopy.syncPill.inSyncA11yNoAge
+        : homeCopy.syncPill.inSyncA11y(state.ageLabel);
     case 'syncing':
       return homeCopy.syncPill.syncingA11y;
     case 'offline':

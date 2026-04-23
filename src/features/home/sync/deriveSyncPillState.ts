@@ -6,14 +6,16 @@ import { formatRelativeSyncAge } from './formatRelativeSyncAge';
  * Pure state-machine for HomeSyncPill — translates the sync store's
  * { status, lastOkAt } snapshot into a render-ready DTO.
  *
- * The semantic fallback `status === 'in-sync' && lastOkAt === null` maps to
- * the `syncing` kind because the user has never seen a successful sync this
- * session — showing "Sincronizado · há … min" without a timestamp would be
- * misleading. Per research §R-001 and contracts/sync-pill.md.
+ * When `status === 'in-sync'` but no successful sync has happened in this
+ * session yet (`lastOkAt === null`), the pill renders the green "Sincronizado"
+ * state WITHOUT an age label (`ageLabel: null`). It does NOT fall back to
+ * 'syncing', because nothing is actually syncing — the store is simply in
+ * its initial state. HomeScreen may trigger an auto-sync when it mounts
+ * into this shape so the age label fills in shortly after.
  */
 
 export type SyncPillStateDTO =
-  | { readonly kind: 'in-sync'; readonly ageLabel: string }
+  | { readonly kind: 'in-sync'; readonly ageLabel: string | null }
   | { readonly kind: 'syncing' }
   | { readonly kind: 'offline' }
   | { readonly kind: 'failed' };
@@ -30,6 +32,6 @@ export function deriveSyncPillState(input: DeriveSyncPillStateInput): SyncPillSt
   if (status === 'offline') return { kind: 'offline' };
   if (status === 'failed') return { kind: 'failed' };
   // status === 'in-sync'
-  if (lastOkAt === null) return { kind: 'syncing' };
+  if (lastOkAt === null) return { kind: 'in-sync', ageLabel: null };
   return { kind: 'in-sync', ageLabel: formatRelativeSyncAge(lastOkAt, nowMs) };
 }
