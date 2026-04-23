@@ -12,6 +12,7 @@ function state(overrides: Partial<InternalState>): InternalState {
     _online: false,
     _lastOutcome: 'initial',
     _hasQueuedChanges: false,
+    _lastOkAt: null,
     ...overrides,
   };
 }
@@ -32,9 +33,9 @@ describe('deriveStatus (pure)', () => {
   test('follow-up-queued and has-queued-changes do not affect public status', () => {
     const online = state({ _online: true, _lastOutcome: 'ok' });
     expect(deriveStatus(online)).toBe('in-sync');
-    expect(
-      deriveStatus({ ...online, _followUpQueued: true, _hasQueuedChanges: true }),
-    ).toBe('in-sync');
+    expect(deriveStatus({ ...online, _followUpQueued: true, _hasQueuedChanges: true })).toBe(
+      'in-sync',
+    );
   });
 });
 
@@ -120,9 +121,7 @@ describe('syncStatusStore reentrancy guard (__DEV__)', () => {
     syncStatusStore.subscribe(() => {
       // This is only safe if the listener doesn't mutate — reentrancy guard
       // should throw inside the subscriber's synchronous callback.
-      expect(bad).toThrow(
-        /transitions must not happen inside subscriber callbacks/,
-      );
+      expect(bad).toThrow(/transitions must not happen inside subscriber callbacks/);
     });
     _internalSyncStatusStore.setLastOutcome('failed');
   });

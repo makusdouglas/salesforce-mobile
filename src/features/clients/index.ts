@@ -10,3 +10,9 @@ export { ClientsScreen } from './screens/ClientsScreen';
 export { ClientFormScreen } from './screens/ClientFormScreen';
 export { ClientProfileScreen } from './screens/ClientProfileScreen';
 export { NewOrderStubScreen } from './screens/NewOrderStubScreen';
+
+// Exposed for Home (008): the dashboard needs the active salesperson id to
+// scope the clients count via clientsRepository.observeByOwner. See
+// specs/008-home-dashboard/plan.md §Summary and contracts/summary-hooks.md.
+export { useActiveSalespersonId } from './hooks/useActiveSalespersonId';
+export type { ActiveSalespersonState } from './types';

@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
@@ -31,14 +31,10 @@ export function CatalogScreen({ navigation }: Props) {
   };
 
   const handleSyncPress = useCallback(async () => {
-    if (status === 'offline') {
-      Alert.alert(
-        'Sem internet',
-        'Conecte-se à internet para carregar o catálogo pela primeira vez.',
-        [{ text: 'OK' }],
-      );
-      return;
-    }
+    // Offline is communicated inline by the SyncStatusIndicator pill per
+    // constitution UX4 ("sync feedback — never a modal or alert"); tapping
+    // refresh while offline is a no-op.
+    if (status === 'offline') return;
     await onPullToRefresh();
   }, [status]);
 
