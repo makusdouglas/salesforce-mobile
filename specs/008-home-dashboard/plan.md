@@ -183,9 +183,10 @@ The feature expands `src/features/home/` from a single placeholder screen into a
     │   └── ui/
     │       └── modal/
     │           ├── index.ts                           # NEW — barrel exporting ConfirmModal + ConfirmModalProps
-    │           ├── ConfirmModal.tsx                   # NEW — single component covering destructive-confirm + info shapes; consumes RN <Modal transparent> + styled card per design/modals/confirm-modal-{phone,tablet}.png
+    │           ├── ConfirmModal.tsx                   # NEW — single component covering destructive-confirm + info shapes; consumes RN <Modal transparent> + styled card per design/modals/confirm-modal-{phone,tablet}.png; calls deriveConfirmModalShape for button-count + colors
+    │           ├── shape.ts                           # NEW — pure deriveConfirmModalShape({cancelLabel, primaryVariant}) → {showCancel, primaryFill, primaryTextColor}; no React imports
     │           └── tests/
-    │               └── ConfirmModal.test.ts           # NEW — renders both variants (two-button destructive, single-button info); asserts cancel/primary callbacks fire; asserts backdrop tap calls onCancel (or onPrimary in info mode)
+    │               └── shape.test.ts                  # NEW — pure-function tests of deriveConfirmModalShape covering destructive/default variants and cancel-visibility
     ├── features/
     │   ├── sync/
     │   │   ├── state/
@@ -207,25 +208,33 @@ The feature expands `src/features/home/` from a single placeholder screen into a
     │       │   ├── RecentActivityCard.tsx              # NEW — wraps a populated row or a DashedPlaceholderCard depending on useLastSentOrder() result
     │       │   └── DashedPlaceholderCard.tsx           # NEW — dashed-border card shell used for empty Drafts and empty Recent Activity
     │       ├── hooks/
-    │       │   ├── useCatalogSummary.ts                # NEW — observes productsRepository.observeAll(); returns { count }
-    │       │   ├── useClientsSummary.ts                # NEW — observes clientsRepository.observeByOwner(salespersonId); { count: 0 } when salespersonId is null
-    │       │   ├── useDraftsSummary.ts                 # NEW — PLACEHOLDER, always returns { count: 0 }; comment points to 009 swap-in
-    │       │   ├── useLastSentOrder.ts                 # NEW — PLACEHOLDER, always returns null; comment points to 009 swap-in
+    │       │   ├── catalogSummary.ts                   # NEW — pure deriveCatalogSummary(products) → { count }; no React
+    │       │   ├── useCatalogSummary.ts                # NEW — thin hook: observes productsRepository.observeAll(); returns deriveCatalogSummary(state)
+    │       │   ├── clientsSummary.ts                   # NEW — pure deriveClientsSummary(clients | null) → { count }; no React
+    │       │   ├── useClientsSummary.ts                # NEW — thin hook: observes clientsRepository.observeByOwner(salespersonId); returns deriveClientsSummary(state)
+    │       │   ├── useDraftsSummary.ts                 # NEW — PLACEHOLDER, always returns { count: 0 }; constant body → callable from Node
+    │       │   ├── useLastSentOrder.ts                 # NEW — PLACEHOLDER, always returns null; constant body → callable from Node
     │       │   └── useViewport.ts                      # NEW — 'phone' | 'tablet' at 768 pt; duplicated from catalog per P3
+    │       ├── snapshot/
+    │       │   └── deriveHomeSnapshot.ts               # NEW — pure (session + sync + counts + recentActivity + nowMs) → HomeSnapshotDTO; composes deriveGreetingName, deriveSyncPillState, populated-vs-empty card DTOs
     │       ├── sync/
-    │       │   └── formatRelativeSyncAge.ts            # NEW — pure formatter ((ageMs, nowMs?) → "agora" | "há N min" | "há N h" | "há N d")
+    │       │   ├── formatRelativeSyncAge.ts            # NEW — pure formatter ((ageMs, nowMs?) → "agora" | "há N min" | "há N h" | "há N d")
+    │       │   └── deriveSyncPillState.ts              # NEW — pure ({status, lastOkAt, nowMs}) → SyncPillStateDTO; state-machine from contracts/sync-pill.md
     │       ├── greeting/
     │       │   └── deriveGreetingName.ts               # NEW — pure (email | null) → first-name | null
     │       ├── responsive/
     │       │   └── breakpoints.ts                      # NEW — TABLET_MIN_WIDTH = 768 (duplicated per P3)
     │       └── tests/
-    │           ├── formatRelativeSyncAge.test.ts       # NEW
-    │           ├── syncStatusStore.lastOkAt.test.ts    # NEW — colocated under home/tests because it verifies Home's consumption contract; the store itself is in sync/ but the behavior is driven by Home's needs
-    │           ├── useCatalogSummary.test.ts           # NEW
-    │           ├── useClientsSummary.test.ts           # NEW
-    │           ├── useDraftsSummary.test.ts            # NEW — locks the placeholder contract
-    │           ├── useLastSentOrder.test.ts            # NEW — locks the placeholder contract
-    │           └── deriveGreetingName.test.ts          # NEW
+    │           ├── formatRelativeSyncAge.test.ts       # NEW — pure
+    │           ├── syncStatusStore.lastOkAt.test.ts    # NEW — sync store behavior; driven by Home's needs so colocated here
+    │           ├── catalogSummary.test.ts              # NEW — pure (tests deriveCatalogSummary; hook reactivity is QA-only)
+    │           ├── clientsSummary.test.ts              # NEW — pure (tests deriveClientsSummary; hook reactivity is QA-only)
+    │           ├── useDraftsSummary.test.ts            # NEW — placeholder locks { count: 0 }
+    │           ├── useLastSentOrder.test.ts            # NEW — placeholder locks null
+    │           ├── deriveGreetingName.test.ts          # NEW — pure
+    │           ├── deriveSyncPillState.test.ts         # NEW — pure (state-machine)
+    │           ├── deriveHomeSnapshot.test.ts          # NEW — pure (composes the whole DTO; single source of shape truth for FR-018)
+    │           └── copyBlocklist.test.ts               # NEW — static grep over copy.ts enforcing FR-016 blocklist
 ```
 
 **Structure Decision**: The Home feature is organized around four architectural levers that match the shape of 006/007 and deliberately stay small:
@@ -238,7 +247,9 @@ The feature expands `src/features/home/` from a single placeholder screen into a
 
 4. **Placeholder hooks lock the contract for 009**. `useDraftsSummary` and `useLastSentOrder` return fixed values today but are already shaped like their future selves — future-009 will replace the body of each file and no Home component or test needs to change. The contract tests lock this.
 
-5. **`ConfirmModal` is cross-cutting infrastructure, landed at `src/app/ui/modal/`, NOT inside `src/features/home/`**. It has two consumers on day one (`SettingsScreen` for logout, and `CatalogScreen`'s offline path — which is being deleted, so the second consumer is implicit: the migration). A single styled component with declarative state (`<ConfirmModal open title ... onCancel onPrimary />`) is simpler than an imperative `showConfirm()` helper + provider; we land the smaller thing first and promote to a helper only when a third non-trivial call site arrives (P3 "rule of three").
+5. **Tests are `ts-jest` + `testEnvironment: 'node'` — pure functions only.** The repo (001–007) ships a single Jest preset with no React renderer and no `testMatch` for `.tsx`. Rather than add `jest-expo` + `@testing-library/react-native` (three new dev deps, a new Jest config branch, a new surface to maintain — all to cover four render tests), 008 continues the established pattern: every hook that subscribes to a repository is paired with a pure helper (`deriveCatalogSummary`, `deriveClientsSummary`), and the helper is what gets tested. Screen-level behavior (reactivity within 2 s, visual conformance of the pill / modal / cards) is validated by QA on phone and tablet simulators in Phase 7. Same pattern 007 followed with `resolveActiveSalesperson` ↔ `useActiveSalespersonId`. Revisiting this decision is a separate feature if and when a future spec justifies the infra investment.
+
+6. **`ConfirmModal` is cross-cutting infrastructure, landed at `src/app/ui/modal/`, NOT inside `src/features/home/`**. It has two consumers on day one (`SettingsScreen` for logout, and `CatalogScreen`'s offline path — which is being deleted, so the second consumer is implicit: the migration). A single styled component with declarative state (`<ConfirmModal open title ... onCancel onPrimary />`) is simpler than an imperative `showConfirm()` helper + provider; we land the smaller thing first and promote to a helper only when a third non-trivial call site arrives (P3 "rule of three").
 
 **Rejected alternatives**:
 
