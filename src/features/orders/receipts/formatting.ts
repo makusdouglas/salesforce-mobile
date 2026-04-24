@@ -31,38 +31,37 @@ export function formatBRL(amount: number): string {
 }
 
 /**
- * Parse the string produced by a BRL-decimal text input. Accepts typical
- * user shapes: "150", "150,00", "150.00", "1.234,50", "1,234.50". Empty
- * / non-numeric → 0.
+ * Parse the string produced by a BRL-decimal text input.
  *
- * Digit-only input uses the "rightmost two digits are centavos" convention
- * so a decimal-pad keyboard without a comma key still lands the user on
- * the right value ("15000" → 150.00).
+ * Convention (matches how the seller types):
+ *   - Digits only (no separator) → whole reais. "10" = R$ 10,00,
+ *     "150" = R$ 150,00. No implicit centavos split.
+ *   - With a separator (`,` or `.`) → reais + centavos. The LAST separator
+ *     is the decimal marker; earlier ones are group separators and are
+ *     dropped. "10,5" = R$ 10,50, "10,50" = R$ 10,50, "1.234,50" =
+ *     R$ 1.234,50, "1,234.50" = R$ 1.234,50.
+ *   - Empty / garbage → 0.
  */
 export function parseBRL(raw: string): number {
   const trimmed = raw.trim();
   if (trimmed === '') return 0;
 
-  // Detect whether the input contains any decimal separator at all.
   const hasSeparator = /[.,]/.test(trimmed);
   if (!hasSeparator) {
     const digitsOnly = trimmed.replace(/\D/g, '');
     if (digitsOnly === '') return 0;
-    // Digits-only: treat rightmost two as centavos.
     const asInt = parseInt(digitsOnly, 10);
-    if (!Number.isFinite(asInt)) return 0;
-    return asInt / 100;
+    return Number.isFinite(asInt) ? asInt : 0;
   }
 
-  // With a separator: strip group separators, normalize the decimal to '.'.
-  // We assume the LAST separator is the decimal marker — common across the
-  // forms pt-BR users type: "1.234,50" OR "1,234.50" OR plain "150,00".
+  // With a separator: the rightmost `,` or `.` is the decimal marker;
+  // anything before it (digits + other separators) is the integer part
+  // with group separators stripped.
   const lastComma = trimmed.lastIndexOf(',');
   const lastDot = trimmed.lastIndexOf('.');
   const decimalSepIndex = Math.max(lastComma, lastDot);
-  if (decimalSepIndex === -1) return 0;
 
-  const intPart = trimmed.slice(0, decimalSepIndex).replace(/[.,\s]/g, '');
+  const intPart = trimmed.slice(0, decimalSepIndex).replace(/\D/g, '');
   const decPart = trimmed.slice(decimalSepIndex + 1).replace(/\D/g, '');
   const combined = `${intPart === '' ? '0' : intPart}.${decPart === '' ? '0' : decPart}`;
   const parsed = parseFloat(combined);
