@@ -174,6 +174,56 @@ export const ordersRepository = {
     );
   },
 
+  /**
+   * 013-orders-overview: status-aware monthly bucket observable.
+   *
+   * Emits orders owned by `salespersonId` that "happen in" the window
+   * [monthStartMs, monthEndMs):
+   *   - draft     → `updated_at ∈ [start, end)`
+   *   - sent      → `sent_at_ms ∈ [start, end)`
+   *   - canceled  → `canceled_at_ms ∈ [start, end)`
+   *
+   * Re-emits on any mutation that touches those columns so status
+   * transitions migrate buckets automatically.
+   *
+   * Contract: specs/013-orders-overview/contracts/observeOrdersForMonth.md
+   */
+  observeOrdersForMonth(
+    salespersonId: string,
+    monthStartMs: number,
+    monthEndMs: number,
+  ) {
+    if (!salespersonId) return of<readonly Order[]>([]);
+    return orders
+      .query(
+        Q.where('salesperson_id', salespersonId),
+        notDeleted,
+        Q.or(
+          Q.and(
+            Q.where('status', 'draft' satisfies OrderStatus),
+            Q.where('updated_at', Q.gte(monthStartMs)),
+            Q.where('updated_at', Q.lt(monthEndMs)),
+          ),
+          Q.and(
+            Q.where('status', 'sent' satisfies OrderStatus),
+            Q.where('sent_at_ms', Q.gte(monthStartMs)),
+            Q.where('sent_at_ms', Q.lt(monthEndMs)),
+          ),
+          Q.and(
+            Q.where('status', 'canceled' satisfies OrderStatus),
+            Q.where('canceled_at_ms', Q.gte(monthStartMs)),
+            Q.where('canceled_at_ms', Q.lt(monthEndMs)),
+          ),
+        ),
+      )
+      .observeWithColumns([
+        'status',
+        'updated_at',
+        'sent_at_ms',
+        'canceled_at_ms',
+      ]);
+  },
+
   async softDelete(id: string): Promise<void> {
     const record = await orders.find(id).catch(() => null);
     if (!record) throwNotFound('order', id);

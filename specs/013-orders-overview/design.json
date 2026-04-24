@@ -1,0 +1,26 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/013-orders-overview/design",
+  "screens": [
+    {
+      "name": "OrdersList / Phone",
+      "frame_id": "ywhNl",
+      "screenshot": "specs/013-orders-overview/design/orders-list-phone.png"
+    },
+    {
+      "name": "OrderDetail / Phone",
+      "frame_id": "q9zUp",
+      "screenshot": "specs/013-orders-overview/design/order-detail-phone.png"
+    },
+    {
+      "name": "OrdersList / Tablet",
+      "frame_id": "ggUNH",
+      "screenshot": "specs/013-orders-overview/design/orders-list-tablet.png"
+    },
+    {
+      "name": "OrderDetail / Tablet",
+      "frame_id": "FY5dB",
+      "screenshot": "specs/013-orders-overview/design/order-detail-tablet.png"
+    }
+  ]
+}

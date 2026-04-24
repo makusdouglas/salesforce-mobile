@@ -16,6 +16,8 @@
  * re-surface as `_status='created'` on the next push.
  */
 
+import { syncLogger } from '../service/syncLogger';
+
 /**
  * Watermelon's DirtyRaw / RawRecord types are generic maps — we treat them
  * as such here and only read the two fields the LWW rule needs.
@@ -54,13 +56,21 @@ export function conflictResolver(
 ): AnyRaw {
   const lu = numericUpdatedAt(local);
   const ru = numericUpdatedAt(remote);
-  if (ru > lu) return remoteWins(resolved, remote);
-  if (ru < lu) return resolved;
+  if (ru > lu) {
+    syncLogger.log('conflict', `[${_table}] Remote wins by updated_at`, { local, remote, resolved });
+    return remoteWins(resolved, remote);
+  }
+  if (ru < lu) {
+    syncLogger.log('conflict', `[${_table}] Local wins by updated_at`, { local, remote, resolved });
+    return resolved;
+  }
 
   const rsid = stringServerId(remote);
   const lsid = stringServerId(local);
   if (rsid !== null && lsid !== null && rsid < lsid) {
+    syncLogger.log('conflict', `[${_table}] Remote wins by server_id tie-breaker`, { local, remote, resolved });
     return remoteWins(resolved, remote);
   }
+  syncLogger.log('conflict', `[${_table}] Local wins by default/tie`, { local, remote, resolved });
   return resolved;
 }

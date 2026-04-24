@@ -48,6 +48,12 @@ export const homeCopy = {
       emptyTitle: 'Nenhum rascunho por enquanto',
       emptySubtitle: 'Quando começar um pedido no catálogo, ele fica salvo aqui.',
     },
+    orders: {
+      title: 'Pedidos',
+      populatedSubtitle: 'Ver todos os pedidos',
+      emptyTitle: 'Ver pedidos',
+      emptySubtitle: 'Abre a lista completa com filtros e totais do mês.',
+    },
   },
 
   recentActivity: {

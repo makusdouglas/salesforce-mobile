@@ -6,14 +6,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { HomeStackParamList } from '@/app/navigation/types';
 import { colors } from '@/app/theme/colors';
 import { ConfirmModal } from '@/app/ui/modal';
-import { authService } from '@/features/auth';
+import { authService, useSession } from '@/features/auth';
+import { useActiveSalespersonId } from '@/features/clients';
 import { lockService } from '@/features/lock';
+
+import { useActiveSalespersonName } from '../hooks/useActiveSalespersonName';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Settings'>;
 
 const TIMEOUT_OPTIONS: readonly number[] = [1, 5, 10, 30];
 
 export function SettingsScreen({ navigation }: Props) {
+  const { email } = useSession();
+  const activeSp = useActiveSalespersonId();
+  const salespersonName = useActiveSalespersonName(activeSp.salespersonId);
+
   const [selectedMinutes, setSelectedMinutes] = useState<number>(
     lockService.getInactivityTimeout(),
   );
@@ -38,57 +45,77 @@ export function SettingsScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.settingsBlock}>
-          <Text style={styles.settingsLabel}>Bloquear após</Text>
-          <View style={styles.segmentRow}>
-            {TIMEOUT_OPTIONS.map((minutes) => {
-              const active = minutes === selectedMinutes;
-              return (
-                <Pressable
-                  key={minutes}
-                  accessibilityRole="button"
-                  onPress={() => selectMinutes(minutes)}
-                  style={({ pressed }) => [
-                    styles.segmentButton,
-                    active ? styles.segmentButtonActive : styles.segmentButtonInactive,
-                    pressed && styles.buttonPressed,
-                  ]}
-                >
-                  <Text style={active ? styles.segmentLabelActive : styles.segmentLabelInactive}>
-                    {minutes} min
-                  </Text>
-                </Pressable>
-              );
-            })}
+        
+        <View style={styles.identityCard}>
+          <View style={styles.avatarPlaceholder}>
+            <Text style={styles.avatarInitials}>
+              {salespersonName ? salespersonName.charAt(0).toUpperCase() : '?'}
+            </Text>
+          </View>
+          <View style={styles.identityText}>
+            <Text style={styles.identityName}>{salespersonName || 'Vendedor'}</Text>
+            <Text style={styles.identityEmail}>{email}</Text>
+          </View>
+        </View>
+
+        <View style={styles.settingsCard}>
+          <Text style={styles.sectionTitle}>Segurança</Text>
+          <View style={styles.settingsBlock}>
+            <Text style={styles.settingsLabel}>Bloquear app após inatividade</Text>
+            <View style={styles.segmentRow}>
+              {TIMEOUT_OPTIONS.map((minutes) => {
+                const active = minutes === selectedMinutes;
+                return (
+                  <Pressable
+                    key={minutes}
+                    accessibilityRole="button"
+                    onPress={() => selectMinutes(minutes)}
+                    style={({ pressed }) => [
+                      styles.segmentButton,
+                      active ? styles.segmentButtonActive : styles.segmentButtonInactive,
+                      pressed && styles.buttonPressed,
+                    ]}
+                  >
+                    <Text style={active ? styles.segmentLabelActive : styles.segmentLabelInactive}>
+                      {minutes} min
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </View>
 
         {__DEV__ ? (
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-            onPress={() => navigation.navigate('DataLayerSmoke')}
-          >
-            <Text style={styles.buttonLabel}>[dev] Data-Layer Smoke</Text>
-          </Pressable>
-        ) : null}
-        {__DEV__ ? (
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-            onPress={() => navigation.navigate('DatabaseInspector')}
-          >
-            <Text style={styles.buttonLabel}>[dev] DB Inspector</Text>
-          </Pressable>
+          <View style={styles.settingsCard}>
+            <Text style={styles.sectionTitle}>[dev] Ferramentas</Text>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.devButton, pressed && styles.buttonPressed]}
+              onPress={() => navigation.navigate('DatabaseInspector')}
+            >
+              <Text style={styles.devButtonLabel}>DB Inspector</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.devButton, pressed && styles.buttonPressed]}
+              onPress={() => navigation.navigate('SyncInspector')}
+            >
+              <Text style={styles.devButtonLabel}>Sync Inspector</Text>
+            </Pressable>
+          </View>
         ) : null}
 
-        <Pressable
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.ghostButton, pressed && styles.buttonPressed]}
-          onPress={openLogout}
-        >
-          <Text style={styles.ghostLabel}>Sair</Text>
-        </Pressable>
+        <View style={styles.footer}>
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.logoutButton, pressed && styles.buttonPressed]}
+            onPress={openLogout}
+          >
+            <Text style={styles.logoutLabel}>Sair da conta</Text>
+          </Pressable>
+        </View>
+
       </ScrollView>
 
       <ConfirmModal
@@ -108,32 +135,83 @@ export function SettingsScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FAFAFA', // Match other screen backgrounds
   },
   content: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingVertical: 24,
-    gap: 12,
+    gap: 20,
   },
-  settingsBlock: {
+  identityCard: {
     width: '100%',
     maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 8,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+  },
+  avatarPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#F4F4F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#18181B',
+  },
+  identityText: {
+    flex: 1,
+    gap: 4,
+  },
+  identityName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0A0A0A',
+  },
+  identityEmail: {
+    fontSize: 14,
+    color: '#71717A',
+  },
+  settingsCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    gap: 16,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#52525B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 4,
+  },
+  settingsBlock: {
+    gap: 12,
   },
   settingsLabel: {
     color: '#52525B',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
   },
   segmentRow: {
     flexDirection: 'row',
     gap: 8,
     flexWrap: 'wrap',
-    justifyContent: 'center',
   },
   segmentButton: {
     paddingVertical: 10,
@@ -150,36 +228,43 @@ const styles = StyleSheet.create({
   },
   segmentLabelActive: {
     color: '#FAFAFA',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
   },
   segmentLabelInactive: {
     color: '#18181B',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  button: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 10,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-  },
-  buttonLabel: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  ghostButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    marginTop: 16,
-  },
-  ghostLabel: {
-    color: '#71717A',
     fontSize: 14,
     fontWeight: '500',
+  },
+  devButton: {
+    backgroundColor: '#F4F4F5',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  devButtonLabel: {
+    color: '#18181B',
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'Courier',
+  },
+  footer: {
+    width: '100%',
+    maxWidth: 420,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  logoutButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  logoutLabel: {
+    color: '#DC2626',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  buttonPressed: {
+    opacity: 0.7,
   },
 });

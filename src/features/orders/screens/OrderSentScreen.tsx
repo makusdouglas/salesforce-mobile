@@ -1,10 +1,11 @@
 // 011-order-email-delivery: terminal confirmation screen reached after the
 // salesperson returns from the OS mail/share intent with a SENT outcome.
-// See design/order-sent-phone.png + order-sent-tablet.png.
+// Layout is pixel-locked to Pencil frames K99dc (phone) and qWpse (tablet).
 //
 // The native back button is disabled for this route (see OrdersStack) so
-// the only way out is the Concluir CTA — prevents accidentally landing
-// back in the draft editor of the order the salesperson just sent.
+// the only way out is the Concluir CTA (or the top-bar chevron, which
+// aliases Concluir) — prevents accidentally landing back in the draft
+// editor of the order the salesperson just sent.
 
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -45,56 +46,97 @@ export function OrderSentScreen({ navigation, route }: Props) {
     }
   };
 
+  // Exit path: land the salesperson on the client's profile. Same target
+  // for the top-bar chevron and the "Concluir" primary CTA.
+  //
+  // We `reset` the parent HomeStack history to [Home, ClientProfile]
+  // instead of `navigate`. A plain navigate keeps the Orders route in
+  // the stack, so the Android/system back button from ClientProfile
+  // would drop the salesperson back into OrderSent — a terminal screen
+  // that deliberately disables its own back. That created a loop the
+  // only escape from which was killing the app.
   const handleDone = (): void => {
-    navigation.getParent()?.navigate('ClientProfile', { clientId });
+    const parent = navigation.getParent();
+    if (!parent) return;
+    parent.reset({
+      index: 1,
+      routes: [
+        { name: 'HomePlaceholder' },
+        { name: 'ClientProfile', params: { clientId } },
+      ],
+    });
   };
 
-  const sharedLabel = recipientEmail
-    ? `PDF compartilhado via email · ${recipientEmail}`
+  // pt-BR relative timestamp for the meta line. The screen is rendered
+  // immediately after the send intent returns, so "há instantes" is
+  // always accurate — we don't ticker-update it.
+  const whenLabel = 'há instantes';
+  const metaTitle = recipientEmail
+    ? 'PDF compartilhado via email'
     : 'PDF compartilhado — sem email cadastrado';
+  const metaSub = recipientEmail ? `${recipientEmail} · ${whenLabel}` : whenLabel;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <View style={styles.content}>
-        <View style={styles.hero}>
-          <View style={styles.checkCircle}>
-            <Feather name="check" size={40} color="#FFFFFF" />
-          </View>
-          <Text style={styles.orderNumber}>{orderNumber}</Text>
-          <Text style={styles.sharedLine}>{sharedLabel}</Text>
-          {error !== null ? <Text style={styles.error}>⚠ {error}</Text> : null}
-        </View>
+      <View style={styles.topBar}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+          onPress={handleDone}
+          hitSlop={12}
+          style={({ pressed }) => [styles.topIcon, pressed && styles.pressed]}
+        >
+          <Feather name="arrow-left" size={22} color="#0A0A0A" />
+        </Pressable>
+        <Text style={styles.topTitle}>Pedido enviado</Text>
+        <View style={styles.topIcon} />
+      </View>
 
-        <View style={[styles.footer, isTablet && styles.footerTablet]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Ver PDF salvo"
-            onPress={() => void handleViewPdf()}
-            disabled={busy}
-            style={({ pressed }) => [
-              styles.footerBtn,
-              isTablet && styles.footerBtnTablet,
-              styles.footerBtnSecondary,
-              busy && styles.disabled,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text style={styles.footerBtnSecondaryText}>Ver PDF salvo</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Concluir"
-            onPress={handleDone}
-            style={({ pressed }) => [
-              styles.footerBtn,
-              isTablet && styles.footerBtnTablet,
-              styles.footerBtnPrimary,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text style={styles.footerBtnPrimaryText}>Concluir</Text>
-          </Pressable>
+      <View style={styles.body}>
+        <View style={styles.okCircle}>
+          <Feather name="check" size={40} color="#166534" />
         </View>
+        <View style={styles.headGroup}>
+          <Text style={styles.headTitle}>Pedido enviado</Text>
+          <Text style={styles.headNumber}>{orderNumber}</Text>
+        </View>
+        <View style={styles.meta}>
+          <Text style={styles.metaTitle}>{metaTitle}</Text>
+          <Text style={styles.metaSub}>{metaSub}</Text>
+        </View>
+        {error !== null ? <Text style={styles.error}>⚠ {error}</Text> : null}
+      </View>
+
+      <View style={[styles.ctaCol, isTablet && styles.ctaColTablet]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ver PDF salvo"
+          onPress={() => void handleViewPdf()}
+          disabled={busy}
+          style={({ pressed }) => [
+            styles.ctaBtn,
+            styles.ctaBtnSecondary,
+            isTablet && styles.ctaBtnTablet,
+            busy && styles.disabled,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Feather name="file-text" size={15} color="#0A0A0A" />
+          <Text style={styles.ctaBtnSecondaryText}>Ver PDF salvo</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Concluir"
+          onPress={handleDone}
+          style={({ pressed }) => [
+            styles.ctaBtn,
+            styles.ctaBtnPrimary,
+            isTablet && styles.ctaBtnTablet,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.ctaBtnPrimaryText}>Concluir</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -102,70 +144,116 @@ export function OrderSentScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FAFAFA' },
-  // Single flex container with the hero + footer split so the buttons can
-  // never be pushed off-screen, regardless of viewport height. justify-
-  // Content=space-between keeps the CTAs pinned to the bottom.
-  content: {
-    flex: 1,
+  topBar: {
+    height: 56,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E4E4E7',
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  hero: {
+  topIcon: {
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0A0A0A',
+  },
+  body: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    gap: 14,
+    gap: 20,
   },
-  checkCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#18181b',
+  okCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 999,
+    backgroundColor: '#DCFCE7',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
   },
-  orderNumber: { fontSize: 28, fontWeight: '700', color: '#0A0A0A' },
-  sharedLine: {
+  headGroup: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  headTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#0A0A0A',
+  },
+  headNumber: {
     fontSize: 13,
-    color: '#52525b',
+    fontWeight: '500',
+    color: '#737373',
+    fontVariant: ['tabular-nums'],
+  },
+  meta: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaTitle: {
+    fontSize: 14,
+    color: '#404040',
     textAlign: 'center',
-    maxWidth: 320,
+  },
+  metaSub: {
+    fontSize: 12,
+    color: '#737373',
+    textAlign: 'center',
   },
   error: { color: '#B91C1C', fontSize: 12, marginTop: 4 },
-  footer: {
-    padding: 16,
-    gap: 10,
+  ctaCol: {
     backgroundColor: '#FFFFFF',
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
     borderTopColor: '#E4E4E7',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
-  footerTablet: { flexDirection: 'row', padding: 28 },
-  // On phone (column footer) the buttons need full width + explicit height,
-  // NOT flex: 1 — two flex: 1 children in a column without a fixed height
-  // collapse to the container's intrinsic size (i.e. just the padding), which
-  // is why the CTAs were rendering as a single thin line on the phone.
-  footerBtn: {
-    height: 52,
-    alignSelf: 'stretch',
+  ctaColTablet: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+    paddingHorizontal: 28,
+    paddingTop: 20,
+    paddingBottom: 28,
+  },
+  ctaBtn: {
+    height: 48,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
   },
-  // Tablet footer is flexDirection: row, so the buttons split the width
-  // evenly via flex: 1.
-  footerBtnTablet: {
-    flex: 1,
-    alignSelf: 'auto',
+  ctaBtnTablet: {
+    width: 260,
   },
-  footerBtnPrimary: { backgroundColor: '#0A0A0A' },
-  footerBtnPrimaryText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  footerBtnSecondary: {
+  ctaBtnPrimary: { backgroundColor: '#171717' },
+  ctaBtnPrimaryText: {
+    color: '#FAFAFA',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  ctaBtnSecondary: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E4E4E7',
   },
-  footerBtnSecondaryText: { color: '#0A0A0A', fontSize: 15, fontWeight: '600' },
+  ctaBtnSecondaryText: {
+    color: '#0A0A0A',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
 });

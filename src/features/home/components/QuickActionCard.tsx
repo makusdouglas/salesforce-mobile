@@ -9,18 +9,21 @@ const ICON_FOR_KIND: Record<QuickActionCardKind, keyof typeof Ionicons.glyphMap>
   catalog: 'cube-outline',
   clients: 'storefront-outline',
   drafts: 'create-outline',
+  orders: 'list-outline',
 };
 
 const ICON_COLOR_FOR_KIND: Record<QuickActionCardKind, string> = {
   catalog: '#0A0A0A',
   clients: '#0A0A0A',
   drafts: '#92400E',
+  orders: '#0A0A0A',
 };
 
 const ICON_COLOR_DASHED: Record<QuickActionCardKind, string> = {
   catalog: '#0A0A0A',
   clients: '#0A0A0A',
   drafts: '#A1A1AA',
+  orders: '#0A0A0A',
 };
 
 type Props = {

@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { DatabaseInspectorScreen } from '@/features/_debug/screens/DatabaseInspectorScreen';
-import { DataLayerSmokeScreen } from '@/features/_debug/screens/DataLayerSmokeScreen';
+import { SyncInspectorScreen } from '@/features/_debug/screens/SyncInspectorScreen';
 import { CatalogScreen, ProductDetailScreen } from '@/features/catalog';
 import {
   ClientFormScreen,
@@ -10,6 +10,7 @@ import {
   NewOrderStubScreen,
 } from '@/features/clients';
 import { DraftsListScreen, HomeScreen, SettingsScreen } from '@/features/home';
+import { OrdersOverviewScreen } from '@/features/orders/overview/screens/OrdersOverviewScreen';
 
 import { OrdersStack } from './OrdersStack';
 import type { HomeStackParamList } from './types';
@@ -65,18 +66,25 @@ export function HomeStack() {
         component={DraftsListScreen}
         options={{ headerShown: false }}
       />
-      {__DEV__ ? (
-        <Stack.Screen
-          name="DataLayerSmoke"
-          component={DataLayerSmokeScreen}
-          options={{ title: '[dev] Data Layer' }}
-        />
-      ) : null}
+      {/* 013-orders-overview: consolidated monthly pedidos list. */}
+      <Stack.Screen
+        name="OrdersOverview"
+        component={OrdersOverviewScreen}
+        options={{ headerShown: false }}
+      />
+
       {__DEV__ ? (
         <Stack.Screen
           name="DatabaseInspector"
           component={DatabaseInspectorScreen}
           options={{ title: '[dev] DB Inspector' }}
+        />
+      ) : null}
+      {__DEV__ ? (
+        <Stack.Screen
+          name="SyncInspector"
+          component={SyncInspectorScreen}
+          options={{ title: '[dev] Sync Inspector' }}
         />
       ) : null}
     </Stack.Navigator>

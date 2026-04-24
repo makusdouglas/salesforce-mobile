@@ -136,7 +136,10 @@ async function loadPdfInputForOrder(order: Order): Promise<{
   clientName: string;
   clientEmail: string | null;
   clientPhone: string | null;
+  clientTaxId: string | null;
+  clientAddressLine: string | null;
   salespersonName: string;
+  salespersonEmail: string | null;
 }> {
   const [client, salesperson, itemRows] = await Promise.all([
     clientsRepository.findById(order.clientId),
@@ -164,7 +167,10 @@ async function loadPdfInputForOrder(order: Order): Promise<{
     clientName: client?.name ?? 'Cliente',
     clientEmail: client?.email ?? null,
     clientPhone: client?.phone ?? null,
+    clientTaxId: client?.taxId ?? null,
+    clientAddressLine: client?.addressLine ?? null,
     salespersonName: salesperson?.name ?? 'Vendedor',
+    salespersonEmail: salesperson?.email ?? null,
   };
 }
 
@@ -203,11 +209,16 @@ export const orderSendService = {
         const html = renderOrderPdfHtml({
           orderNumber,
           issuedAtMs: Date.now(),
-          salesperson: { name: pdfInputs.salespersonName },
+          salesperson: {
+            name: pdfInputs.salespersonName,
+            email: pdfInputs.salespersonEmail,
+          },
           client: {
             name: pdfInputs.clientName,
             email: pdfInputs.clientEmail,
             phone: pdfInputs.clientPhone,
+            taxId: pdfInputs.clientTaxId,
+            addressLine: pdfInputs.clientAddressLine,
           },
           items: pdfInputs.lines,
           orderDiscount: { amountCents: order.discountAmount, mode: order.discountMode },

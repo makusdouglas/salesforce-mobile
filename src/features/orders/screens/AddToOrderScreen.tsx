@@ -125,6 +125,142 @@ export function AddToOrderScreen({ navigation, route }: Props) {
     }
   };
 
+  const productCard = (
+    <View style={styles.productCard}>
+      <View style={styles.productImageSlot}>
+        <Text style={styles.productImagePlaceholder}>▢</Text>
+      </View>
+      <View style={styles.productInfo}>
+        <Text style={styles.productName}>{product?.name ?? 'Produto'}</Text>
+        {product?.description ? (
+          <Text style={styles.productMeta}>{product.description}</Text>
+        ) : product?.category ? (
+          <Text style={styles.productMeta}>{product.category}</Text>
+        ) : null}
+        {selectedVariant !== null ? (
+          <Text style={styles.productPrice}>
+            {formatBRL(selectedVariant.price)}
+            <Text style={styles.productPriceUnit}> / unidade</Text>
+          </Text>
+        ) : (
+          <Text style={styles.productPrice}>—</Text>
+        )}
+      </View>
+      {variants.length > 0 ? (
+        <View style={styles.productVariants}>
+          <Text style={styles.sectionLabel}>Variante</Text>
+          <View style={styles.chipRow}>
+            {variants.map((v) => {
+              const active = v.id === selectedVariantId;
+              return (
+                <Pressable
+                  key={v.id}
+                  onPress={() => setSelectedVariantId(v.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    active ? styles.chipActive : styles.chipIdle,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text
+                    style={active ? styles.chipTextActive : styles.chipText}
+                  >
+                    {v.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const controlsCard = (
+    <View style={styles.controlsCard}>
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>Quantidade</Text>
+          <Text style={styles.sectionHint}>Toque +/− ou toque no número</Text>
+        </View>
+        <View style={styles.qtyRow}>
+          <QtyStepper
+            value={quantity}
+            onChange={setQuantity}
+            size="lg"
+            min={1}
+            showUnit
+            unitLabel="unidades"
+            accessibilityLabel="Quantidade"
+          />
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Desconto por item (opcional)</Text>
+        <DiscountControl
+          value={discount}
+          onChange={setDiscount}
+          amountMax={preview.subtotal}
+          accessibilityLabel="Desconto por item"
+        />
+      </View>
+
+      <View style={styles.previewCard}>
+        <View style={styles.previewRow}>
+          <Text style={styles.previewLabel}>
+            Subtotal ({quantity} ×{' '}
+            {selectedVariant !== null ? formatBRL(selectedVariant.price) : '—'}
+            )
+          </Text>
+          <Text style={styles.previewValue}>{formatBRL(preview.subtotal)}</Text>
+        </View>
+        {preview.discountAmount > 0 ? (
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabelDisc}>
+              Desconto
+              {discount.mode === 'percent' && discount.value > 0
+                ? ` (${discount.value}%)`
+                : ''}
+            </Text>
+            <Text style={styles.previewValueDisc}>
+              −{formatBRL(preview.discountAmount)}
+            </Text>
+          </View>
+        ) : null}
+        <View style={[styles.previewRow, styles.previewTotalRow]}>
+          <Text style={styles.previewTotalLabel}>Total da linha</Text>
+          <Text style={styles.previewTotalValue}>
+            {formatBRL(preview.lineTotal)}
+          </Text>
+        </View>
+      </View>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Adicionar ao pedido"
+        disabled={!canAdd}
+        onPress={() => void handleAdd()}
+        style={({ pressed }) => [
+          styles.primaryBtn,
+          !canAdd && styles.disabled,
+          pressed && canAdd && styles.pressed,
+        ]}
+      >
+        <Text style={styles.primaryBtnText}>🛒  Adicionar ao pedido</Text>
+      </Pressable>
+
+      <Text style={styles.footNote}>
+        % ajusta com +/− · R$ aceita valor digitado. Preço de catálogo não é
+        alterado.
+      </Text>
+
+      {error !== null ? <Text style={styles.errorText}>⚠ {error}</Text> : null}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={[styles.topBar, isTablet && styles.topBarTablet]}>
@@ -137,136 +273,162 @@ export function AddToOrderScreen({ navigation, route }: Props) {
           <Text style={styles.iconBtnText}>⌄</Text>
         </Pressable>
         <Text style={styles.topTitle}>Adicionar ao pedido</Text>
-        <View style={styles.iconBtn} />
+        {isTablet ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Fechar"
+            onPress={() => navigation.goBack()}
+            style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
+          >
+            <Text style={styles.iconBtnText}>×</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.iconBtn} />
+        )}
       </View>
 
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={[
-          styles.bodyContent,
-          isTablet && styles.bodyContentTablet,
-        ]}
-      >
-        <View style={styles.hero}>
-          <Text style={styles.heroName}>{product?.name ?? 'Produto'}</Text>
-          {selectedVariant !== null ? (
-            <Text style={styles.heroPrice}>
-              {formatBRL(selectedVariant.price)} / un
-            </Text>
-          ) : (
-            <Text style={styles.heroPrice}>—</Text>
-          )}
+      {isTablet ? (
+        <View style={styles.splitBody}>
+          <ScrollView
+            style={styles.splitLeft}
+            contentContainerStyle={styles.splitPaneContent}
+          >
+            {productCard}
+          </ScrollView>
+          <ScrollView
+            style={styles.splitRight}
+            contentContainerStyle={styles.splitPaneContent}
+          >
+            {controlsCard}
+          </ScrollView>
         </View>
-
-        {variants.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Variante</Text>
-            <View style={styles.chipRow}>
-              {variants.map((v) => {
-                const active = v.id === selectedVariantId;
-                return (
-                  <Pressable
-                    key={v.id}
-                    onPress={() => setSelectedVariantId(v.id)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    style={({ pressed }) => [
-                      styles.chip,
-                      active ? styles.chipActive : styles.chipIdle,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <Text
-                      style={active ? styles.chipTextActive : styles.chipText}
-                    >
-                      {v.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        ) : null}
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionLabel}>Quantidade</Text>
-            <Text style={styles.sectionHint}>Toque +/− ou toque no número</Text>
-          </View>
-          <View style={styles.qtyRow}>
-            <QtyStepper
-              value={quantity}
-              onChange={setQuantity}
-              size="lg"
-              min={1}
-              showUnit
-              unitLabel="unidades"
-              accessibilityLabel="Quantidade"
-            />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Desconto por item (opcional)</Text>
-          <DiscountControl
-            value={discount}
-            onChange={setDiscount}
-            amountMax={preview.subtotal}
-            accessibilityLabel="Desconto por item"
-          />
-          <Text style={styles.sectionHint}>
-            % ajusta com +/− · R$ aceita valor digitado. Preço de catálogo não é
-            alterado.
-          </Text>
-        </View>
-
-        <View style={styles.previewCard}>
-          <View style={styles.previewRow}>
-            <Text style={styles.previewLabel}>
-              Subtotal ({quantity} ×{' '}
-              {selectedVariant !== null
-                ? formatBRL(selectedVariant.price)
-                : '—'}
-              )
-            </Text>
-            <Text style={styles.previewValue}>{formatBRL(preview.subtotal)}</Text>
-          </View>
-          {preview.discountAmount > 0 ? (
-            <View style={styles.previewRow}>
-              <Text style={styles.previewLabelDisc}>Desconto</Text>
-              <Text style={styles.previewValueDisc}>
-                −{formatBRL(preview.discountAmount)}
+      ) : (
+        <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+          <View style={styles.hero}>
+            <Text style={styles.heroName}>{product?.name ?? 'Produto'}</Text>
+            {selectedVariant !== null ? (
+              <Text style={styles.heroPrice}>
+                {formatBRL(selectedVariant.price)} / un
               </Text>
+            ) : (
+              <Text style={styles.heroPrice}>—</Text>
+            )}
+          </View>
+
+          {variants.length > 0 ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Variante</Text>
+              <View style={styles.chipRow}>
+                {variants.map((v) => {
+                  const active = v.id === selectedVariantId;
+                  return (
+                    <Pressable
+                      key={v.id}
+                      onPress={() => setSelectedVariantId(v.id)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      style={({ pressed }) => [
+                        styles.chip,
+                        active ? styles.chipActive : styles.chipIdle,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <Text
+                        style={active ? styles.chipTextActive : styles.chipText}
+                      >
+                        {v.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           ) : null}
-          <View style={[styles.previewRow, styles.previewTotalRow]}>
-            <Text style={styles.previewTotalLabel}>Total da linha</Text>
-            <Text style={styles.previewTotalValue}>
-              {formatBRL(preview.lineTotal)}
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionLabel}>Quantidade</Text>
+              <Text style={styles.sectionHint}>Toque +/− ou toque no número</Text>
+            </View>
+            <View style={styles.qtyRow}>
+              <QtyStepper
+                value={quantity}
+                onChange={setQuantity}
+                size="lg"
+                min={1}
+                showUnit
+                unitLabel="unidades"
+                accessibilityLabel="Quantidade"
+              />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Desconto por item (opcional)</Text>
+            <DiscountControl
+              value={discount}
+              onChange={setDiscount}
+              amountMax={preview.subtotal}
+              accessibilityLabel="Desconto por item"
+            />
+            <Text style={styles.sectionHint}>
+              % ajusta com +/− · R$ aceita valor digitado. Preço de catálogo não
+              é alterado.
             </Text>
           </View>
+
+          <View style={styles.previewCard}>
+            <View style={styles.previewRow}>
+              <Text style={styles.previewLabel}>
+                Subtotal ({quantity} ×{' '}
+                {selectedVariant !== null
+                  ? formatBRL(selectedVariant.price)
+                  : '—'}
+                )
+              </Text>
+              <Text style={styles.previewValue}>
+                {formatBRL(preview.subtotal)}
+              </Text>
+            </View>
+            {preview.discountAmount > 0 ? (
+              <View style={styles.previewRow}>
+                <Text style={styles.previewLabelDisc}>Desconto</Text>
+                <Text style={styles.previewValueDisc}>
+                  −{formatBRL(preview.discountAmount)}
+                </Text>
+              </View>
+            ) : null}
+            <View style={[styles.previewRow, styles.previewTotalRow]}>
+              <Text style={styles.previewTotalLabel}>Total da linha</Text>
+              <Text style={styles.previewTotalValue}>
+                {formatBRL(preview.lineTotal)}
+              </Text>
+            </View>
+          </View>
+
+          {error !== null ? (
+            <Text style={styles.errorText}>⚠ {error}</Text>
+          ) : null}
+        </ScrollView>
+      )}
+
+      {isTablet ? null : (
+        <View style={styles.footer}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Adicionar ao pedido"
+            disabled={!canAdd}
+            onPress={() => void handleAdd()}
+            style={({ pressed }) => [
+              styles.primaryBtn,
+              !canAdd && styles.disabled,
+              pressed && canAdd && styles.pressed,
+            ]}
+          >
+            <Text style={styles.primaryBtnText}>Adicionar ao pedido</Text>
+          </Pressable>
         </View>
-
-        {error !== null ? (
-          <Text style={styles.errorText}>⚠ {error}</Text>
-        ) : null}
-      </ScrollView>
-
-      <View style={[styles.footer, isTablet && styles.footerTablet]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Adicionar ao pedido"
-          disabled={!canAdd}
-          onPress={() => void handleAdd()}
-          style={({ pressed }) => [
-            styles.primaryBtn,
-            !canAdd && styles.disabled,
-            pressed && canAdd && styles.pressed,
-          ]}
-        >
-          <Text style={styles.primaryBtnText}>Adicionar ao pedido</Text>
-        </Pressable>
-      </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -294,7 +456,54 @@ const styles = StyleSheet.create({
   topTitle: { fontSize: 15, fontWeight: '700', color: '#0A0A0A' },
   body: { flex: 1 },
   bodyContent: { padding: 16, gap: 20, flexGrow: 1 },
-  bodyContentTablet: { padding: 28, gap: 24 },
+  splitBody: { flex: 1, flexDirection: 'row', gap: 16, padding: 20 },
+  splitLeft: { flex: 1 },
+  splitRight: { width: 360 },
+  splitPaneContent: { gap: 14, paddingBottom: 20 },
+  productCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    borderRadius: 14,
+    padding: 18,
+    gap: 12,
+  },
+  productImageSlot: {
+    width: '100%',
+    aspectRatio: 1.1,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  productImagePlaceholder: {
+    fontSize: 48,
+    color: '#D4D4D8',
+  },
+  productInfo: { gap: 4 },
+  productName: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' },
+  productMeta: { fontSize: 12, color: '#737373' },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0A0A0A',
+    marginTop: 2,
+  },
+  productPriceUnit: { fontSize: 13, fontWeight: '500', color: '#737373' },
+  productVariants: { gap: 8, paddingTop: 4 },
+  controlsCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    borderRadius: 14,
+    padding: 18,
+    gap: 16,
+  },
+  footNote: {
+    fontSize: 11,
+    color: '#A1A1AA',
+    textAlign: 'center',
+  },
   hero: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -364,7 +573,6 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: '#E4E4E7',
   },
-  footerTablet: { paddingHorizontal: 28 },
   primaryBtn: {
     height: 52,
     backgroundColor: '#171717',

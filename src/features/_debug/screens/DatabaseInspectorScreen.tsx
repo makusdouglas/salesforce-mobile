@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
+  FlatList,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 // row of every table. Feature code must never do this (R1 / barrel contract);
 // this inspector is a deliberate exception, locked behind __DEV__.
 import { database } from '@/data/database';
+import { SyncStatusIndicator, onPullToRefresh } from '@/features/sync';
 
 const TABLES = [
   'salespeople',
@@ -81,6 +85,7 @@ function statusColor(status: string): string {
 export function DatabaseInspectorScreen() {
   const [selectedTable, setSelectedTable] = useState<TableName>('clients');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'id'>('recent');
   const [search, setSearch] = useState('');
   const [rows, setRows] = useState<RawRow[]>([]);
   const [counts, setCounts] = useState<Record<TableName, { total: number; byStatus: StatusCounts }>>(() => {
@@ -148,7 +153,7 @@ export function DatabaseInspectorScreen() {
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
+    const filtered = rows.filter((r) => {
       if (statusFilter !== 'all' && r._status !== statusFilter) return false;
       if (q.length === 0) return true;
       // Search across all scalar field values.
@@ -159,7 +164,16 @@ export function DatabaseInspectorScreen() {
       }
       return false;
     });
-  }, [rows, statusFilter, search]);
+
+    return filtered.sort((a, b) => {
+      if (sortBy === 'recent') {
+        const aTime = typeof a.updated_at === 'number' ? a.updated_at : (typeof a.created_at_ms === 'number' ? a.created_at_ms : 0);
+        const bTime = typeof b.updated_at === 'number' ? b.updated_at : (typeof b.created_at_ms === 'number' ? b.created_at_ms : 0);
+        if (aTime !== bTime) return bTime - aTime;
+      }
+      return String(b.id).localeCompare(String(a.id));
+    });
+  }, [rows, statusFilter, search, sortBy]);
 
   const toggleExpanded = (id: string) => {
     const next = new Set(expanded);
@@ -170,17 +184,67 @@ export function DatabaseInspectorScreen() {
 
   const selectedCounts = counts[selectedTable];
 
+  const handleCopyJSON = (row: RawRow) => {
+    void Share.share({ message: JSON.stringify(row, null, 2) });
+  };
+
+  const handleHardDelete = (rowId: string) => {
+    Alert.alert('Apagar Permanente', `Deseja destruir ${rowId} do banco local?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Apagar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const collection = database.get(selectedTable);
+            const record = await collection.find(rowId);
+            await database.write(async () => {
+              await record.destroyPermanently();
+            });
+            setRefreshKey((k) => k + 1);
+          } catch (e) {
+            setError(`hard_delete: ${e instanceof Error ? e.message : String(e)}`);
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleLinkPress = (key: string, value: string) => {
+    let targetTable: TableName | null = null;
+    if (key === 'salesperson_id') targetTable = 'salespeople';
+    else if (key === 'client_id') targetTable = 'clients';
+    else if (key === 'product_id') targetTable = 'products';
+    else if (key === 'product_variant_id') targetTable = 'product_variants';
+    else if (key === 'order_id') targetTable = 'orders';
+
+    if (targetTable) {
+      setSelectedTable(targetTable);
+      setSearch(value);
+      setExpanded(new Set([value]));
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>[dev] DB Inspector</Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => setRefreshKey((k) => k + 1)}
-          style={({ pressed }) => [styles.refreshBtn, pressed && styles.pressed]}
-        >
-          <Text style={styles.refreshLabel}>Atualizar</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <SyncStatusIndicator />
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void onPullToRefresh()}
+            style={({ pressed }) => [styles.syncBtn, pressed && styles.pressed]}
+          >
+            <Text style={styles.syncLabel}>Sincronizar</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setRefreshKey((k) => k + 1)}
+            style={({ pressed }) => [styles.refreshBtn, pressed && styles.pressed]}
+          >
+            <Text style={styles.refreshLabel}>Atualizar</Text>
+          </Pressable>
+        </View>
       </View>
 
       {error !== null ? (
@@ -202,7 +266,10 @@ export function DatabaseInspectorScreen() {
             <Pressable
               key={table}
               accessibilityRole="button"
-              onPress={() => setSelectedTable(table)}
+              onPress={() => {
+                setSelectedTable(table);
+                setSearch('');
+              }}
               style={({ pressed }) => [
                 styles.tableChip,
                 active ? styles.tableChipActive : styles.tableChipInactive,
@@ -270,12 +337,33 @@ export function DatabaseInspectorScreen() {
         autoCapitalize="none"
       />
 
-      <Text style={styles.resultLabel}>
-        {filteredRows.length} de {rows.length} {rows.length === 1 ? 'linha' : 'linhas'}
-      </Text>
+      <View style={styles.resultsBar}>
+        <Text style={styles.resultLabel}>
+          {filteredRows.length} de {rows.length} {rows.length === 1 ? 'linha' : 'linhas'}
+        </Text>
+        <View style={styles.sortToggle}>
+          <Pressable onPress={() => setSortBy('recent')} style={[styles.sortBtn, sortBy === 'recent' && styles.sortBtnActive]}>
+            <Text style={[styles.sortLabel, sortBy === 'recent' && styles.sortLabelActive]}>Recentes</Text>
+          </Pressable>
+          <Pressable onPress={() => setSortBy('id')} style={[styles.sortBtn, sortBy === 'id' && styles.sortBtnActive]}>
+            <Text style={[styles.sortLabel, sortBy === 'id' && styles.sortLabelActive]}>ID</Text>
+          </Pressable>
+        </View>
+      </View>
 
-      <ScrollView style={styles.rowsScroll} contentContainerStyle={styles.rowsContent}>
-        {filteredRows.map((row) => {
+      <FlatList
+        data={filteredRows}
+        keyExtractor={(item) => item.id}
+        style={styles.rowsScroll}
+        contentContainerStyle={styles.rowsContent}
+        initialNumToRender={20}
+        windowSize={5}
+        ListEmptyComponent={
+          <Text style={styles.emptyHint}>
+            {rows.length === 0 ? 'tabela vazia' : 'nenhuma linha passa no filtro atual'}
+          </Text>
+        }
+        renderItem={({ item: row }) => {
           const isOpen = expanded.has(row.id);
           const sync = `${row._status}${row._changed ? ` · ${row._changed}` : ''}`;
           const primary =
@@ -285,7 +373,6 @@ export function DatabaseInspectorScreen() {
             '(sem nome)';
           return (
             <Pressable
-              key={row.id}
               accessibilityRole="button"
               onPress={() => toggleExpanded(row.id)}
               style={({ pressed }) => [styles.row, pressed && styles.pressed]}
@@ -307,25 +394,47 @@ export function DatabaseInspectorScreen() {
                 <View style={styles.detailBlock}>
                   {Object.entries(row)
                     .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([key, value]) => (
-                      <View key={key} style={styles.detailRow}>
-                        <Text style={styles.detailKey}>{key}</Text>
-                        <Text style={styles.detailValue} selectable>
-                          {formatValue(value)}
-                        </Text>
-                      </View>
-                    ))}
+                    .map(([key, value]) => {
+                      const isIdLink = key.endsWith('_id') && typeof value === 'string' && value.length > 0;
+                      return (
+                        <View key={key} style={styles.detailRow}>
+                          <Text style={styles.detailKey}>{key}</Text>
+                          {isIdLink ? (
+                            <Text
+                              style={[styles.detailValue, styles.detailValueLink]}
+                              onPress={() => handleLinkPress(key, value as string)}
+                            >
+                              {formatValue(value)}
+                            </Text>
+                          ) : (
+                            <Text style={styles.detailValue} selectable>
+                              {formatValue(value)}
+                            </Text>
+                          )}
+                        </View>
+                      );
+                    })}
+                  
+                  <View style={styles.rowActions}>
+                    <Pressable
+                      style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}
+                      onPress={() => handleCopyJSON(row)}
+                    >
+                      <Text style={styles.actionLabel}>Copiar JSON</Text>
+                    </Pressable>
+                    <Pressable
+                      style={({ pressed }) => [styles.actionBtn, styles.actionBtnDanger, pressed && styles.pressed]}
+                      onPress={() => handleHardDelete(row.id)}
+                    >
+                      <Text style={styles.actionLabelDanger}>Hard Delete</Text>
+                    </Pressable>
+                  </View>
                 </View>
               ) : null}
             </Pressable>
           );
-        })}
-        {filteredRows.length === 0 ? (
-          <Text style={styles.emptyHint}>
-            {rows.length === 0 ? 'tabela vazia' : 'nenhuma linha passa no filtro atual'}
-          </Text>
-        ) : null}
-      </ScrollView>
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -335,12 +444,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#0A0A0A' },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   refreshBtn: {
     backgroundColor: '#18181B',
     paddingHorizontal: 14,
@@ -348,6 +461,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   refreshLabel: { color: '#FAFAFA', fontSize: 13, fontWeight: '600' },
+  syncBtn: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D4D4D8',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  syncLabel: { color: '#18181B', fontSize: 13, fontWeight: '600' },
   errorBanner: {
     marginHorizontal: 16,
     marginBottom: 8,
@@ -430,13 +552,46 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#0A0A0A',
   },
-  resultLabel: {
+  resultsBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 8,
+  },
+  resultLabel: {
     fontSize: 11,
     color: '#71717A',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
+  },
+  sortToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#E4E4E7',
+    borderRadius: 6,
+    padding: 2,
+  },
+  sortBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  sortBtnActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
+  },
+  sortLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#71717A',
+  },
+  sortLabelActive: {
+    color: '#18181B',
+    fontWeight: '600',
   },
   rowsScroll: { flex: 1 },
   rowsContent: { padding: 16, paddingTop: 8, gap: 8 },
@@ -462,6 +617,38 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', gap: 8 },
   detailKey: { width: 120, fontSize: 11, fontWeight: '600', color: '#52525B' },
   detailValue: { flex: 1, fontSize: 11, color: '#0A0A0A', fontFamily: 'Courier' },
+  detailValueLink: {
+    color: '#2563EB',
+    textDecorationLine: 'underline',
+  },
+  rowActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F4F4F5',
+    paddingTop: 12,
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    backgroundColor: '#F4F4F5',
+    borderRadius: 6,
+  },
+  actionBtnDanger: {
+    backgroundColor: '#FEF2F2',
+  },
+  actionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#18181B',
+  },
+  actionLabelDanger: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#DC2626',
+  },
   emptyHint: {
     textAlign: 'center',
     paddingVertical: 24,

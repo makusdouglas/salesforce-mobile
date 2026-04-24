@@ -108,8 +108,17 @@ export function HomeScreen({ navigation }: Props) {
   const goDraftsPlaceholder = (): void => {
     navigation.navigate('DraftsList');
   };
-  // TODO(010-orders): replace with navigation to the sent-order detail.
-  const goRecentActivityPlaceholder = (): void => {};
+  const goOrders = (): void => {
+    navigation.navigate('OrdersOverview');
+  };
+  // 013-orders-overview: the single-item RecentActivityCard taps into the
+  // full orders surface (the seller can then inspect any sent/canceled
+  // row from there). A dedicated deep-link into OrderDetail requires the
+  // snapshot to carry the orderId, which is a cross-feature DTO change
+  // deferred to a follow-up.
+  const goRecentActivityPlaceholder = (): void => {
+    navigation.navigate('OrdersOverview');
+  };
 
   const catalogHandlers = {
     onPress: goCatalog,
@@ -121,6 +130,9 @@ export function HomeScreen({ navigation }: Props) {
   };
   const draftsHandlers = {
     onPress: goDraftsPlaceholder,
+  };
+  const ordersHandlers = {
+    onPress: goOrders,
   };
 
   const quickActionsTablet = (
@@ -137,8 +149,9 @@ export function HomeScreen({ navigation }: Props) {
         <View style={styles.tabletCell}>
           <QuickActionCard card={snapshot.drafts} viewport={viewport} {...draftsHandlers} />
         </View>
-        {/* Neutral spacer balances the 2-column grid per design/home-tablet.png */}
-        <View style={styles.tabletCell} />
+        <View style={styles.tabletCell}>
+          <QuickActionCard card={snapshot.orders} viewport={viewport} {...ordersHandlers} />
+        </View>
       </View>
     </View>
   );
@@ -148,6 +161,7 @@ export function HomeScreen({ navigation }: Props) {
       <QuickActionCard card={snapshot.catalog} viewport={viewport} {...catalogHandlers} />
       <QuickActionCard card={snapshot.clients} viewport={viewport} {...clientsHandlers} />
       <QuickActionCard card={snapshot.drafts} viewport={viewport} {...draftsHandlers} />
+      <QuickActionCard card={snapshot.orders} viewport={viewport} {...ordersHandlers} />
     </View>
   );
 
