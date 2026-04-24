@@ -167,7 +167,9 @@ Append-only model — correções são novos recibos referenciando o original vi
 
 ---
 
-### 13. Orders Overview & Accounting Summary `[core]` `[ui]`
+### 13. Orders Overview & Accounting Summary `[core]` `[ui]` ✅ **Shipped**
+
+Artifacts: [spec.md](specs/013-orders-overview/spec.md) · [plan.md](specs/013-orders-overview/plan.md) · [tasks.md](specs/013-orders-overview/tasks.md) · [design/screens.md](specs/013-orders-overview/design/screens.md)
 
 Tela única para o vendedor consolidar **todos** os seus pedidos (rascunho / enviado / cancelado) com filtros por status, mês e busca, mais uma faixa de resumo para prestação de contas (faturado, recebido, pendente). Status de pagamento é **derivado** das `payment_receipts` (feature 12) — nenhum novo valor de status é introduzido (respeita D4). Inclui uma tela secundária `OrderDetail` somente-leitura para pedidos `sent` / `canceled`, que também destrava o TODO em `HomeScreen.tsx:111` (tap no card "Atividade recente") e o gancho da feature 10 (Repeat Last Order) para abrir detalhe antes de clonar.
 
