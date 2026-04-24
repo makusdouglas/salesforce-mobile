@@ -14,6 +14,7 @@ import {
   PaymentReceiptDetailScreen,
   PaymentReceiptFormScreen,
 } from '@/features/orders/receipts';
+import { OrderDetailScreen } from '@/features/orders/detail/screens/OrderDetailScreen';
 
 import type { OrdersStackParamList } from './types';
 
@@ -41,6 +42,7 @@ export function OrdersStack() {
         options={{ presentation: 'modal' }}
       />
       <Stack.Screen name="PaymentReceiptDetail" component={PaymentReceiptDetailScreen} />
+      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
     </Stack.Navigator>
   );
 }

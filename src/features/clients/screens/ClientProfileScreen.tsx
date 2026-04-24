@@ -207,15 +207,16 @@ export function ClientProfileScreen({ navigation, route }: Props) {
           ) : null
         }
         onRowPress={(row) => {
-          // Tap dispatch by status:
-          //   draft → resume the draft in the editor (OrderDraft screen).
-          //   sent  → open the OrderReceipts view (012-payment-receipts entry
-          //           point). From there the seller can register a receipt
-          //           and/or re-open the stored PDF via the topBar action.
-          //           Prior behaviour (tap-to-open-PDF) is preserved as a
-          //           secondary action inside OrderReceipts.
-          //   canceled → no-op (row is visually dim via the existing
-          //           rowCanceled style).
+          // Tap dispatch by status (013-orders-overview):
+          //   draft    → resume the draft in the editor.
+          //   sent     → new read-only OrderDetail, deep-linked so the
+          //              tablet variant uses the full-screen layout
+          //              (not the split panel, which only applies when
+          //              the detail is reached from OrdersOverview).
+          //              The receipts section inside OrderDetail still
+          //              links through to OrderReceipts for the full
+          //              list + new-receipt CTA — nothing is lost.
+          //   canceled → same OrderDetail screen, deep-linked.
           if (row.status === 'draft') {
             navigation.navigate('Orders', {
               screen: 'OrderDraft',
@@ -223,12 +224,10 @@ export function ClientProfileScreen({ navigation, route }: Props) {
             });
             return;
           }
-          if (row.status === 'sent') {
-            navigation.navigate('Orders', {
-              screen: 'OrderReceipts',
-              params: { orderId: row.id },
-            });
-          }
+          navigation.navigate('Orders', {
+            screen: 'OrderDetail',
+            params: { orderId: row.id, deepLinked: true },
+          });
         }}
       />
     </View>
@@ -248,7 +247,9 @@ export function ClientProfileScreen({ navigation, route }: Props) {
         pressed && styles.pressed,
       ]}
     >
-      <Text style={styles.secondaryLabel}>Novo pedido em branco</Text>
+      <Text style={[styles.secondaryLabel, isTablet && styles.secondaryLabelTablet]}>
+        Novo pedido em branco
+      </Text>
     </Pressable>
   );
 
@@ -266,25 +267,35 @@ export function ClientProfileScreen({ navigation, route }: Props) {
         <Text style={styles.topTitle} numberOfLines={1}>
           {client.name}
         </Text>
-        <View style={styles.syncSlot}>
-          <SyncStatusIndicator />
-        </View>
+        {isTablet ? (
+          <View style={styles.topBarActions}>
+            <View style={styles.syncSlotTablet}>
+              <SyncStatusIndicator />
+            </View>
+            {cta}
+          </View>
+        ) : (
+          <View style={styles.syncSlot}>
+            <SyncStatusIndicator />
+          </View>
+        )}
       </View>
 
       {isTablet ? (
         <View style={styles.splitContainer}>
-          <ScrollView
-            style={styles.splitLeft}
-            contentContainerStyle={styles.splitLeftContent}
-          >
-            {identity}
-          </ScrollView>
+          <View style={styles.splitLeft}>
+            <ScrollView
+              style={styles.splitLeftScroll}
+              contentContainerStyle={styles.splitLeftContent}
+            >
+              {identity}
+            </ScrollView>
+          </View>
           <View style={styles.splitRight}>
             <ScrollView contentContainerStyle={styles.splitRightContent}>
               {hero}
               {historySection}
             </ScrollView>
-            <View style={styles.splitCtaBar}>{cta}</View>
           </View>
         </View>
       ) : (
@@ -357,6 +368,13 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'flex-end',
   },
+  syncSlotTablet: {
+    // Room for the full "Dados em dia" label + dot without wrapping.
+    // No trailing padding — the CTA now sits to the right of the pill,
+    // so the gap lives on `topBarActions`.
+    minWidth: 0,
+    alignItems: 'center',
+  },
   identityCard: {
     backgroundColor: '#FFFFFF',
     borderColor: '#E4E4E7',
@@ -423,18 +441,25 @@ const styles = StyleSheet.create({
   splitContainer: {
     flex: 1,
     flexDirection: 'row',
+    overflow: 'hidden',
   },
   splitLeft: {
     width: '45%',
     borderRightWidth: 1,
     borderRightColor: '#E4E4E7',
+    overflow: 'hidden',
+  },
+  splitLeftScroll: {
+    flex: 1,
   },
   splitLeftContent: {
     padding: 24,
+    paddingBottom: 40,
   },
   splitRight: {
     flex: 1,
     flexDirection: 'column',
+    overflow: 'hidden',
   },
   splitRightContent: {
     padding: 24,
@@ -468,6 +493,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  secondaryLabelTablet: {
+    fontSize: 13,
+  },
   ctaBase: {
     paddingHorizontal: 24,
   },
@@ -475,8 +503,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   ctaTablet: {
-    paddingVertical: 14,
-    minWidth: 240,
+    // Compact header-inline sizing — matches the top-bar height.
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    minWidth: 0,
+  },
+  topBarActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   primaryLabel: {
     color: '#FAFAFA',

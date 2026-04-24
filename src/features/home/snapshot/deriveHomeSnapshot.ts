@@ -21,7 +21,7 @@ export type GreetingDTO = {
   readonly subtitle: string;
 };
 
-export type QuickActionCardKind = 'catalog' | 'clients' | 'drafts';
+export type QuickActionCardKind = 'catalog' | 'clients' | 'drafts' | 'orders';
 
 export type QuickActionPopulated = {
   readonly subtitle: string;
@@ -59,6 +59,7 @@ export type HomeSnapshotDTO = {
   readonly catalog: QuickActionCardDTO;
   readonly clients: QuickActionCardDTO;
   readonly drafts: QuickActionCardDTO;
+  readonly orders: QuickActionCardDTO;
   readonly recentActivity: RecentActivityDTO | null;
   readonly recentActivityEmpty: RecentActivityEmptyDTO;
 };
@@ -133,6 +134,22 @@ function buildDraftsCard(count: number): QuickActionCardDTO {
   };
 }
 
+function buildOrdersCard(): QuickActionCardDTO {
+  const c = homeCopy.cards.orders;
+  return {
+    kind: 'orders',
+    title: c.title,
+    // Always populated — the seller can always tap into the list, even
+    // with zero orders. The list itself renders its own empty state.
+    populated: { subtitle: c.populatedSubtitle },
+    empty: {
+      variant: 'solid',
+      title: c.emptyTitle,
+      subtitle: c.emptySubtitle,
+    },
+  };
+}
+
 export function deriveHomeSnapshot(input: DeriveHomeSnapshotInput): HomeSnapshotDTO {
   const { name, email, sync, nowMs, catalog, clients, drafts, recentActivity } = input;
 
@@ -157,6 +174,7 @@ export function deriveHomeSnapshot(input: DeriveHomeSnapshotInput): HomeSnapshot
     catalog: buildCatalogCard(catalog.count),
     clients: buildClientsCard(clients.count),
     drafts: buildDraftsCard(drafts.count),
+    orders: buildOrdersCard(),
     recentActivity,
     recentActivityEmpty: {
       title: homeCopy.recentActivity.emptyTitle,

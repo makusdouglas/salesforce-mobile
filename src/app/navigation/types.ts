@@ -11,8 +11,8 @@ export type AuthStackParamList = {
 export type HomeStackParamList = {
   HomePlaceholder: undefined;
   Settings: undefined;
-  DataLayerSmoke: undefined;
   DatabaseInspector: undefined;
+  SyncInspector: undefined;
   // 009-order-assembly: catalog routes now carry an optional inOrderId.
   // When present, the catalog and product-detail screens swap their
   // primary CTAs to "Adicionar ao pedido" and show a sticky summary bar.
@@ -26,6 +26,8 @@ export type HomeStackParamList = {
   Orders: OrdersNavigatorParams;
   // 009-order-assembly: drafts-in-progress list, reached from Home.
   DraftsList: undefined;
+  // 013-orders-overview: consolidated orders list (monthly + filters).
+  OrdersOverview: undefined;
 };
 
 export type OrdersStackParamList = {
@@ -53,6 +55,11 @@ export type OrdersStackParamList = {
   // pre-links the new receipt to the original.
   PaymentReceiptForm: { orderId: string; correctionOf?: string };
   PaymentReceiptDetail: { receiptId: string };
+  // 013-orders-overview: read-only order detail reachable from three
+  // entry points. `deepLinked: true` selects the full-screen tablet
+  // layout; OrdersOverview's own tablet tap omits the flag and renders
+  // the detail in its right pane instead of pushing here.
+  OrderDetail: { orderId: string; deepLinked?: boolean };
 };
 
 export type OrdersNavigatorParams =
@@ -68,7 +75,8 @@ export type OrdersNavigatorParams =
   | {
       screen: 'PaymentReceiptDetail';
       params: OrdersStackParamList['PaymentReceiptDetail'];
-    };
+    }
+  | { screen: 'OrderDetail'; params: OrdersStackParamList['OrderDetail'] };
 
 declare global {
   namespace ReactNavigation {
