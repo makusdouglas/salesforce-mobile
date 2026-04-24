@@ -181,7 +181,10 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
         <View style={styles.itemsCard}>
           <View style={styles.itemsHeader}>
             <Text style={styles.itemsHeaderText}>{itemCount} itens</Text>
-            <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+            <Pressable
+              onPress={() => navigation.navigate('OrderDraft', { orderId })}
+              hitSlop={8}
+            >
               <Text style={styles.itemsHeaderLink}>Editar</Text>
             </Pressable>
           </View>
