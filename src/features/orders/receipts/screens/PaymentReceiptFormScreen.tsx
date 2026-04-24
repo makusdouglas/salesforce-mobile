@@ -23,7 +23,7 @@ import type { PaymentMethod } from '@/data/types';
 import { useViewport } from '../../hooks/useViewport';
 import { MethodChip } from '../components/MethodChip';
 import { useReceiptForm } from '../hooks/useReceiptForm';
-import { formatCents, methodLabel, parseCents, formatShortDatePt } from '../formatting';
+import { formatBRL, methodLabel, parseBRL, formatShortDatePt } from '../formatting';
 
 type Props = NativeStackScreenProps<OrdersStackParamList, 'PaymentReceiptForm'>;
 
@@ -38,7 +38,7 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
 
   const {
     state,
-    setAmountCents,
+    setAmount,
     setMethod,
     setNotes,
     canSubmit,
@@ -52,17 +52,17 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
 
   const onAmountChange = (raw: string): void => {
     setAmountText(raw);
-    const cents = parseCents(raw);
-    const signed = isCorrection && negative ? -cents : cents;
-    setAmountCents(signed);
+    const decimal = parseBRL(raw);
+    const signed = isCorrection && negative ? -decimal : decimal;
+    setAmount(signed);
   };
 
   const onToggleSign = (): void => {
     if (!isCorrection) return;
     setNegative((prev) => {
       const next = !prev;
-      const cents = Math.abs(state.amountCents);
-      setAmountCents(next ? -cents : cents);
+      const absValue = Math.abs(state.amount);
+      setAmount(next ? -absValue : absValue);
       return next;
     });
   };
@@ -74,7 +74,7 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
     }
   };
 
-  const displayAmount = useMemo(() => formatCents(state.amountCents), [state.amountCents]);
+  const displayAmount = useMemo(() => formatBRL(state.amount), [state.amount]);
   const saveLabel = isCorrection ? 'Salvar correção' : 'Salvar recebimento';
   const screenTitle = isCorrection ? 'Nova correção' : 'Novo recebimento';
 

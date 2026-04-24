@@ -29,9 +29,9 @@ export interface UseOrderReceiptsResult {
 }
 
 const ZERO_TOTALS: ReceiptTotals = {
-  totalCents: 0,
-  receivedCents: 0,
-  outstandingCents: 0,
+  total: 0,
+  received: 0,
+  outstanding: 0,
   hasOverpayment: false,
   hasNegativeBalance: false,
   progressRatio: 0,
@@ -99,7 +99,7 @@ export function useOrderReceipts(orderId: string): UseOrderReceiptsResult {
     order === null
       ? ZERO_TOTALS
       : computeReceiptTotals({
-          orderTotalCents: orderTotal,
+          orderTotal,
           receipts: receipts.map((r) => ({ amount: r.amount })),
         });
 

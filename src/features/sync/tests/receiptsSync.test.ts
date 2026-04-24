@@ -32,7 +32,7 @@ describe('push: payment_receipt payload excludes device-local columns', () => {
       _changed: '',
       updated_at: 123,
       order_id: 'o-1',
-      amount: 15000,
+      amount: 150,
       method: 'pix',
       received_at_ms: 1_700_000_000_000,
       attachment_url: 'receipt-attachments/seller/r-1.jpg',
@@ -46,7 +46,7 @@ describe('push: payment_receipt payload excludes device-local columns', () => {
 
     expect(payload).toMatchObject({
       order_id: 'o-1',
-      amount: 15000,
+      amount: 150,
       method: 'pix',
       received_at_ms: 1_700_000_000_000,
       attachment_url: 'receipt-attachments/seller/r-1.jpg',
@@ -66,7 +66,7 @@ describe('push: payment_receipt payload excludes device-local columns', () => {
       _changed: '',
       updated_at: 1,
       order_id: 'o-1',
-      amount: -1000,
+      amount: -10,
       method: 'cash',
       received_at_ms: 2,
       attachment_url: null,
@@ -78,7 +78,7 @@ describe('push: payment_receipt payload excludes device-local columns', () => {
       attachment_upload_state: null,
     });
     expect(payload).toMatchObject({
-      amount: -1000,
+      amount: -10,
       correction_of_receipt_id: 'r-original',
     });
   });
@@ -91,7 +91,7 @@ describe('pull: payment_receipt row initializes device-local columns to null', (
       updated_at: new Date('2026-04-01T12:00:00Z').toISOString(),
       deleted_at: null,
       order_id: 'o-1',
-      amount: 15000,
+      amount: 150,
       method: 'pix',
       received_at_ms: 1_700_000_000_000,
       attachment_url: 'receipt-attachments/seller/r-1.jpg',
@@ -101,7 +101,7 @@ describe('pull: payment_receipt row initializes device-local columns to null', (
 
     expect(wmdb).toMatchObject({
       order_id: 'o-1',
-      amount: 15000,
+      amount: 150,
       method: 'pix',
       attachment_url: 'receipt-attachments/seller/r-1.jpg',
       correction_of_receipt_id: null,
@@ -118,7 +118,7 @@ describe('pull: payment_receipt row initializes device-local columns to null', (
       updated_at: new Date('2026-04-01T12:00:00Z').toISOString(),
       deleted_at: null,
       order_id: 'o-1',
-      amount: -500,
+      amount: -5,
       method: 'cash',
       received_at_ms: 1_700_000_000_000,
       attachment_url: null,
@@ -127,6 +127,6 @@ describe('pull: payment_receipt row initializes device-local columns to null', (
     });
     expect(wmdb.correction_of_receipt_id).toBe('r-not-yet-pulled');
     // Row still inserts cleanly — no special "quarantine" field on the record.
-    expect(wmdb).toHaveProperty('amount', -500);
+    expect(wmdb).toHaveProperty('amount', -5);
   });
 });

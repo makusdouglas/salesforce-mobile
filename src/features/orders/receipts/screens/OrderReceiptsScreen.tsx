@@ -15,7 +15,7 @@ import type { OrdersStackParamList } from '@/app/navigation/types';
 import { useViewport } from '../../hooks/useViewport';
 import { openStoredPdf } from '../../send/openStoredPdf';
 import { useOrderReceipts } from '../hooks/useOrderReceipts';
-import { formatCents, formatShortDatePt, methodLabel } from '../formatting';
+import { formatBRL, formatShortDatePt, methodLabel } from '../formatting';
 
 type Props = NativeStackScreenProps<OrdersStackParamList, 'OrderReceipts'>;
 
@@ -83,15 +83,11 @@ export function OrderReceiptsScreen({ navigation, route }: Props) {
         ) : null}
 
         <View style={styles.summaryCard}>
-          <SummaryRow label="Total do pedido" value={totals.totalCents} tone="neutral" />
-          <SummaryRow
-            label="Recebido"
-            value={totals.receivedCents}
-            tone="positive"
-          />
+          <SummaryRow label="Total do pedido" value={totals.total} tone="neutral" />
+          <SummaryRow label="Recebido" value={totals.received} tone="positive" />
           <SummaryRow
             label="Saldo em aberto"
-            value={totals.outstandingCents}
+            value={totals.outstanding}
             tone="warning"
           />
           <View style={styles.progressTrack}>
@@ -133,7 +129,7 @@ export function OrderReceiptsScreen({ navigation, route }: Props) {
                 <Pressable
                   key={r.id}
                   accessibilityRole="button"
-                  accessibilityLabel={`Recebimento ${formatCents(r.amount)}`}
+                  accessibilityLabel={`Recebimento ${formatBRL(r.amount)}`}
                   onPress={() => handleReceiptPress(r.id)}
                   style={({ pressed }) => [
                     styles.row,
@@ -144,7 +140,7 @@ export function OrderReceiptsScreen({ navigation, route }: Props) {
                   <View style={styles.rowLeft}>
                     <View style={styles.rowTopLine}>
                       <Text style={[styles.rowAmount, { color: amountColor }]}>
-                        {formatCents(r.amount)}
+                        {formatBRL(r.amount)}
                       </Text>
                       <View
                         style={[
@@ -213,7 +209,9 @@ function SummaryRow({
   return (
     <View style={styles.summaryRow}>
       <Text style={styles.summaryLabel}>{label}</Text>
-      <Text style={[styles.summaryValue, { color: valueColor }]}>{formatCents(value)}</Text>
+      <Text style={[styles.summaryValue, { color: valueColor }]}>
+        {value < 0 ? `− ${formatBRL(Math.abs(value))}` : formatBRL(value)}
+      </Text>
     </View>
   );
 }

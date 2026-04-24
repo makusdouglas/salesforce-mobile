@@ -1,6 +1,11 @@
-// 012-payment-receipts: BRL formatting helpers for the receipt surfaces.
-// Kept local to the receipts sub-tree so the existing orders/formatting
-// layer is not pulled into attachment/sync modules.
+// 012-payment-receipts: local formatting helpers for the receipts surfaces.
+//
+// Amount convention: BRL decimals (e.g. 194.50) — matches the rest of the
+// codebase (orders.discount_amount, order_items.unit_price, etc. are all
+// numeric(12,2)). DO NOT use integer-cents here — computeReceiptTotals is
+// fed directly from computeOrderTotals, which emits BRL decimals.
+
+import { formatBRL as baseFormatBRL } from '../formatting/formatBRL';
 
 const METHOD_LABELS = {
   cash: 'Dinheiro',
@@ -16,26 +21,55 @@ export function methodLabel(method: keyof typeof METHOD_LABELS): string {
 
 export const METHOD_LABELS_MAP = METHOD_LABELS;
 
-/** Formats a cents integer as `R$ 1.234,56`. Signed: −R$ for negatives. */
-export function formatCents(amountCents: number): string {
-  const negative = amountCents < 0;
-  const abs = Math.abs(amountCents);
-  const reais = Math.floor(abs / 100);
-  const centavos = abs % 100;
-  const reaisStr = reais.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  const centavosStr = centavos.toString().padStart(2, '0');
-  const prefix = negative ? '− R$ ' : 'R$ ';
-  return `${prefix}${reaisStr},${centavosStr}`;
+/**
+ * Format a BRL decimal. Delegates to orders/formatting/formatBRL but stays
+ * locally re-exported so the receipts sub-tree does not have to thread the
+ * import through every file.
+ */
+export function formatBRL(amount: number): string {
+  return baseFormatBRL(amount);
 }
 
-/** Parses free typing ("15,00" / "15.00" / "1500") into cents. */
-export function parseCents(raw: string): number {
-  const digitsOnly = raw.replace(/\D/g, '');
-  if (digitsOnly === '') return 0;
-  // Treat the rightmost two digits as centavos.
-  return parseInt(digitsOnly, 10);
+/**
+ * Parse the string produced by a BRL-decimal text input. Accepts typical
+ * user shapes: "150", "150,00", "150.00", "1.234,50", "1,234.50". Empty
+ * / non-numeric → 0.
+ *
+ * Digit-only input uses the "rightmost two digits are centavos" convention
+ * so a decimal-pad keyboard without a comma key still lands the user on
+ * the right value ("15000" → 150.00).
+ */
+export function parseBRL(raw: string): number {
+  const trimmed = raw.trim();
+  if (trimmed === '') return 0;
+
+  // Detect whether the input contains any decimal separator at all.
+  const hasSeparator = /[.,]/.test(trimmed);
+  if (!hasSeparator) {
+    const digitsOnly = trimmed.replace(/\D/g, '');
+    if (digitsOnly === '') return 0;
+    // Digits-only: treat rightmost two as centavos.
+    const asInt = parseInt(digitsOnly, 10);
+    if (!Number.isFinite(asInt)) return 0;
+    return asInt / 100;
+  }
+
+  // With a separator: strip group separators, normalize the decimal to '.'.
+  // We assume the LAST separator is the decimal marker — common across the
+  // forms pt-BR users type: "1.234,50" OR "1,234.50" OR plain "150,00".
+  const lastComma = trimmed.lastIndexOf(',');
+  const lastDot = trimmed.lastIndexOf('.');
+  const decimalSepIndex = Math.max(lastComma, lastDot);
+  if (decimalSepIndex === -1) return 0;
+
+  const intPart = trimmed.slice(0, decimalSepIndex).replace(/[.,\s]/g, '');
+  const decPart = trimmed.slice(decimalSepIndex + 1).replace(/\D/g, '');
+  const combined = `${intPart === '' ? '0' : intPart}.${decPart === '' ? '0' : decPart}`;
+  const parsed = parseFloat(combined);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
+/** Short date: "23 abr 2026". */
 export function formatShortDatePt(ms: number): string {
   const d = new Date(ms);
   const day = d.getDate().toString().padStart(2, '0');

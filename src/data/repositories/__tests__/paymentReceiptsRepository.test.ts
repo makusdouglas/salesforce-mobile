@@ -87,14 +87,14 @@ describe('paymentReceiptsRepository.create', () => {
 
     await paymentReceiptsRepository.create({
       orderId: 'order-1',
-      amount: 15000,
+      amount: 150,
       method: 'pix',
     });
 
     expect(createMock).toHaveBeenCalledTimes(1);
     expect(rec._bag).toMatchObject({
       orderId: 'order-1',
-      amount: 15000,
+      amount: 150,
       method: 'pix',
       notes: null,
       correctionOfReceiptId: null,
@@ -116,7 +116,7 @@ describe('paymentReceiptsRepository.create', () => {
 
     await paymentReceiptsRepository.create({
       orderId: 'order-1',
-      amount: 15000,
+      amount: 150,
       method: 'pix',
       attachment: {
         localPath: '/tmp/receipts/staging/a.jpg',
@@ -195,14 +195,14 @@ describe('paymentReceiptsRepository.createCorrection', () => {
 
     await paymentReceiptsRepository.createCorrection({
       originalId: 'orig-1',
-      amount: -1000,
+      amount: -10,
       method: 'cash',
     });
 
     expect(findMock).toHaveBeenCalledWith('orig-1');
     expect(rec._bag).toMatchObject({
       orderId: 'order-42', // inherited from the original
-      amount: -1000,
+      amount: -10,
       method: 'cash',
       correctionOfReceiptId: 'orig-1',
     });

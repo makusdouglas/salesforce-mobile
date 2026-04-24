@@ -20,7 +20,8 @@ export interface UseReceiptFormParams {
 }
 
 export interface ReceiptFormState {
-  readonly amountCents: number; // 0 = unset / invalid
+  /** BRL decimal (e.g. 194.50). 0 = unset / invalid. */
+  readonly amount: number;
   readonly method: PaymentMethod;
   readonly receivedAtMs: number; // default: Date.now() at mount
   readonly notes: string;
@@ -29,7 +30,7 @@ export interface ReceiptFormState {
 
 export interface UseReceiptFormResult {
   readonly state: ReceiptFormState;
-  readonly setAmountCents: (next: number) => void;
+  readonly setAmount: (next: number) => void;
   readonly setMethod: (next: PaymentMethod) => void;
   readonly setReceivedAtMs: (next: number) => void;
   readonly setNotes: (next: string) => void;
@@ -49,7 +50,7 @@ const INITIAL_METHOD: PaymentMethod = 'pix';
 
 export function useReceiptForm(params: UseReceiptFormParams): UseReceiptFormResult {
   const [state, setState] = useState<ReceiptFormState>(() => ({
-    amountCents: 0,
+    amount: 0,
     method: INITIAL_METHOD,
     receivedAtMs: Date.now(),
     notes: '',
@@ -58,8 +59,8 @@ export function useReceiptForm(params: UseReceiptFormParams): UseReceiptFormResu
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setAmountCents = useCallback((next: number) => {
-    setState((s) => ({ ...s, amountCents: next }));
+  const setAmount = useCallback((next: number) => {
+    setState((s) => ({ ...s, amount: next }));
   }, []);
   const setMethod = useCallback((next: PaymentMethod) => {
     setState((s) => ({ ...s, method: next }));
@@ -77,7 +78,7 @@ export function useReceiptForm(params: UseReceiptFormParams): UseReceiptFormResu
   // For corrections, any non-zero amount is acceptable (the spec allows
   // upward + downward adjustments). For create(), only amount > 0.
   const isCorrection = params.correctionOf !== undefined;
-  const canSubmit = isCorrection ? state.amountCents !== 0 : state.amountCents > 0;
+  const canSubmit = isCorrection ? state.amount !== 0 : state.amount > 0;
 
   const submit = useCallback(async (): Promise<string | null> => {
     if (submitting) return null;
@@ -93,7 +94,7 @@ export function useReceiptForm(params: UseReceiptFormParams): UseReceiptFormResu
     setError(null);
     try {
       const payload = {
-        amount: state.amountCents,
+        amount: state.amount,
         method: state.method,
         receivedAtMs: state.receivedAtMs,
         ...(state.notes.trim() !== '' ? { notes: state.notes.trim() } : {}),
@@ -121,7 +122,7 @@ export function useReceiptForm(params: UseReceiptFormParams): UseReceiptFormResu
 
   return {
     state,
-    setAmountCents,
+    setAmount,
     setMethod,
     setReceivedAtMs,
     setNotes,
