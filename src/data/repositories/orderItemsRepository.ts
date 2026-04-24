@@ -72,6 +72,20 @@ export const orderItemsRepository = {
       .observeWithColumns(['quantity', 'unit_price', 'discount_amount', 'discount_mode']);
   },
 
+  /**
+   * 013-orders-overview: batch observer used by the list to fold the
+   * "N itens" label onto every row without N+1 subscriptions. Re-emits
+   * on membership changes (item added/removed). The OrdersOverview row
+   * only shows the count, so column-level changes don't need to trigger
+   * re-renders.
+   */
+  observeByOrders(orderIds: readonly string[]) {
+    if (orderIds.length === 0) return of<readonly OrderItem[]>([]);
+    return collection
+      .query(Q.where('order_id', Q.oneOf([...orderIds])), notDeleted)
+      .observe();
+  },
+
   async findByOrder(orderId: string): Promise<OrderItem[]> {
     return collection.query(Q.where('order_id', orderId), notDeleted).fetch();
   },

@@ -143,6 +143,18 @@ export const paymentReceiptsRepository = {
     return collection.query(Q.where('order_id', orderId), notDeleted).observe();
   },
 
+  /**
+   * 013-orders-overview: batch observe — emits every non-deleted receipt
+   * whose `order_id` is in the given set. Used by OrdersOverview to fold
+   * payment status into every visible row without N+1 subscriptions.
+   */
+  observeReceiptsForOrders(orderIds: readonly string[]) {
+    if (orderIds.length === 0) return of<readonly PaymentReceipt[]>([]);
+    return collection
+      .query(Q.where('order_id', Q.oneOf([...orderIds])), notDeleted)
+      .observeWithColumns(['amount']);
+  },
+
   async create(input: PaymentReceiptCreateInput): Promise<PaymentReceipt> {
     if (input.orderId.trim() === '') throwValidation('orderId is required', 'orderId');
     if (input.amount <= 0) throwValidation('amount must be > 0', 'amount');
