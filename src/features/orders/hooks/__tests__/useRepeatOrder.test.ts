@@ -5,8 +5,12 @@
  * it without any React test harness.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+ 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
+import { ordersRepository } from '@/data/repositories/ordersRepository';
+import { AllItemsUnavailableError, OrderNotFoundError, ordersService } from '../../services/ordersService';
+import { runRepeatOrder } from '../useRepeatOrder';
 
 // ordersService (required below via requireActual to get the real error
 // classes) transitively imports `@/data/database`, which pulls the SQLite
@@ -45,10 +49,6 @@ jest.mock('../../services/ordersService', () => {
     },
   };
 });
-
-import { ordersRepository } from '@/data/repositories/ordersRepository';
-import { AllItemsUnavailableError, OrderNotFoundError, ordersService } from '../../services/ordersService';
-import { runRepeatOrder } from '../useRepeatOrder';
 
 const orders = ordersRepository as jest.Mocked<typeof ordersRepository>;
 const repeatMock = ordersService.repeat as jest.MockedFunction<typeof ordersService.repeat>;
