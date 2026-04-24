@@ -1,3 +1,4 @@
+import { fetchAndPublishRoles } from './rolesRepository';
 import { _internalSessionStore } from './session';
 import { secureStore } from '../storage/secureStore';
 
@@ -35,4 +36,8 @@ export async function authBootstrap(): Promise<void> {
     accessTokenExpiresAtMs: 0,
     clearQueuedSync: true,
   });
+  // Re-hydrate roles so the Admin tab appears without requiring an
+  // explicit login on app reopen. Fire-and-forget — the tab updates as
+  // soon as the snapshot changes.
+  void fetchAndPublishRoles();
 }
