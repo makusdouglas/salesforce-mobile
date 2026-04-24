@@ -73,6 +73,7 @@ export function OrderSentScreen({ navigation, route }: Props) {
             disabled={busy}
             style={({ pressed }) => [
               styles.footerBtn,
+              isTablet && styles.footerBtnTablet,
               styles.footerBtnSecondary,
               busy && styles.disabled,
               pressed && styles.pressed,
@@ -86,6 +87,7 @@ export function OrderSentScreen({ navigation, route }: Props) {
             onPress={handleDone}
             style={({ pressed }) => [
               styles.footerBtn,
+              isTablet && styles.footerBtnTablet,
               styles.footerBtnPrimary,
               pressed && styles.pressed,
             ]}
@@ -139,12 +141,22 @@ const styles = StyleSheet.create({
     borderTopColor: '#E4E4E7',
   },
   footerTablet: { flexDirection: 'row', padding: 28 },
+  // On phone (column footer) the buttons need full width + explicit height,
+  // NOT flex: 1 — two flex: 1 children in a column without a fixed height
+  // collapse to the container's intrinsic size (i.e. just the padding), which
+  // is why the CTAs were rendering as a single thin line on the phone.
   footerBtn: {
-    flex: 1,
     height: 52,
+    alignSelf: 'stretch',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Tablet footer is flexDirection: row, so the buttons split the width
+  // evenly via flex: 1.
+  footerBtnTablet: {
+    flex: 1,
+    alignSelf: 'auto',
   },
   footerBtnPrimary: { backgroundColor: '#0A0A0A' },
   footerBtnPrimaryText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
