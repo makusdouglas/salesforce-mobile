@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
   heroPhone: {
     width: '100%',
-    height: 260,
+    aspectRatio: 4 / 3,
   },
   phoneInfo: {
     paddingVertical: 20,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   heroTablet: {
     width: 360,
-    height: 420,
+    aspectRatio: 4 / 3,
     borderRadius: 16,
   },
   tabletInfoColumn: {
