@@ -10,8 +10,9 @@
 export { authService } from './service/authService';
 export { AuthError, type AuthErrorCode } from './service/errors';
 export { useSession } from './hooks/useSession';
+export { useRoles, useHasRole } from './hooks/useRoles';
 export { requireSession } from './session/requireSession';
 export { SessionProvider } from './components/SessionProvider';
 export { LoginScreen } from './screens/LoginScreen';
 export { ReloginScreen } from './screens/ReloginScreen';
-export type { SessionStatus, SessionSnapshot } from './session/session';
+export type { SessionStatus, SessionSnapshot, SessionRole } from './session/session';

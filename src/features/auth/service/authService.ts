@@ -1,6 +1,7 @@
 import { supabase } from '@/data';
 import { deletePinCredential } from '@/features/lock/storage/lockStorage';
 
+import { fetchAndPublishRoles } from '../session/rolesRepository';
 import { _internalSessionStore } from '../session/session';
 import { secureStore } from '../storage/secureStore';
 
@@ -38,6 +39,8 @@ async function _completeLoginExchange(
     accessTokenExpiresAtMs,
     clearQueuedSync,
   });
+  // Fire-and-forget role fetch; role-gated UI waits on the session snapshot.
+  void fetchAndPublishRoles();
   return { hadQueuedSync };
 }
 
@@ -113,6 +116,9 @@ export const authService = {
       accessTokenExpiresAtMs,
       clearQueuedSync: false,
     });
+    // Refresh roles on session refresh so newly granted/revoked roles
+    // take effect without an app restart (FR-023).
+    void fetchAndPublishRoles();
 
     // Sync-block handoff (FR-007): when @/features/sync ships, fire-and-forget
     // sync.runPullThenPush() here. Until then, this is a no-op.

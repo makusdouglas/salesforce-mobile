@@ -15,7 +15,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.markusdouglas.salesforcemobile",
-      "supportsTablet": false
+      "supportsTablet": true
     },
     "android": {
       "package": "com.markusdouglas.salesforcemobile",
@@ -24,14 +24,45 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "plugins": [
       "expo-secure-store",
       "expo-local-authentication",
       "expo-mail-composer",
       "expo-sharing",
-      "@react-native-community/datetimepicker"
-    ]
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir acesso à biblioteca de fotos para adicionar imagens de produtos.",
+          "cameraPermission": "Permitir acesso à câmera para tirar fotos e escanear códigos de barras."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir acesso à câmera para escanear códigos de barras de produtos."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ee2308a5-0820-4d5b-b5d7-41bb915c5a29"
+      }
+    },
+    "owner": "mnsiquei",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ee2308a5-0820-4d5b-b5d7-41bb915c5a29"
+    }
   }
 }

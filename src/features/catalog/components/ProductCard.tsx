@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    aspectRatio: 1.6,
+    aspectRatio: 4 / 3,
   },
   body: {
     paddingVertical: 10,

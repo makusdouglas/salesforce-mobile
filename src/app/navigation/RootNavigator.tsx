@@ -4,7 +4,7 @@ import { ReloginScreen, useSession } from '@/features/auth';
 import { LockGate } from '@/features/lock';
 
 import { AuthStack } from './AuthStack';
-import { HomeStack } from './HomeStack';
+import { RootTabs } from './RootTabs';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -19,7 +19,7 @@ export function RootNavigator() {
         <Stack.Screen name="Home">
           {() => (
             <LockGate>
-              <HomeStack />
+              <RootTabs />
             </LockGate>
           )}
         </Stack.Screen>

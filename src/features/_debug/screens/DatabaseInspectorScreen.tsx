@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -15,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 // Dev-only: reaches into the private database singleton to enumerate every
 // row of every table. Feature code must never do this (R1 / barrel contract);
 // this inspector is a deliberate exception, locked behind __DEV__.
+import { ConfirmModal } from '@/app/ui/modal';
 import { database } from '@/data/database';
 import { SyncStatusIndicator, onPullToRefresh } from '@/features/sync';
 
@@ -96,6 +96,7 @@ export function DatabaseInspectorScreen() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [pendingHardDeleteId, setPendingHardDeleteId] = useState<string | null>(null);
 
   // Load row counts for every table whenever we refresh.
   useEffect(() => {
@@ -189,25 +190,23 @@ export function DatabaseInspectorScreen() {
   };
 
   const handleHardDelete = (rowId: string) => {
-    Alert.alert('Apagar Permanente', `Deseja destruir ${rowId} do banco local?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Apagar',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const collection = database.get(selectedTable);
-            const record = await collection.find(rowId);
-            await database.write(async () => {
-              await record.destroyPermanently();
-            });
-            setRefreshKey((k) => k + 1);
-          } catch (e) {
-            setError(`hard_delete: ${e instanceof Error ? e.message : String(e)}`);
-          }
-        },
-      },
-    ]);
+    setPendingHardDeleteId(rowId);
+  };
+
+  const confirmHardDelete = async () => {
+    const rowId = pendingHardDeleteId;
+    setPendingHardDeleteId(null);
+    if (rowId === null) return;
+    try {
+      const collection = database.get(selectedTable);
+      const record = await collection.find(rowId);
+      await database.write(async () => {
+        await record.destroyPermanently();
+      });
+      setRefreshKey((k) => k + 1);
+    } catch (e) {
+      setError(`hard_delete: ${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
   const handleLinkPress = (key: string, value: string) => {
@@ -433,6 +432,18 @@ export function DatabaseInspectorScreen() {
               ) : null}
             </Pressable>
           );
+        }}
+      />
+      <ConfirmModal
+        open={pendingHardDeleteId !== null}
+        title="Apagar permanente"
+        body={`Deseja destruir ${pendingHardDeleteId ?? ''} do banco local?`}
+        cancelLabel="Cancelar"
+        primaryLabel="Apagar"
+        primaryVariant="destructive"
+        onCancel={() => setPendingHardDeleteId(null)}
+        onPrimary={() => {
+          void confirmHardDelete();
         }}
       />
     </SafeAreaView>

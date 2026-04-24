@@ -1,8 +1,11 @@
 export type SessionStatus = 'NotAuthenticated' | 'Authenticated' | 'RequiresRelogin';
 
+export type SessionRole = 'admin' | 'seller';
+
 export type SessionSnapshot = {
   status: SessionStatus;
   email: string | null;
+  roles: readonly SessionRole[];
 };
 
 type InternalSessionState = {
@@ -14,15 +17,33 @@ type InternalSessionState = {
 
 type FullState = SessionSnapshot & InternalSessionState;
 
+const EMPTY_ROLES: readonly SessionRole[] = Object.freeze([]);
+
 function initialState(): FullState {
   return {
     status: 'NotAuthenticated',
     email: null,
+    roles: EMPTY_ROLES,
     accessToken: null,
     accessTokenExpiresAtMs: null,
     _isRefreshing: false,
     _queuedSync: false,
   };
+}
+
+function sortRoles(input: readonly SessionRole[]): readonly SessionRole[] {
+  const unique = Array.from(new Set(input)).sort();
+  return Object.freeze(unique);
+}
+
+function rolesEqual(
+  a: readonly SessionRole[],
+  b: readonly SessionRole[],
+): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) if (a[i] !== b[i]) return false;
+  return true;
 }
 
 let state: FullState = initialState();
@@ -31,7 +52,7 @@ const listeners = new Set<() => void>();
 let notifyingDepth = 0;
 
 function makeSnapshot(s: FullState): SessionSnapshot {
-  const snapshot: SessionSnapshot = { status: s.status, email: s.email };
+  const snapshot: SessionSnapshot = { status: s.status, email: s.email, roles: s.roles };
   if (typeof __DEV__ !== 'undefined' && __DEV__) Object.freeze(snapshot);
   return snapshot;
 }
@@ -102,11 +123,20 @@ export const _internalSessionStore = {
     state = {
       status: 'NotAuthenticated',
       email: input.preserveEmail,
+      roles: EMPTY_ROLES,
       accessToken: null,
       accessTokenExpiresAtMs: null,
       _isRefreshing: false,
       _queuedSync: false,
     };
+    cachedSnapshot = makeSnapshot(state);
+    emit();
+  },
+  setRoles(roles: readonly SessionRole[]): void {
+    guardReentrancy();
+    const next = sortRoles(roles);
+    if (rolesEqual(state.roles, next)) return;
+    state = { ...state, roles: next };
     cachedSnapshot = makeSnapshot(state);
     emit();
   },

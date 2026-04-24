@@ -3,7 +3,15 @@
 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { OrdersStackParamList } from '@/app/navigation/types';
@@ -263,6 +271,10 @@ export function AddToOrderScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <View style={[styles.topBar, isTablet && styles.topBarTablet]}>
         <Pressable
           accessibilityRole="button"
@@ -429,6 +441,7 @@ export function AddToOrderScreen({ navigation, route }: Props) {
           </Pressable>
         </View>
       )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
