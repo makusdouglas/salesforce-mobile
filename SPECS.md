@@ -151,7 +151,7 @@ Gerar PDF do pedido localmente (expo-print), abrir share sheet / email intent co
 Registrar recebimento (valor, método, data, foto opcional do comprovante), upload da imagem pra Supabase Storage com cache local.
 
 ```
-/speckit-specify Implement payment-receipt recording against the payment_receipts entity. From an order detail, the salesperson registers a receipt with amount, method (cash, pix, transfer, check, other), date, optional notes, and an optional photo captured via camera or picked from the library. Photos upload to Supabase Storage on next sync and are cached locally via expo-file-system (same pattern as R3). Offline creation is mandatory — everything persists locally and syncs opportunistically. A receipt is append-only; corrections are new receipts with a reference back to the original.
+/speckit-specify Implement payment-receipt recording against the payment_receipts entity. From an order detail, the salesperson registers a receipt with amount, method (cash, pix, transfer, check, other), date, optional notes, and an optional photo or pdf  captured via camera or picked from the library. Files upload to Supabase Storage on next sync and are cached locally via expo-file-system (same pattern as R3). Offline creation is mandatory — everything persists locally and syncs opportunistically. A receipt is append-only; corrections are new receipts with a reference back to the original.   
 ```
 
 > **Pencil hook**: **accept** — form de receipt, captura de foto, histórico.
