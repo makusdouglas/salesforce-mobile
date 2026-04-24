@@ -7,6 +7,7 @@ import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -95,9 +96,15 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
         <View style={styles.iconBtn} />
       </View>
 
+      <KeyboardAvoidingView
+        style={styles.avoiding}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         style={styles.body}
         contentContainerStyle={[styles.bodyContent, isTablet && styles.bodyContentTablet]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
       >
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Valor</Text>
@@ -205,12 +212,14 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
           </Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FAFAFA' },
+  avoiding: { flex: 1 },
   topBar: {
     height: 56,
     flexDirection: 'row',
