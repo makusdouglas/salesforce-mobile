@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 999,
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#E4E4E7',
     backgroundColor: '#FFFFFF',
@@ -141,16 +141,13 @@ const styles = StyleSheet.create({
   btn: {
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 999,
   } as ViewStyle,
   btnGhost: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 999,
-    borderBottomLeftRadius: 999,
+    backgroundColor: '#F5F5F5',
   },
   btnFilled: {
     backgroundColor: '#171717',
-    borderTopRightRadius: 999,
-    borderBottomRightRadius: 999,
   },
   btnLabel: {
     color: '#0A0A0A',
@@ -200,25 +197,31 @@ const SIZE: Record<
     value: TextStyle;
   }
 > = {
+  // sm + md keep the legacy full-pill shape used by OrderLineCard +
+  // catalog quick-adds — they sit inline inside compact rows where the
+  // pill read works better than a card.
   sm: {
-    row: {},
-    btn: { width: 36, height: 36 },
+    row: { borderRadius: 999 },
+    btn: { width: 36, height: 36, borderRadius: 999 },
     btnLabel: { fontSize: 18 },
     valueWrap: { width: 44, height: 36 },
     value: { fontSize: 15 },
   },
   md: {
-    row: {},
-    btn: { width: 40, height: 40 },
+    row: { borderRadius: 999 },
+    btn: { width: 40, height: 40, borderRadius: 999 },
     btnLabel: { fontSize: 20 },
     valueWrap: { width: 56, height: 40 },
     value: { fontSize: 18 },
   },
+  // lg mirrors the `qStep` frame from the Pencil design (AddToOrder phone):
+  // card-shaped container (radius 14, height 56, padding 0/6), two free
+  // 44×44 circular buttons, numeric + unit stack in the center.
   lg: {
-    row: {},
-    btn: { width: 48, height: 48 },
-    btnLabel: { fontSize: 24 },
-    valueWrap: { width: 80, height: 48 },
+    row: { borderRadius: 14, height: 56, paddingHorizontal: 6 },
+    btn: { width: 44, height: 44, borderRadius: 999 },
+    btnLabel: { fontSize: 20 },
+    valueWrap: { flex: 1, height: 48 },
     value: { fontSize: 28 },
   },
 };

@@ -247,37 +247,104 @@ export function OrderDraftScreen({ navigation, route }: Props) {
     </View>
   );
 
+  const summaryCard = (
+    <View style={styles.summaryCard}>
+      <Text style={styles.summaryTitle}>Resumo</Text>
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>Subtotal</Text>
+        <Text style={styles.summaryValue}>{formatBRL(totals.subtotal)}</Text>
+      </View>
+      {totals.lineDiscountsTotal > 0 ? (
+        <View style={styles.summaryRow}>
+          <Text style={[styles.summaryLabel, styles.summaryPositive]}>
+            Descontos por item
+          </Text>
+          <Text style={[styles.summaryValue, styles.summaryPositive]}>
+            −{formatBRL(totals.lineDiscountsTotal)}
+          </Text>
+        </View>
+      ) : null}
+      {totals.orderDiscount > 0 ? (
+        <View style={styles.summaryRow}>
+          <Text style={[styles.summaryLabel, styles.summaryPositive]}>
+            Desconto do pedido
+          </Text>
+          <Text style={[styles.summaryValue, styles.summaryPositive]}>
+            −{formatBRL(totals.orderDiscount)}
+          </Text>
+        </View>
+      ) : null}
+      <View style={[styles.summaryRow, styles.summaryTotalRow]}>
+        <Text style={styles.summaryTotalLabel}>Total</Text>
+        <Text style={styles.summaryTotalValue}>{formatBRL(totals.total)}</Text>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Continuar para revisão"
+        onPress={handleContinue}
+        disabled={!canContinue}
+        style={({ pressed }) => [
+          styles.summaryCTA,
+          !canContinue && styles.disabled,
+          pressed && canContinue && styles.pressed,
+        ]}
+      >
+        <Text style={styles.summaryCTAText}>Continuar →</Text>
+      </Pressable>
+      <Text style={styles.summaryNote}>
+        Preços do catálogo não são alterados.
+      </Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       {renderedTopBar}
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={[
-          styles.bodyContent,
-          isTablet && styles.bodyContentTablet,
-        ]}
-      >
-        {renderedList}
-      </ScrollView>
-      <View style={[styles.footer, isTablet && styles.footerTablet]}>
-        <View style={styles.footerLeft}>
-          <Text style={styles.footerLabel}>Total do rascunho</Text>
-          <Text style={styles.footerTotal}>{formatBRL(totals.total)}</Text>
+      {isTablet ? (
+        <View style={styles.splitBody}>
+          <ScrollView
+            style={styles.splitLeft}
+            contentContainerStyle={styles.splitLeftContent}
+          >
+            <View style={styles.listHeader}>
+              <Text style={styles.listHeaderTitle}>Itens do pedido</Text>
+              <Text style={styles.listHeaderCount}>
+                {itemCount} {itemCount === 1 ? 'item' : 'itens'} · salvo localmente
+              </Text>
+            </View>
+            {renderedList}
+          </ScrollView>
+          <View style={styles.splitRight}>{summaryCard}</View>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Continuar para revisão"
-          onPress={handleContinue}
-          disabled={!canContinue}
-          style={({ pressed }) => [
-            styles.primaryBtn,
-            !canContinue && styles.disabled,
-            pressed && canContinue && styles.pressed,
-          ]}
+      ) : (
+        <ScrollView
+          style={styles.body}
+          contentContainerStyle={styles.bodyContent}
         >
-          <Text style={styles.primaryBtnText}>Continuar →</Text>
-        </Pressable>
-      </View>
+          {renderedList}
+        </ScrollView>
+      )}
+      {isTablet ? null : (
+        <View style={styles.footer}>
+          <View style={styles.footerLeft}>
+            <Text style={styles.footerLabel}>Total do rascunho</Text>
+            <Text style={styles.footerTotal}>{formatBRL(totals.total)}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Continuar para revisão"
+            onPress={handleContinue}
+            disabled={!canContinue}
+            style={({ pressed }) => [
+              styles.primaryBtn,
+              !canContinue && styles.disabled,
+              pressed && canContinue && styles.pressed,
+            ]}
+          >
+            <Text style={styles.primaryBtnText}>Continuar →</Text>
+          </Pressable>
+        </View>
+      )}
       <View style={styles.cancelRow}>
         <Pressable
           accessibilityRole="button"
@@ -326,7 +393,78 @@ const styles = StyleSheet.create({
   topSubtitle: { fontSize: 11, color: '#737373' },
   body: { flex: 1 },
   bodyContent: { padding: 16, gap: 10, flexGrow: 1 },
-  bodyContentTablet: { padding: 28, gap: 14 },
+  splitBody: { flex: 1, flexDirection: 'row' },
+  splitLeft: { flex: 1 },
+  splitLeftContent: { padding: 28, paddingBottom: 40, gap: 14 },
+  splitRight: {
+    width: 340,
+    padding: 28,
+    paddingLeft: 0,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    marginBottom: 4,
+  },
+  listHeaderTitle: { fontSize: 14, fontWeight: '700', color: '#0A0A0A' },
+  listHeaderCount: { fontSize: 11, color: '#737373' },
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    borderRadius: 14,
+    padding: 20,
+    gap: 10,
+  },
+  summaryTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0A0A0A',
+    marginBottom: 2,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  summaryLabel: { fontSize: 13, color: '#525252' },
+  summaryValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0A0A0A',
+    fontVariant: ['tabular-nums'],
+  },
+  summaryPositive: { color: '#047857' },
+  summaryTotalRow: {
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
+    paddingTop: 10,
+    marginTop: 4,
+  },
+  summaryTotalLabel: { fontSize: 15, fontWeight: '700', color: '#0A0A0A' },
+  summaryTotalValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0A0A0A',
+    fontVariant: ['tabular-nums'],
+  },
+  summaryCTA: {
+    backgroundColor: '#171717',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  summaryCTAText: { color: '#FAFAFA', fontSize: 14, fontWeight: '600' },
+  summaryNote: {
+    fontSize: 11,
+    color: '#A1A1AA',
+    textAlign: 'center',
+    marginTop: 2,
+  },
   list: { gap: 10 },
   lineWrap: { gap: 10 },
   addDashed: {
@@ -352,7 +490,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  footerTablet: { paddingHorizontal: 28, paddingTop: 18, paddingBottom: 14 },
   footerLeft: { gap: 2 },
   footerLabel: { color: '#737373', fontSize: 11 },
   footerTotal: { color: '#0A0A0A', fontSize: 22, fontWeight: '700' },
