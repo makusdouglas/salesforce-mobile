@@ -257,8 +257,11 @@ export const orderSendService = {
   },
 
   /**
-   * FR-017: regenerate the stored PDF for a sent order using the PERSISTED
-   * order_number — never allocate a new one. Returns the path.
+   * FR-017 + legacy recovery: regenerate the stored PDF for a sent order.
+   *
+   * Reuses the persisted `order_number` when present. If the order has
+   * none (legacy orders sent before 011 shipped, or edge-case corruption),
+   * allocates a fresh number in-session so the PDF can still be produced.
    */
   async regeneratePdfForSentOrder(orderId: string): Promise<string> {
     const order = await ordersRepository.findById(orderId);
@@ -266,14 +269,25 @@ export const orderSendService = {
     if (order.status !== 'sent') {
       throw new Error(`Order ${orderId} is ${order.status}, not sent — cannot regenerate`);
     }
-    if (!order.orderNumber) {
-      throw new Error(`Order ${orderId} has no order_number — cannot regenerate without allocating`);
+
+    let orderNumber = order.orderNumber;
+    if (!orderNumber) {
+      const allocated: { value: string } = { value: '' };
+      await database.write(async () => {
+        allocated.value = await allocateNextOrderNumber(new Date().getFullYear());
+        await order.update((r) => {
+          r.orderNumber = allocated.value;
+          applyTouchOnUpdate(r);
+        });
+      });
+      orderNumber = allocated.value;
     }
+
     const pdfInputs = await loadPdfInputForOrder(order);
-    const filename = pdfFilename(order.orderNumber, pdfInputs.clientName);
+    const filename = pdfFilename(orderNumber, pdfInputs.clientName);
     const stablePath = `${pdfDirectoryPath()}${filename}`;
     const html = renderOrderPdfHtml({
-      orderNumber: order.orderNumber,
+      orderNumber,
       issuedAtMs: order.sentAtMs ?? Date.now(),
       salesperson: { name: pdfInputs.salespersonName },
       client: {

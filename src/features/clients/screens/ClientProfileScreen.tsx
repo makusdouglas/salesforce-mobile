@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
@@ -194,9 +194,13 @@ export function ClientProfileScreen({ navigation, route }: Props) {
         onRowPress={(row) => {
           // 011-order-email-delivery US3: tap on a sent row opens the
           // stored PDF (regenerating from persisted order_number if the
-          // file is missing — FR-017).
+          // file is missing — FR-017). Surface errors so a silent failure
+          // doesn't look like the row is ignoring the tap.
           if (row.status !== 'sent') return;
-          void openStoredPdf(row.id).catch(() => undefined);
+          void openStoredPdf(row.id).catch((err: unknown) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            Alert.alert('Não foi possível abrir o PDF', msg);
+          });
         }}
       />
     </View>
