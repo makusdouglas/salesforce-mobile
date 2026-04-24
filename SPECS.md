@@ -154,8 +154,10 @@ Append-only model — correções são novos recibos referenciando o original vi
 
 - Spec: [specs/012-payment-receipts/spec.md](specs/012-payment-receipts/spec.md)
 - Plan: [specs/012-payment-receipts/plan.md](specs/012-payment-receipts/plan.md)
-- Design: [specs/012-payment-receipts/design/screens.md](specs/012-payment-receipts/design/screens.md) (6 frames)
-- Tasks: [specs/012-payment-receipts/tasks.md](specs/012-payment-receipts/tasks.md) (62 tasks, 60 done + 2 deferred)
+- Design: [specs/012-payment-receipts/design/screens.md](specs/012-payment-receipts/design/screens.md) (7 frames incl. Phase 8 client-history variant)
+- Tasks: [specs/012-payment-receipts/tasks.md](specs/012-payment-receipts/tasks.md) (67 tasks incl. Phase 8 follow-up on ClientProfile rows; 65 done + 2 deferred)
+
+**Phase 8 follow-up**: `ClientProfileScreen` order-history rows now show a Paid / Partial / Pending / Ajuste-pendente chip + "R$ received de R$ total", derived live from `paymentReceiptsRepository.observeByOrder()`. Drafts keep the single-line shape; only sent orders get the bottom row.
 
 ```
 /speckit-specify Implement payment-receipt recording against the payment_receipts entity. From an order detail, the salesperson registers a receipt with amount, method (cash, pix, transfer, check, other), date, optional notes, and an optional photo or pdf  captured via camera or picked from the library. Files upload to Supabase Storage on next sync and are cached locally via expo-file-system (same pattern as R3). Offline creation is mandatory — everything persists locally and syncs opportunistically. A receipt is append-only; corrections are new receipts with a reference back to the original.   

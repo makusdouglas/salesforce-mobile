@@ -4,14 +4,17 @@ import { switchMap } from 'rxjs/operators';
 
 import type Order from '@/data/models/Order';
 import type OrderItem from '@/data/models/OrderItem';
+import type PaymentReceipt from '@/data/models/PaymentReceipt';
 import { orderItemsRepository } from '@/data/repositories/orderItemsRepository';
 import { ordersRepository } from '@/data/repositories/ordersRepository';
+import { paymentReceiptsRepository } from '@/data/repositories/paymentReceiptsRepository';
 
 import {
   deriveOrderHistoryRow,
   sortByRecentFirst,
   type OrderItemLike,
   type OrderLike,
+  type ReceiptLike,
 } from '../orders/deriveOrderHistory';
 import { type OrderHistoryRowDTO } from '../types';
 
@@ -34,6 +37,10 @@ function toOrderItemLike(item: OrderItem): OrderItemLike {
   };
 }
 
+function toReceiptLike(receipt: PaymentReceipt): ReceiptLike {
+  return { amount: receipt.amount };
+}
+
 export function useClientOrderHistory(clientId: string): readonly OrderHistoryRowDTO[] {
   const [rows, setRows] = useState<readonly OrderHistoryRowDTO[]>([]);
 
@@ -46,13 +53,20 @@ export function useClientOrderHistory(clientId: string): readonly OrderHistoryRo
           if (orders.length === 0) return of<OrderHistoryRowDTO[]>([]);
           return combineLatest(
             orders.map((o) =>
-              orderItemsRepository
-                .observeByOrder(o.id)
-                .pipe(
-                  switchMap((items: OrderItem[]) =>
-                    of(deriveOrderHistoryRow(toOrderLike(o), items.map(toOrderItemLike))),
+              combineLatest([
+                orderItemsRepository.observeByOrder(o.id),
+                paymentReceiptsRepository.observeByOrder(o.id),
+              ]).pipe(
+                switchMap(([items, receipts]: [OrderItem[], PaymentReceipt[]]) =>
+                  of(
+                    deriveOrderHistoryRow(
+                      toOrderLike(o),
+                      items.map(toOrderItemLike),
+                      receipts.map(toReceiptLike),
+                    ),
                   ),
                 ),
+              ),
             ),
           );
         }),

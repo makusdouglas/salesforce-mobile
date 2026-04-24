@@ -13,6 +13,7 @@
 | Payment Receipt Form / Tablet | `qmurF` | [payment-receipt-form-tablet.png](./payment-receipt-form-tablet.png) | Two-column split: Valor / Método / Data left, Observações (textarea) + Comprovante with offline-sync banner right; save action promoted into topBar. |
 | Payment Receipt Detail / Phone | `dPZom` | [payment-receipt-detail-phone.png](./payment-receipt-detail-phone.png) | Receipt view: big amount + method badge, metadata list (Data, Pedido, Registrado por, Status=Sincronizado), Observações, full-width attachment preview with download, and a bordered "Registrar correção" CTA in the footer with the append-only rule as caption. |
 | Payment Receipt Detail / Tablet | `bfEgo` | [payment-receipt-detail-tablet.png](./payment-receipt-detail-tablet.png) | Split: large attachment viewer fills the left column, right column shows amount card, metadata card, notes, and immutability hint; "Compartilhar" and "Registrar correção" actions promoted into topBar. |
+| Client History · payment status (Phase 8) | `KWnbI` | [client-history-payment-status.png](./client-history-payment-status.png) | Post-Phase-7 follow-up. Redesigned `ClientProfileScreen` order-history rows to a 2-line layout: top = date + status pill + total; bottom (sent only) = payment chip (Paid / Partial / Pending / Ajuste pendente with a Feather icon) + "R$ received de R$ total". Drafts keep the single-line shape. Feeds directly from `paymentReceiptsRepository.observeByOrder()` — no new tables or sync changes. |
 
 ## Components referenced
 

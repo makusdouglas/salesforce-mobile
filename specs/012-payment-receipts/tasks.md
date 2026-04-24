@@ -189,6 +189,28 @@ All frames produced by `/speckit-pencil-design` on 2026-04-23. See [design/scree
 
 ---
 
+## Phase 8: Follow-up — Client history payment status 💡
+
+**Added after Phase 7**: surface receipt-derived payment status on the
+`ClientProfile` order-history rows so the seller can see, at a glance,
+which past orders are Paid / Partial / Pending / Adjust-pending and how
+much was received vs. the total. Cross-cutting: feature 012 owns the
+receipt data, feature 007 owns the history surface.
+
+Design: [design/client-history-payment-status.png](./design/client-history-payment-status.png).
+
+- [x] T063 [FollowUp] Extend `OrderHistoryRowDTO` in `src/features/clients/types.ts` with `received: number` + `paymentStatus: 'paid' | 'partial' | 'pending' | 'adjust' | null`. Null for draft/canceled — no payment expectation.
+- [x] T064 [FollowUp] Extend `deriveOrderHistoryRow` to accept `readonly ReceiptLike[] = []` and compute the new fields. `paymentStatus` derivation uses a 0.005 BRL tolerance to absorb float drift: `< 0` or `> total + EPS` → `adjust`; `>= total - EPS` → `paid`; `> 0` → `partial`; else `pending`. Non-sent orders yield `null` regardless of receipts.
+- [x] T065 [FollowUp] Update `useClientOrderHistory` to observe receipts per order via `paymentReceiptsRepository.observeByOrder(orderId)`, combineLatest alongside orders + items. Live-updates rows when a new receipt is saved.
+- [x] T066 [FollowUp] Rewrite `OrderHistoryRow` to the 2-line design: top line = date + status pill + total; bottom line (sent only) = payment chip (Paid/Partial/Pending/Ajuste pendente, with Feather icon) + "R$ X de R$ Y" received-over-total. Draft and canceled rows keep the single-line shape (no bottom row).
+- [x] T067 [P] [FollowUp] [Test] Extend `orderHistory.test.ts` with 10 cases covering paid / partial / pending / adjust / orphan-correction / EPS boundaries / draft-canceled null. 626 jest tests now pass (+10).
+
+**Checkpoint**: client-profile history rows visually reflect payment
+status and recebido/total in real time. No DB or sync changes — pure
+derivation from data already in WatermelonDB.
+
+---
+
 ## Parallelization cheatsheet
 
 Tasks tagged `[P]` in the same phase can run concurrently; they touch distinct files.
