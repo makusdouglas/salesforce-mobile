@@ -54,6 +54,23 @@ describe('parseBRL — garbage', () => {
   });
 });
 
+describe('parseBRL — leading minus (correction form)', () => {
+  it.each([
+    ['-10', -10],
+    ['- 10', -10],
+    ['−10', -10], // Unicode minus
+    ['—10', -10], // em-dash
+    ['-150,50', -150.5],
+    ['-1.234,50', -1234.5],
+  ])('"%s" → %s', (input, expected) => {
+    expect(parseBRL(input)).toBeCloseTo(expected);
+  });
+
+  it('"-" alone returns 0 (no magnitude)', () => {
+    expect(parseBRL('-')).toBe(0);
+  });
+});
+
 describe('formatBRL', () => {
   it('formats integer reais with two centavos', () => {
     expect(formatBRL(10)).toMatch(/10,00/);

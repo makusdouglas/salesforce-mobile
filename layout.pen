@@ -9081,7 +9081,7 @@
     {
       "type": "frame",
       "id": "kQnDq",
-      "x": 2500,
+      "x": 3094,
       "y": 6100,
       "name": "ClientProfileEmpty / Phone",
       "width": 390,
@@ -24412,7 +24412,7 @@
     {
       "type": "frame",
       "id": "dPZom",
-      "x": 1900,
+      "x": 992,
       "y": 15842,
       "name": "PaymentReceiptDetail / Phone",
       "width": 390,
@@ -25396,6 +25396,792 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "KWnbI",
+      "x": 2460,
+      "y": 6435,
+      "name": "ClientHistory · payment status (v2)",
+      "width": 390,
+      "fill": "#FAFAFA",
+      "layout": "vertical",
+      "gap": 10,
+      "padding": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "2UT5j",
+          "name": "label",
+          "width": "fill_container",
+          "padding": [
+            4,
+            4,
+            8,
+            4
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "J9vwC",
+              "fill": "#52525B",
+              "content": "Histórico de pedidos",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "600",
+              "letterSpacing": 0.6
+            },
+            {
+              "type": "text",
+              "id": "d6rpb",
+              "fill": "#A1A1AA",
+              "content": "4",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NRSNX",
+          "name": "r1-paid",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 10,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E4E4E7"
+          },
+          "gap": 12,
+          "padding": [
+            14,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "othaw",
+              "name": "r1L",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "f1PbH",
+                  "name": "r1t",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "oqnPX",
+                      "name": "r1tL",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OFmt2",
+                          "fill": "#0A0A0A",
+                          "content": "12/04/2026",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nvbGF",
+                          "name": "r1pill",
+                          "fill": "#DCFCE7",
+                          "cornerRadius": 999,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kmCb4",
+                              "fill": "#166534",
+                              "content": "Enviado",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "jYQQw",
+                      "fill": "#0A0A0A",
+                      "content": "R$ 420,00",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zfXmD",
+                  "name": "r1b",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "eHRXM",
+                      "name": "r1paid",
+                      "fill": "#ECFDF5",
+                      "cornerRadius": 999,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#A7F3D0"
+                      },
+                      "gap": 6,
+                      "padding": [
+                        3,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "IGTzl",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "check-circle",
+                          "iconFontFamily": "feather",
+                          "fill": "#15803D"
+                        },
+                        {
+                          "type": "text",
+                          "id": "BZlJv",
+                          "fill": "#15803D",
+                          "content": "Pago",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZYgOQ",
+                      "fill": "#525252",
+                      "content": "R$ 420 de R$ 420",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "icon_font",
+              "id": "oZ7F5",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "refresh-cw",
+              "iconFontFamily": "feather",
+              "fill": "#18181B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uGZNr",
+          "name": "r2-partial",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 10,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E4E4E7"
+          },
+          "gap": 12,
+          "padding": [
+            14,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "muomP",
+              "name": "r2L",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XSuBk",
+                  "name": "r2t",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "cYssp",
+                      "name": "r2tL",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "2PW6u",
+                          "fill": "#0A0A0A",
+                          "content": "08/04/2026",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "7HYPN",
+                          "name": "r2pill",
+                          "fill": "#DCFCE7",
+                          "cornerRadius": 999,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "6amOO",
+                              "fill": "#166534",
+                              "content": "Enviado",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "yO5vT",
+                      "fill": "#0A0A0A",
+                      "content": "R$ 280,00",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xtG4G",
+                  "name": "r2b",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "FQLJP",
+                      "name": "r2part",
+                      "fill": "#FFFBEB",
+                      "cornerRadius": 999,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#FDE68A"
+                      },
+                      "gap": 6,
+                      "padding": [
+                        3,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "dHKY0",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "clock",
+                          "iconFontFamily": "feather",
+                          "fill": "#B45309"
+                        },
+                        {
+                          "type": "text",
+                          "id": "NCsI1",
+                          "fill": "#B45309",
+                          "content": "Parcial",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "1DR5a",
+                      "fill": "#525252",
+                      "content": "R$ 150 de R$ 280",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "icon_font",
+              "id": "Oq9PR",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "refresh-cw",
+              "iconFontFamily": "feather",
+              "fill": "#18181B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yWg6J",
+          "name": "r3-pending",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 10,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E4E4E7"
+          },
+          "gap": 12,
+          "padding": [
+            14,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "t09uz",
+              "name": "r3L",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "6ym08",
+                  "name": "r3t",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "MUmtN",
+                      "name": "r3tL",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lVflr",
+                          "fill": "#0A0A0A",
+                          "content": "01/04/2026",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OeyPo",
+                          "name": "r3pill",
+                          "fill": "#DCFCE7",
+                          "cornerRadius": 999,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "V6HOK",
+                              "fill": "#166534",
+                              "content": "Enviado",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "CkOPC",
+                      "fill": "#0A0A0A",
+                      "content": "R$ 95,00",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NWAhj",
+                  "name": "r3b",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "EpIPE",
+                      "name": "r3pend",
+                      "fill": "#FEF2F2",
+                      "cornerRadius": 999,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#FECACA"
+                      },
+                      "gap": 6,
+                      "padding": [
+                        3,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "wKUUu",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "alert-circle",
+                          "iconFontFamily": "feather",
+                          "fill": "#B91C1C"
+                        },
+                        {
+                          "type": "text",
+                          "id": "YB85x",
+                          "fill": "#B91C1C",
+                          "content": "Pendente",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "hs1WD",
+                      "fill": "#525252",
+                      "content": "R$ 0 de R$ 95",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "icon_font",
+              "id": "5yIW2",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "refresh-cw",
+              "iconFontFamily": "feather",
+              "fill": "#18181B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "SrEu1",
+          "name": "r4-adjust",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 10,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E4E4E7"
+          },
+          "gap": 12,
+          "padding": [
+            14,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "S8TcJ",
+              "name": "r4L",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qpXnF",
+                  "name": "r4t",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "3S3hH",
+                      "name": "r4tL",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "5OBIx",
+                          "fill": "#0A0A0A",
+                          "content": "22/03/2026",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DUyn6",
+                          "name": "r4pill",
+                          "fill": "#DCFCE7",
+                          "cornerRadius": 999,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "7lJxg",
+                              "fill": "#166534",
+                              "content": "Enviado",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Ryhqs",
+                      "fill": "#0A0A0A",
+                      "content": "R$ 150,00",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Lfo9x",
+                  "name": "r4b",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "cbKoN",
+                      "name": "r4adj",
+                      "fill": "#FEF2F2",
+                      "cornerRadius": 999,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#FECACA"
+                      },
+                      "gap": 6,
+                      "padding": [
+                        3,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "4NAPn",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "alert-triangle",
+                          "iconFontFamily": "feather",
+                          "fill": "#B91C1C"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ajQtC",
+                          "fill": "#B91C1C",
+                          "content": "Ajuste pendente",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "wLKcf",
+                      "fill": "#525252",
+                      "content": "R$ 180 de R$ 150",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "icon_font",
+              "id": "c7oLP",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "refresh-cw",
+              "iconFontFamily": "feather",
+              "fill": "#18181B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gFh2d",
+          "name": "r5-draft",
+          "width": "fill_container",
+          "fill": "#FAFAFA",
+          "cornerRadius": 10,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E4E4E7"
+          },
+          "gap": 12,
+          "padding": [
+            14,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "UU3XA",
+              "name": "r5L",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BxUwF",
+                  "name": "r5t",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "TtCsN",
+                      "name": "r5tL",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ccmsW",
+                          "fill": "#0A0A0A",
+                          "content": "15/03/2026",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZGNz7",
+                          "name": "r5pill",
+                          "fill": "#F4F4F5",
+                          "cornerRadius": 999,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "3yZK1",
+                              "fill": "#52525B",
+                              "content": "Rascunho",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "FjLxo",
+                      "fill": "#0A0A0A",
+                      "content": "R$ 62,00",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "eEefp",
+                  "fill": "#737373",
+                  "content": "Continue de onde parou",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "icon_font",
+              "id": "xrgoZ",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "edit-3",
+              "iconFontFamily": "feather",
+              "fill": "#737373"
             }
           ]
         }

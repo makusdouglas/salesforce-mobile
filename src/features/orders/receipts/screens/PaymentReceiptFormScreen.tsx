@@ -78,7 +78,9 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
   } = useReceiptForm({ orderId, ...(correctionOf !== undefined ? { correctionOf } : {}) });
 
   const [amountText, setAmountText] = useState('');
-  const [negative, setNegative] = useState(false);
+  // Correction mode defaults to negative (reversal is the common case).
+  // The seller taps the + toggle when they need an upward adjustment.
+  const [negative, setNegative] = useState(isCorrection);
   const [attachmentBusy, setAttachmentBusy] = useState(false);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [sourcePickerOpen, setSourcePickerOpen] = useState(false);
@@ -92,9 +94,23 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
 
   const onAmountChange = (raw: string): void => {
     setAmountText(raw);
-    const decimal = parseBRL(raw);
-    const signed = isCorrection && negative ? -decimal : decimal;
-    setAmount(signed);
+    // parseBRL already honors a leading "-" / "−" typed by the seller.
+    // When the sign-toggle flag is set in correction mode, force the
+    // magnitude negative regardless of how they typed it.
+    const parsed = parseBRL(raw);
+    if (!isCorrection) {
+      setAmount(parsed < 0 ? -parsed : parsed);
+      return;
+    }
+    // Correction: honor the toggle. Parsed already carries sign if typed.
+    // If the toggle says "negative" and parsed is positive, flip it.
+    // If the toggle says "positive" and parsed is negative, keep it negative
+    // (explicit typed sign wins — the user clearly meant that).
+    if (negative && parsed > 0) {
+      setAmount(-parsed);
+    } else {
+      setAmount(parsed);
+    }
   };
 
   const onToggleSign = (): void => {

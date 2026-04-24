@@ -46,26 +46,31 @@ export function parseBRL(raw: string): number {
   const trimmed = raw.trim();
   if (trimmed === '') return 0;
 
-  const hasSeparator = /[.,]/.test(trimmed);
+  // Detect leading minus (ASCII hyphen, Unicode minus, em-dash). Used by
+  // the receipt-correction form so a seller can type "-10" directly.
+  const isNegative = /^[-−—]/.test(trimmed);
+  const rest = isNegative ? trimmed.slice(1).trim() : trimmed;
+
+  const hasSeparator = /[.,]/.test(rest);
+  let value: number;
   if (!hasSeparator) {
-    const digitsOnly = trimmed.replace(/\D/g, '');
+    const digitsOnly = rest.replace(/\D/g, '');
     if (digitsOnly === '') return 0;
     const asInt = parseInt(digitsOnly, 10);
-    return Number.isFinite(asInt) ? asInt : 0;
+    value = Number.isFinite(asInt) ? asInt : 0;
+  } else {
+    const lastComma = rest.lastIndexOf(',');
+    const lastDot = rest.lastIndexOf('.');
+    const decimalSepIndex = Math.max(lastComma, lastDot);
+
+    const intPart = rest.slice(0, decimalSepIndex).replace(/\D/g, '');
+    const decPart = rest.slice(decimalSepIndex + 1).replace(/\D/g, '');
+    const combined = `${intPart === '' ? '0' : intPart}.${decPart === '' ? '0' : decPart}`;
+    const parsed = parseFloat(combined);
+    value = Number.isFinite(parsed) ? parsed : 0;
   }
 
-  // With a separator: the rightmost `,` or `.` is the decimal marker;
-  // anything before it (digits + other separators) is the integer part
-  // with group separators stripped.
-  const lastComma = trimmed.lastIndexOf(',');
-  const lastDot = trimmed.lastIndexOf('.');
-  const decimalSepIndex = Math.max(lastComma, lastDot);
-
-  const intPart = trimmed.slice(0, decimalSepIndex).replace(/\D/g, '');
-  const decPart = trimmed.slice(decimalSepIndex + 1).replace(/\D/g, '');
-  const combined = `${intPart === '' ? '0' : intPart}.${decPart === '' ? '0' : decPart}`;
-  const parsed = parseFloat(combined);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return isNegative ? -value : value;
 }
 
 /** Short date: "23 abr 2026". */

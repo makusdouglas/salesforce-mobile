@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ConfirmModal } from '@/app/ui/modal';
 import type { HomeStackParamList } from '@/app/navigation/types';
 import { useRepeatOrder } from '@/features/orders/hooks/useRepeatOrder';
 import { SyncStatusIndicator } from '@/features/sync';
@@ -51,6 +52,7 @@ export function ClientProfileScreen({ navigation, route }: Props) {
   const { repeat } = useRepeatOrder();
   const [blocked, setBlocked] = useState<BlockedKey | null>(null);
   const [busy, setBusy] = useState(false);
+  const [repeatTarget, setRepeatTarget] = useState<BlockedKey | null>(null);
 
   // 009-order-assembly: "Novo pedido em branco" enters the OrdersStack.
   const handleNewOrder = () =>
@@ -85,11 +87,24 @@ export function ClientProfileScreen({ navigation, route }: Props) {
 
   const handleHeroRepeat = () => {
     if (!lastSent) return;
-    void runRepeat(lastSent.orderId, { kind: 'hero' });
+    setRepeatTarget({ kind: 'hero' });
   };
 
   const handleRowRepeat = (row: OrderHistoryRowDTO) => {
-    void runRepeat(row.id, { kind: 'row', orderId: row.id });
+    setRepeatTarget({ kind: 'row', orderId: row.id });
+  };
+
+  const cancelRepeat = () => setRepeatTarget(null);
+
+  const confirmRepeat = () => {
+    if (!repeatTarget) return;
+    const target = repeatTarget;
+    setRepeatTarget(null);
+    if (target.kind === 'hero' && lastSent) {
+      void runRepeat(lastSent.orderId, target);
+    } else if (target.kind === 'row') {
+      void runRepeat(target.orderId, target);
+    }
   };
 
   if (client === null) {
@@ -282,6 +297,16 @@ export function ClientProfileScreen({ navigation, route }: Props) {
           <View style={styles.phoneCtaBar}>{cta}</View>
         </>
       )}
+
+      <ConfirmModal
+        open={repeatTarget !== null}
+        title="Repetir pedido"
+        body="Um novo rascunho será criado com os mesmos itens e preços atuais do catálogo. Você ainda poderá revisar antes de enviar."
+        cancelLabel="Cancelar"
+        primaryLabel="Criar rascunho"
+        onCancel={cancelRepeat}
+        onPrimary={confirmRepeat}
+      />
     </SafeAreaView>
   );
 }
