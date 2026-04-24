@@ -6,12 +6,16 @@
 // (copy to <docDir>/receipts/staging/<receiptId>.<ext>). On submit the
 // staged metadata is passed through to repo.create/createCorrection.
 
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -64,6 +68,7 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
     state,
     setAmount,
     setMethod,
+    setReceivedAtMs,
     setNotes,
     setAttachment,
     canSubmit,
@@ -77,6 +82,13 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
   const [attachmentBusy, setAttachmentBusy] = useState(false);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [sourcePickerOpen, setSourcePickerOpen] = useState(false);
+  // Date picker — Android shows the native dialog imperatively (auto-
+  // dismisses on pick/cancel); iOS renders the picker inline inside a
+  // modal with a Confirmar/Cancelar footer.
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  // iOS-only: value while user wheels the spinner. Committed to form
+  // state on Confirmar, discarded on Cancelar.
+  const [pendingDateMs, setPendingDateMs] = useState(state.receivedAtMs);
 
   const onAmountChange = (raw: string): void => {
     setAmountText(raw);
@@ -156,6 +168,36 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
   const handleRemoveAttachment = (): void => {
     setAttachment(null);
     setAttachmentError(null);
+  };
+
+  const handleOpenDatePicker = (): void => {
+    setPendingDateMs(state.receivedAtMs);
+    setDatePickerOpen(true);
+  };
+
+  // Single onChange for both platforms. On Android, the native dialog
+  // closes itself and fires this once with type='set' (user confirmed)
+  // or type='dismissed' (user backed out). On iOS, this fires on every
+  // wheel move — we only track pendingDateMs and commit on Confirmar.
+  const handleDateChange = (event: DateTimePickerEvent, selected?: Date): void => {
+    if (Platform.OS === 'android') {
+      setDatePickerOpen(false);
+      if (event.type === 'set' && selected !== undefined) {
+        setReceivedAtMs(selected.getTime());
+      }
+      return;
+    }
+    // iOS: stash, wait for Confirmar.
+    if (selected !== undefined) setPendingDateMs(selected.getTime());
+  };
+
+  const handleConfirmIosDate = (): void => {
+    setReceivedAtMs(pendingDateMs);
+    setDatePickerOpen(false);
+  };
+
+  const handleCancelIosDate = (): void => {
+    setDatePickerOpen(false);
   };
 
   const displayAmount = useMemo(() => formatBRL(state.amount), [state.amount]);
@@ -242,16 +284,21 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        <View style={styles.card}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Data: ${formatShortDatePt(state.receivedAtMs)}. Tocar para alterar.`}
+          onPress={handleOpenDatePicker}
+          style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+        >
           <Text style={styles.cardLabel}>Data</Text>
           <View style={styles.dateRow}>
             <Text style={styles.dateValue}>{formatShortDatePt(state.receivedAtMs)}</Text>
             <Feather name="calendar" size={18} color="#737373" />
           </View>
           <Text style={styles.cardHint}>
-            Data default de hoje. Edição de data chega em atualização futura.
+            Passado ou futuro — toque para escolher outra data.
           </Text>
-        </View>
+        </Pressable>
 
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Observações (opcional)</Text>
@@ -369,6 +416,63 @@ export function PaymentReceiptFormScreen({ navigation, route }: Props) {
         onPickPdf={handlePickPdf}
         onCancel={() => setSourcePickerOpen(false)}
       />
+
+      {/* Date picker: Android uses the native dialog (declarative; the
+          module renders it in a separate window), iOS renders a modal
+          wrapping <DateTimePicker display="spinner"> with a footer. */}
+      {datePickerOpen && Platform.OS === 'android' ? (
+        <DateTimePicker
+          value={new Date(state.receivedAtMs)}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
+      ) : null}
+
+      <Modal
+        visible={datePickerOpen && Platform.OS === 'ios'}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancelIosDate}
+      >
+        <Pressable
+          accessibilityLabel="Fechar"
+          accessibilityRole="button"
+          onPress={handleCancelIosDate}
+          style={styles.datePickerBackdrop}
+        >
+          <Pressable onPress={() => undefined} style={styles.datePickerCard}>
+            <Text style={styles.datePickerTitle}>Data do recebimento</Text>
+            <DateTimePicker
+              value={new Date(pendingDateMs)}
+              mode="date"
+              display="spinner"
+              onChange={handleDateChange}
+              textColor="#0A0A0A"
+            />
+            <View style={styles.datePickerFooter}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleCancelIosDate}
+                style={({ pressed }) => [styles.datePickerBtn, pressed && styles.pressed]}
+              >
+                <Text style={styles.datePickerBtnText}>Cancelar</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleConfirmIosDate}
+                style={({ pressed }) => [
+                  styles.datePickerBtn,
+                  styles.datePickerBtnPrimary,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.datePickerBtnPrimaryText}>Confirmar</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -484,6 +588,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  datePickerBackdrop: {
+    flex: 1,
+    backgroundColor: '#00000099',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    padding: 24,
+  },
+  datePickerCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+  },
+  datePickerTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0A0A0A',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  datePickerFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 8,
+  },
+  datePickerBtn: {
+    paddingHorizontal: 20,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  datePickerBtnText: { color: '#525252', fontSize: 14, fontWeight: '600' },
+  datePickerBtnPrimary: { backgroundColor: '#171717' },
+  datePickerBtnPrimaryText: { color: '#FAFAFA', fontSize: 14, fontWeight: '600' },
   errorText: { color: '#B91C1C', fontSize: 13 },
   footer: {
     padding: 16,

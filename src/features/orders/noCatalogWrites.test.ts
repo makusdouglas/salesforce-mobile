@@ -3,6 +3,9 @@
  * 010-repeat-last-order — scan root widened to cover clients/ screens and
  * the repeat code path; added a second assertion enforcing FR-016's
  * offline-only guarantee for the clone flow.
+ * 012-payment-receipts — the receipts sub-tree
+ * (`src/features/orders/receipts/**`) is already covered because the
+ * walker recurses into ORDERS_ROOT; no additional entry required.
  *
  * Scans non-test files along the repeat and order-assembly code paths for:
  *   (a) catalog-table write APIs (R5 lock — discounts never alter products).

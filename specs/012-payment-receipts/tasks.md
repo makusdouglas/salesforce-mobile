@@ -178,12 +178,12 @@ All frames produced by `/speckit-pencil-design` on 2026-04-23. See [design/scree
 
 **Purpose**: Guardrails, documentation, and the UX5 responsive sweep.
 
-- [ ] T057 [P] Widen `src/features/orders/noCatalogWrites.test.ts` scan root to include `src/features/orders/receipts/**` — R5 guard extended. As part of the same task, re-run `src/features/orders/receipts/appendOnlyReceipts.test.ts` (authored in T019) against the **fully-implemented** sub-tree — the Phase 2 run passed against an empty tree; the Phase 7 re-run is the one that catches late regressions.
-- [ ] T058 [P] Update `SPECS.md` with a one-line summary of 012 linking to plan + design artifacts.
-- [ ] T059 Run the [quickstart.md](./quickstart.md) smoke test end-to-end on a phone simulator (390×844). Any step failing is a blocker.
-- [ ] T060 Run the [quickstart.md](./quickstart.md) smoke test end-to-end on a tablet simulator (820×1180). Confirm the split layouts, the `3 + 2` method chip grid, and the large attachment viewer on `PaymentReceiptDetail`.
-- [ ] T061 [P] RLS sanity check (quickstart step 6): confirm a second seller cannot read the first seller's attachment URL; confirm same-seller upload succeeds.
-- [ ] T062 Update `CLAUDE.md` if the active plan moves after implementation merge (typically handled by the next feature's `/speckit-plan`, not this task).
+- [x] T057 [P] Widen `src/features/orders/noCatalogWrites.test.ts` scan root to include `src/features/orders/receipts/**` — R5 guard extended. As part of the same task, re-run `src/features/orders/receipts/appendOnlyReceipts.test.ts` (authored in T019) against the **fully-implemented** sub-tree — the Phase 2 run passed against an empty tree; the Phase 7 re-run is the one that catches late regressions.
+- [x] T058 [P] Update `SPECS.md` with a one-line summary of 012 linking to plan + design artifacts.
+- [~] T059 Run the [quickstart.md](./quickstart.md) smoke test end-to-end on a phone simulator (390×844). Any step failing is a blocker.
+- [~] T060 Run the [quickstart.md](./quickstart.md) smoke test end-to-end on a tablet simulator (820×1180). Confirm the split layouts, the `3 + 2` method chip grid, and the large attachment viewer on `PaymentReceiptDetail`.
+- [~] T061 [P] RLS sanity check (quickstart step 6): confirm a second seller cannot read the first seller's attachment URL; confirm same-seller upload succeeds.
+- [~] T062 Update `CLAUDE.md` if the active plan moves after implementation merge (typically handled by the next feature's `/speckit-plan`, not this task).
 
 **Checkpoint**: Feature 012 is implementation-complete, tested, and ready for merge to `develop` once `/ultrareview` passes.
 

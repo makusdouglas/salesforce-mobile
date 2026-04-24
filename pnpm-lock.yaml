@@ -17,6 +17,9 @@ dependencies:
   '@nozbe/watermelondb':
     specifier: ^0.28.0
     version: 0.28.0
+  '@react-native-community/datetimepicker':
+    specifier: 8.6.0
+    version: 8.6.0(expo@55.0.15)(react-native@0.83.4)(react@19.2.0)
   '@react-native-community/netinfo':
     specifier: ^12.0.1
     version: 12.0.1(react-native@0.83.4)(react@19.2.0)
@@ -2095,6 +2098,25 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
     dev: true
+
+  /@react-native-community/datetimepicker@8.6.0(expo@55.0.15)(react-native@0.83.4)(react@19.2.0):
+    resolution: {integrity: sha512-yxPSqNfxgpGaqHQIpatqe6ykeBdU/1pdsk/G3x01mY2bpTflLpmVTLqFSJYd3MiZzxNZcMs/j1dQakUczSjcYA==}
+    peerDependencies:
+      expo: '>=52.0.0'
+      react: '*'
+      react-native: '*'
+      react-native-windows: '*'
+    peerDependenciesMeta:
+      expo:
+        optional: true
+      react-native-windows:
+        optional: true
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+      invariant: 2.2.4
+      react: 19.2.0
+      react-native: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+    dev: false
 
   /@react-native-community/netinfo@12.0.1(react-native@0.83.4)(react@19.2.0):
     resolution: {integrity: sha512-P/3caXIvfYSJG8AWJVefukg+ZGRPs+M4Lp3pNJtgcTYoJxCjWrKQGNnCkj/Cz//zWa/avGed0i/wzm0T8vV2IQ==}
