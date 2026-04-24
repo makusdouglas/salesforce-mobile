@@ -4,6 +4,23 @@ export type RootStackParamList = {
   Relogin: { resolve: () => void; reject: () => void };
 };
 
+export type RootTabsParamList = {
+  HomeTab: undefined;
+  AdminTab: undefined;
+};
+
+export type AdminStackParamList = {
+  AdminProducts: undefined;
+  AdminProductSource: undefined;
+  AdminBarcodeScanner: undefined;
+  AdminBarcodeMatch: { productId: string };
+  AdminProductForm: {
+    productId?: string;
+    prefilledBarcode?: string;
+  };
+  AdminImageSource: undefined;
+};
+
 export type AuthStackParamList = {
   Login: undefined;
 };
