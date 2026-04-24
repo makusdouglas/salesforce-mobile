@@ -1,4 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as Updates from 'expo-updates';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,6 +26,31 @@ export function SettingsScreen({ navigation }: Props) {
     lockService.getInactivityTimeout(),
   );
   const [logoutOpen, setLogoutOpen] = useState<boolean>(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+
+  const handleCheckUpdate = useCallback(async () => {
+    if (checkingUpdate) return;
+    setCheckingUpdate(true);
+    setUpdateStatus('Buscando atualizações...');
+    try {
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        setUpdateStatus('Atualização encontrada. Baixando...');
+        await Updates.fetchUpdateAsync();
+        setUpdateStatus('Reiniciando aplicativo...');
+        await Updates.reloadAsync();
+      } else {
+        setUpdateStatus('O aplicativo já está na versão mais recente.');
+        setTimeout(() => setUpdateStatus(null), 3000);
+      }
+    } catch (error) {
+      setUpdateStatus(`Erro: ${error instanceof Error ? error.message : String(error)}`);
+      setTimeout(() => setUpdateStatus(null), 5000);
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }, [checkingUpdate]);
 
   const selectMinutes = useCallback((minutes: number): void => {
     setSelectedMinutes((previous) => {
@@ -83,6 +109,33 @@ export function SettingsScreen({ navigation }: Props) {
                 );
               })}
             </View>
+          </View>
+        </View>
+
+        <View style={styles.settingsCard}>
+          <Text style={styles.sectionTitle}>Sistema (OTA)</Text>
+          <View style={styles.settingsBlock}>
+            <Text style={styles.settingsLabel}>
+              Versão: {Updates.updateId ? Updates.updateId.substring(0, 8) : 'Build nativa local'}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.segmentButton,
+                styles.segmentButtonInactive,
+                pressed && styles.buttonPressed,
+                checkingUpdate && styles.disabled,
+              ]}
+              onPress={() => void handleCheckUpdate()}
+              disabled={checkingUpdate}
+            >
+              <Text style={styles.segmentLabelInactive}>
+                {checkingUpdate ? 'Buscando...' : 'Buscar atualizações'}
+              </Text>
+            </Pressable>
+            {updateStatus ? (
+              <Text style={styles.updateStatusText}>{updateStatus}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -266,5 +319,14 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.7,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  updateStatusText: {
+    fontSize: 13,
+    color: '#047857',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
 });
