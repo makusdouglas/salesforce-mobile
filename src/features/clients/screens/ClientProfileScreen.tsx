@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
 import { useRepeatOrder } from '@/features/orders/hooks/useRepeatOrder';
+import { openStoredPdf } from '@/features/orders/send/openStoredPdf';
 import { SyncStatusIndicator } from '@/features/sync';
 
 import { AllUnavailableNotice } from '../components/AllUnavailableNotice';
@@ -190,6 +191,13 @@ export function ClientProfileScreen({ navigation, route }: Props) {
             <AllUnavailableNotice onDismiss={() => setBlocked(null)} />
           ) : null
         }
+        onRowPress={(row) => {
+          // 011-order-email-delivery US3: tap on a sent row opens the
+          // stored PDF (regenerating from persisted order_number if the
+          // file is missing — FR-017).
+          if (row.status !== 'sent') return;
+          void openStoredPdf(row.id).catch(() => undefined);
+        }}
       />
     </View>
   );

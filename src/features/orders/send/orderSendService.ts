@@ -20,7 +20,6 @@
 
 // eslint-disable-next-line import/no-unresolved -- subpath provided by expo-file-system
 import * as FileSystem from 'expo-file-system/legacy';
-import * as MailComposer from 'expo-mail-composer';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -111,6 +110,15 @@ async function writePdfFile(html: string, destPath: string): Promise<void> {
     // ignore
   }
   await FileSystem.copyAsync({ from: result.uri, to: destPath });
+  // Post-copy validation: the file must exist and be non-empty. If the PDF
+  // is 0 bytes we would otherwise attach a corrupt file to the email and
+  // the recipient would see an "impossible to open" PDF — which is the
+  // failure mode the salesperson reported in the 2026-04-23 field test.
+  const after = await FileSystem.getInfoAsync(destPath, { size: true } as never);
+  const size = (after as unknown as { size?: number }).size ?? 0;
+  if (!after.exists || size <= 0) {
+    throw new Error(`PDF write produced an empty file at ${destPath} (size=${size})`);
+  }
 }
 
 async function fileExists(pathLike: string | null | undefined): Promise<boolean> {
@@ -217,33 +225,15 @@ export const orderSendService = {
       }
     }
 
-    // 3. Decide intent. Single choke point for email shape (U1).
-    const emailLikely = isLikelyEmail(pdfInputs.clientEmail);
-
-    if (emailLikely) {
-      const available = await safeIsMailAvailable();
-      if (!available) return { kind: 'error', reason: 'intent_unavailable' };
-      const result = await MailComposer.composeAsync({
-        recipients: [pdfInputs.clientEmail as string],
-        subject: SUBJECT_TEMPLATE(orderNumber, pdfInputs.clientName),
-        body: BODY_TEMPLATE(pdfInputs.salespersonName, pdfInputs.clientName),
-        attachments: [pdfPath as string],
-      });
-      if (result.status === MailComposer.MailComposerStatus.SENT) {
-        const sentAtMs = await flipToSent(order);
-        return {
-          kind: 'sent',
-          orderNumber,
-          pdfPath: pdfPath as string,
-          sentAtMs,
-          recipientEmail: pdfInputs.clientEmail,
-        };
-      }
-      // CANCELLED / SAVED / UNDETERMINED → keep draft, reuse on retry.
-      return { kind: 'cancelled', orderNumber, pdfPath: pdfPath as string };
-    }
-
-    // Generic share fallback (no email / malformed email).
+    // 3. Open the OS share sheet with the PDF attached. The 2026-04-23
+    //    field test confirmed that attachments passed through
+    //    `Sharing.shareAsync` (which uses the platform FileProvider / UTI
+    //    machinery) render correctly on the recipient side, while
+    //    `MailComposer.composeAsync({ attachments })` produced a corrupt
+    //    attachment on Gmail for Android — see R4 rationale + R11. The
+    //    SendHint keeps showing the client's email for reference; the
+    //    salesperson picks the mail app in the share sheet and types the
+    //    recipient (or the mail app auto-suggests it from recents).
     const shareAvailable = await safeIsShareAvailable();
     if (!shareAvailable) return { kind: 'error', reason: 'intent_unavailable' };
     try {
@@ -262,7 +252,7 @@ export const orderSendService = {
       orderNumber,
       pdfPath: pdfPath as string,
       sentAtMs,
-      recipientEmail: null,
+      recipientEmail: isLikelyEmail(pdfInputs.clientEmail) ? pdfInputs.clientEmail : null,
     };
   },
 
@@ -317,14 +307,6 @@ async function flipToSent(order: Order): Promise<number> {
     });
   });
   return sentAtMs;
-}
-
-async function safeIsMailAvailable(): Promise<boolean> {
-  try {
-    return await MailComposer.isAvailableAsync();
-  } catch {
-    return false;
-  }
 }
 
 async function safeIsShareAvailable(): Promise<boolean> {

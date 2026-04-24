@@ -21,7 +21,11 @@ export function OrdersStack() {
         options={{ presentation: 'modal' }}
       />
       <Stack.Screen name="OrderSummary" component={OrderSummaryScreen} />
-      <Stack.Screen name="OrderSent" component={OrderSentScreen} />
+      <Stack.Screen
+        name="OrderSent"
+        component={OrderSentScreen}
+        options={{ gestureEnabled: false, headerBackVisible: false }}
+      />
     </Stack.Navigator>
   );
 }

@@ -12,11 +12,6 @@ jest.mock('expo-file-system/legacy', () => ({
   copyAsync: jest.fn().mockResolvedValue(undefined),
   deleteAsync: jest.fn().mockResolvedValue(undefined),
 }));
-jest.mock('expo-mail-composer', () => ({
-  isAvailableAsync: jest.fn().mockResolvedValue(true),
-  composeAsync: jest.fn(),
-  MailComposerStatus: { SENT: 'sent', CANCELLED: 'cancelled', SAVED: 'saved', UNDETERMINED: 'undetermined' },
-}));
 jest.mock('expo-print', () => ({
   printToFileAsync: jest.fn().mockResolvedValue({ uri: 'file:///tmp/out.pdf' }),
 }));
@@ -56,7 +51,6 @@ jest.mock('./allocateNextOrderNumber', () => ({
 }));
 
 import * as FileSystem from 'expo-file-system/legacy';
-import * as MailComposer from 'expo-mail-composer';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -68,7 +62,7 @@ import { productsRepository } from '@/data/repositories/productsRepository';
 import { salespeopleRepository } from '@/data/repositories/salespeopleRepository';
 
 import { allocateNextOrderNumber } from './allocateNextOrderNumber';
-import { BODY_TEMPLATE, SUBJECT_TEMPLATE, orderSendService } from './orderSendService';
+import { orderSendService } from './orderSendService';
 
 function makeOrder(over: Record<string, unknown> = {}): any {
   const state: Record<string, unknown> = {
@@ -118,20 +112,30 @@ const mockSalesperson = { id: 's1', name: 'Maria' };
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (FileSystem.getInfoAsync as jest.Mock).mockResolvedValue({ exists: false });
+  // Default: file doesn't exist on pre-check, but after writePdfFile's
+  // copy we report a non-empty file so the post-copy size guard passes.
+  let call = 0;
+  (FileSystem.getInfoAsync as jest.Mock).mockImplementation(async () => {
+    call += 1;
+    // First call per test = pre-existing file check (missing). Subsequent
+    // calls = post-copy size check (non-empty) and any later lookups.
+    return call === 1 ? { exists: false } : { exists: true, size: 1024 };
+  });
   (allocateNextOrderNumber as jest.Mock).mockResolvedValue('#2026-0042');
   (orderItemsRepository.findByOrder as jest.Mock).mockResolvedValue([mockItem]);
   (productVariantsRepository.findById as jest.Mock).mockResolvedValue(mockVariant);
   (productsRepository.findById as jest.Mock).mockResolvedValue(mockProduct);
   (salespeopleRepository.findById as jest.Mock).mockResolvedValue(mockSalesperson);
+  (Print.printToFileAsync as jest.Mock).mockResolvedValue({ uri: 'file:///tmp/out.pdf' });
+  (Sharing.shareAsync as jest.Mock).mockResolvedValue(undefined);
+  (Sharing.isAvailableAsync as jest.Mock).mockResolvedValue(true);
 });
 
 describe('orderSendService.sendOrder', () => {
-  test('happy path: client with email → mail composer SENT → flip to sent', async () => {
+  test('happy path: client with email → share sheet → flip to sent, recipientEmail preserved for OrderSent', async () => {
     const order = makeOrder({ clientId: 'c1' });
     (ordersRepository.findById as jest.Mock).mockResolvedValue(order);
     (clientsRepository.findById as jest.Mock).mockResolvedValue({ id: 'c1', name: 'Padaria', email: 'x@y.co', phone: null });
-    (MailComposer.composeAsync as jest.Mock).mockResolvedValue({ status: 'sent' });
 
     const result = await orderSendService.sendOrder({ orderId: 'ord1' });
 
@@ -140,17 +144,16 @@ describe('orderSendService.sendOrder', () => {
       expect(result.orderNumber).toBe('#2026-0042');
       expect(result.recipientEmail).toBe('x@y.co');
     }
-    expect(MailComposer.composeAsync).toHaveBeenCalledWith(expect.objectContaining({
-      recipients: ['x@y.co'],
-      subject: SUBJECT_TEMPLATE('#2026-0042', 'Padaria'),
-      body: BODY_TEMPLATE('Maria', 'Padaria'),
-    }));
+    expect(Sharing.shareAsync).toHaveBeenCalledWith(
+      expect.stringContaining('pedido-2026-0042-padaria.pdf'),
+      expect.objectContaining({ mimeType: 'application/pdf' }),
+    );
     expect(order._state.status).toBe('sent');
     expect(order._state.sentAtMs).toBeGreaterThan(0);
     expect(order._state.orderNumber).toBe('#2026-0042');
   });
 
-  test('no email → generic share → flip to sent with recipientEmail null', async () => {
+  test('no email → share → flip to sent with recipientEmail null', async () => {
     const order = makeOrder();
     (ordersRepository.findById as jest.Mock).mockResolvedValue(order);
     (clientsRepository.findById as jest.Mock).mockResolvedValue({ id: 'c1', name: 'Padaria', email: null, phone: null });
@@ -160,26 +163,25 @@ describe('orderSendService.sendOrder', () => {
     expect(result.kind).toBe('sent');
     if (result.kind === 'sent') expect(result.recipientEmail).toBeNull();
     expect(Sharing.shareAsync).toHaveBeenCalled();
-    expect(MailComposer.composeAsync).not.toHaveBeenCalled();
     expect(order._state.status).toBe('sent');
   });
 
-  test('malformed email → generic share branch', async () => {
+  test('malformed email → share branch, recipientEmail null on result', async () => {
     const order = makeOrder();
     (ordersRepository.findById as jest.Mock).mockResolvedValue(order);
     (clientsRepository.findById as jest.Mock).mockResolvedValue({ id: 'c1', name: 'Padaria', email: 'not-an-email', phone: null });
 
-    await orderSendService.sendOrder({ orderId: 'ord1' });
+    const result = await orderSendService.sendOrder({ orderId: 'ord1' });
 
     expect(Sharing.shareAsync).toHaveBeenCalled();
-    expect(MailComposer.composeAsync).not.toHaveBeenCalled();
+    if (result.kind === 'sent') expect(result.recipientEmail).toBeNull();
   });
 
-  test('mail composer CANCELLED → draft kept, number + PDF persisted', async () => {
+  test('share throws (user dismissed) → draft kept, number + PDF persisted', async () => {
     const order = makeOrder();
     (ordersRepository.findById as jest.Mock).mockResolvedValue(order);
     (clientsRepository.findById as jest.Mock).mockResolvedValue({ id: 'c1', name: 'Padaria', email: 'x@y.co', phone: null });
-    (MailComposer.composeAsync as jest.Mock).mockResolvedValue({ status: 'cancelled' });
+    (Sharing.shareAsync as jest.Mock).mockRejectedValueOnce(new Error('user cancelled'));
 
     const result = await orderSendService.sendOrder({ orderId: 'ord1' });
 
@@ -195,7 +197,6 @@ describe('orderSendService.sendOrder', () => {
     (ordersRepository.findById as jest.Mock).mockResolvedValue(order);
     (clientsRepository.findById as jest.Mock).mockResolvedValue({ id: 'c1', name: 'Padaria', email: 'x@y.co', phone: null });
     (FileSystem.getInfoAsync as jest.Mock).mockResolvedValue({ exists: true });
-    (MailComposer.composeAsync as jest.Mock).mockResolvedValue({ status: 'sent' });
 
     await orderSendService.sendOrder({ orderId: 'ord1' });
 

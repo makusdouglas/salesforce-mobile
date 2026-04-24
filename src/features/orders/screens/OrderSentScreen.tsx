@@ -1,11 +1,15 @@
 // 011-order-email-delivery: terminal confirmation screen reached after the
 // salesperson returns from the OS mail/share intent with a SENT outcome.
 // See design/order-sent-phone.png + order-sent-tablet.png.
+//
+// The native back button is disabled for this route (see OrdersStack) so
+// the only way out is the Concluir CTA — prevents accidentally landing
+// back in the draft editor of the order the salesperson just sent.
 
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { OrdersStackParamList } from '@/app/navigation/types';
@@ -21,6 +25,12 @@ export function OrderSentScreen({ navigation, route }: Props) {
   const isTablet = viewport === 'tablet';
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Swallow Android hardware back presses — the only exit is Concluir.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => sub.remove();
+  }, []);
 
   const handleViewPdf = async (): Promise<void> => {
     if (busy) return;
@@ -45,42 +55,44 @@ export function OrderSentScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <View style={[styles.body, isTablet && styles.bodyTablet]}>
-        <View style={styles.checkCircle}>
-          <Feather name="check" size={40} color="#FFFFFF" />
+      <View style={styles.content}>
+        <View style={styles.hero}>
+          <View style={styles.checkCircle}>
+            <Feather name="check" size={40} color="#FFFFFF" />
+          </View>
+          <Text style={styles.orderNumber}>{orderNumber}</Text>
+          <Text style={styles.sharedLine}>{sharedLabel}</Text>
+          {error !== null ? <Text style={styles.error}>⚠ {error}</Text> : null}
         </View>
-        <Text style={styles.orderNumber}>{orderNumber}</Text>
-        <Text style={styles.sharedLine}>{sharedLabel}</Text>
-        {error !== null ? <Text style={styles.error}>⚠ {error}</Text> : null}
-      </View>
 
-      <View style={[styles.footer, isTablet && styles.footerTablet]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Ver PDF salvo"
-          onPress={() => void handleViewPdf()}
-          disabled={busy}
-          style={({ pressed }) => [
-            styles.footerBtn,
-            styles.footerBtnSecondary,
-            busy && styles.disabled,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.footerBtnSecondaryText}>Ver PDF salvo</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Concluir"
-          onPress={handleDone}
-          style={({ pressed }) => [
-            styles.footerBtn,
-            styles.footerBtnPrimary,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.footerBtnPrimaryText}>Concluir</Text>
-        </Pressable>
+        <View style={[styles.footer, isTablet && styles.footerTablet]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ver PDF salvo"
+            onPress={() => void handleViewPdf()}
+            disabled={busy}
+            style={({ pressed }) => [
+              styles.footerBtn,
+              styles.footerBtnSecondary,
+              busy && styles.disabled,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.footerBtnSecondaryText}>Ver PDF salvo</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Concluir"
+            onPress={handleDone}
+            style={({ pressed }) => [
+              styles.footerBtn,
+              styles.footerBtnPrimary,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.footerBtnPrimaryText}>Concluir</Text>
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -88,14 +100,20 @@ export function OrderSentScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FAFAFA' },
-  body: {
+  // Single flex container with the hero + footer split so the buttons can
+  // never be pushed off-screen, regardless of viewport height. justify-
+  // Content=space-between keeps the CTAs pinned to the bottom.
+  content: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  hero: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    gap: 16,
+    gap: 14,
   },
-  bodyTablet: { padding: 48 },
   checkCircle: {
     width: 96,
     height: 96,

@@ -89,12 +89,23 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
     try {
       const result = await runSend(orderId);
       if (result.kind === 'sent') {
-        navigation.replace('OrderSent', {
-          orderId,
-          orderNumber: result.orderNumber,
-          pdfPath: result.pdfPath,
-          recipientEmail: result.recipientEmail,
-          clientId: order.clientId,
+        // Reset the OrdersStack so the whole draft→summary→sent chain is
+        // replaced with a single OrderSent entry. Prevents the native back
+        // button from returning the salesperson to the draft editor.
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'OrderSent',
+              params: {
+                orderId,
+                orderNumber: result.orderNumber,
+                pdfPath: result.pdfPath,
+                recipientEmail: result.recipientEmail,
+                clientId: order.clientId,
+              },
+            },
+          ],
         });
         return;
       }
