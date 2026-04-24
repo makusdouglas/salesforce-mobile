@@ -7,8 +7,9 @@
 // in Phase 6 — the form just accepts an AttachmentInput or leaves it
 // undefined).
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
+import { generateId } from '@/data/ids';
 import { paymentReceiptsRepository } from '@/data/repositories/paymentReceiptsRepository';
 import type { AttachmentInput } from '@/data/repositories/paymentReceiptsRepository';
 import type { PaymentMethod } from '@/data/types';
@@ -29,6 +30,13 @@ export interface ReceiptFormState {
 }
 
 export interface UseReceiptFormResult {
+  /**
+   * Pre-allocated receipt id for the session. Stable across renders.
+   * Used by the attachment-staging pipeline so the local filename and the
+   * eventual remote Storage path both reference the same id — the
+   * receipt-attachments RLS policies rely on this invariant.
+   */
+  readonly receiptId: string;
   readonly state: ReceiptFormState;
   readonly setAmount: (next: number) => void;
   readonly setMethod: (next: PaymentMethod) => void;
@@ -49,6 +57,12 @@ export interface UseReceiptFormResult {
 const INITIAL_METHOD: PaymentMethod = 'pix';
 
 export function useReceiptForm(params: UseReceiptFormParams): UseReceiptFormResult {
+  // Stable session id. Generated once per form mount — subsequent
+  // attachment re-picks overwrite the same staged file name.
+  const receiptIdRef = useRef<string | null>(null);
+  if (receiptIdRef.current === null) receiptIdRef.current = generateId();
+  const receiptId = receiptIdRef.current;
+
   const [state, setState] = useState<ReceiptFormState>(() => ({
     amount: 0,
     method: INITIAL_METHOD,
@@ -94,6 +108,7 @@ export function useReceiptForm(params: UseReceiptFormParams): UseReceiptFormResu
     setError(null);
     try {
       const payload = {
+        id: receiptId,
         amount: state.amount,
         method: state.method,
         receivedAtMs: state.receivedAtMs,
@@ -118,9 +133,10 @@ export function useReceiptForm(params: UseReceiptFormParams): UseReceiptFormResu
     } finally {
       setSubmitting(false);
     }
-  }, [canSubmit, isCorrection, params, state, submitting]);
+  }, [canSubmit, isCorrection, params, receiptId, state, submitting]);
 
   return {
+    receiptId,
     state,
     setAmount,
     setMethod,

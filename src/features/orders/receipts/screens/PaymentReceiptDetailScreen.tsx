@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { OrdersStackParamList } from '@/app/navigation/types';
 
 import { useViewport } from '../../hooks/useViewport';
+import { AttachmentPreview } from '../components/AttachmentPreview';
 import { useOrderReceipts } from '../hooks/useOrderReceipts';
 import { useReceipt } from '../hooks/useReceipt';
 import { formatBRL, formatShortDatePt, methodLabel } from '../formatting';
@@ -172,16 +173,11 @@ export function PaymentReceiptDetailScreen({ navigation, route }: Props) {
           </View>
         ) : null}
 
-        {/* Attachment preview — Phase 6 fills this in */}
+        {/* Attachment preview — live from Phase 6 */}
         {receipt.attachmentLocalPath !== null || receipt.attachmentUrl !== null ? (
           <View style={styles.card}>
             <Text style={styles.cardLabel}>Comprovante</Text>
-            <View style={styles.attachmentStub}>
-              <Feather name="file-text" size={40} color="#737373" />
-              <Text style={styles.attachmentStubText}>
-                Prévia do comprovante · disponível em breve
-              </Text>
-            </View>
+            <AttachmentPreview receipt={receipt} />
           </View>
         ) : null}
       </ScrollView>

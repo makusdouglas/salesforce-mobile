@@ -161,14 +161,14 @@ All frames produced by `/speckit-pencil-design` on 2026-04-23. See [design/scree
 
 ### Implementation for US4
 
-- [ ] T049 [US4] Enable the attachment block in `PaymentReceiptFormScreen.tsx`: wire `Câmera` → `pickFromCamera()`, `Galeria / PDF` → action sheet with `pickFromLibrary({ allowPdf: true })`. On pick, call `stage()` + `validateAttachment()`; populate form state with the `AttachmentInput`. Show the preview card + `cache local · aguardando sync` caption.
-- [ ] T050 [US4] On submit (`useReceiptForm.submit`), pass the staged attachment metadata into `repository.create`/`createCorrection`. The repo writes the 5 attachment columns in the same `database.write` as the row.
-- [ ] T051 [P] [US4] Implement `src/features/orders/receipts/components/AttachmentPreview.tsx` — given a receipt row, calls `resolvePreview()` and renders an `Image` for photos or the document glyph for PDFs. Exposes sync-state badge (`Aguardando sync` / `Sincronizado` / `Falha ao enviar` with retry button).
-- [ ] T052 [US4] Drop `AttachmentPreview` into `PaymentReceiptDetailScreen.tsx` (replaces the Phase 5 empty block).
-- [ ] T053 [US4] On `PaymentReceiptDetailScreen`, wire the `Registrar nova tentativa` button (shown only when `attachment_upload_state === 'failed'`) to `repository.retryAttachmentUpload(id)` which delegates to `uploader.retry`.
-- [ ] T054 [US4] In `OrderReceiptsScreen`, show the paperclip icon on rows where `attachment_url` or `attachment_local_path` is set (FR-016).
-- [ ] T055 [P] [US4] [Test] Extend `PaymentReceiptFormScreen.test.tsx` with the picker-stubbed attach flow: mocked `pickFromCamera` returns a fake URI; verify `stage` is called; save persists the attachment metadata on the row.
-- [ ] T056 [P] [US4] [Test] Extend `PaymentReceiptDetailScreen.test.tsx` — given a receipt with `attachment_upload_state === 'pending'`, badge reads `Aguardando sync`; with `'synced'`, reads `Sincronizado`; with `'failed'`, renders the retry button and calls `retryAttachmentUpload` on press.
+- [x] T049 [US4] Enable the attachment block in `PaymentReceiptFormScreen.tsx`: wire `Câmera` → `pickFromCamera()`, `Galeria / PDF` → action sheet with `pickFromLibrary({ allowPdf: true })`. On pick, call `stage()` + `validateAttachment()`; populate form state with the `AttachmentInput`. Show the preview card + `cache local · aguardando sync` caption.
+- [x] T050 [US4] On submit (`useReceiptForm.submit`), pass the staged attachment metadata into `repository.create`/`createCorrection`. The repo writes the 5 attachment columns in the same `database.write` as the row.
+- [x] T051 [P] [US4] Implement `src/features/orders/receipts/components/AttachmentPreview.tsx` — given a receipt row, calls `resolvePreview()` and renders an `Image` for photos or the document glyph for PDFs. Exposes sync-state badge (`Aguardando sync` / `Sincronizado` / `Falha ao enviar` with retry button).
+- [x] T052 [US4] Drop `AttachmentPreview` into `PaymentReceiptDetailScreen.tsx` (replaces the Phase 5 empty block).
+- [x] T053 [US4] On `PaymentReceiptDetailScreen`, wire the `Registrar nova tentativa` button (shown only when `attachment_upload_state === 'failed'`) to `repository.retryAttachmentUpload(id)` which delegates to `uploader.retry`.
+- [x] T054 [US4] In `OrderReceiptsScreen`, show the paperclip icon on rows where `attachment_url` or `attachment_local_path` is set (FR-016).
+- [~] T055 [P] [US4] [Test] Extend `PaymentReceiptFormScreen.test.tsx` with the picker-stubbed attach flow: mocked `pickFromCamera` returns a fake URI; verify `stage` is called; save persists the attachment metadata on the row.
+- [~] T056 [P] [US4] [Test] Extend `PaymentReceiptDetailScreen.test.tsx` — given a receipt with `attachment_upload_state === 'pending'`, badge reads `Aguardando sync`; with `'synced'`, reads `Sincronizado`; with `'failed'`, renders the retry button and calls `retryAttachmentUpload` on press.
 
 **Checkpoint**: All four user stories fully functional. Offline, online, correction, attachment — all green.
 

@@ -57,6 +57,14 @@ export interface AttachmentInput {
 }
 
 export interface PaymentReceiptCreateInput {
+  /**
+   * Optional pre-allocated id. Callers pass one when they need the receipt
+   * id to be known BEFORE the row is inserted — e.g. the attachment-staging
+   * pipeline stages a file at `<docDir>/receipts/staging/<id>.<ext>` and
+   * the uploader builds its remote Storage path from the same id. When
+   * omitted, the repo allocates a fresh id via generateId().
+   */
+  id?: string;
   orderId: string;
   /** Strictly > 0. Corrections (any non-zero signed value) go through createCorrection. */
   amount: number;
@@ -68,6 +76,8 @@ export interface PaymentReceiptCreateInput {
 }
 
 export interface PaymentReceiptCreateCorrectionInput {
+  /** Optional pre-allocated id. See PaymentReceiptCreateInput.id. */
+  id?: string;
   /** Must reference an existing receipt row. Orphan pulls (original not yet synced locally) are handled at the sync layer. */
   originalId: string;
   /** Non-zero; may be positive (upward adjustment) or negative (reversal). */
@@ -143,7 +153,7 @@ export const paymentReceiptsRepository = {
 
     return database.write(async () =>
       collection.create((record) => {
-        record._raw.id = generateId();
+        record._raw.id = input.id ?? generateId();
         record.orderId = input.orderId;
         record.amount = input.amount;
         record.method = input.method;
@@ -178,7 +188,7 @@ export const paymentReceiptsRepository = {
 
     return database.write(async () =>
       collection.create((record) => {
-        record._raw.id = generateId();
+        record._raw.id = input.id ?? generateId();
         // Correction inherits the order the original belongs to — the
         // caller cannot redirect a correction to a different order.
         record.orderId = original.orderId;
