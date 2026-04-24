@@ -18,7 +18,7 @@
 // sharing intents on the VENDEDOR surface. Zero network (FR-021 / P1) —
 // static-scanned by noNetworkOnSend.test.ts.
 
-// eslint-disable-next-line import/no-unresolved -- subpath provided by expo-file-system
+ 
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';

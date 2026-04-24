@@ -46,13 +46,29 @@ export type OrdersStackParamList = {
     recipientEmail: string | null;
     clientId: string;
   };
+  // 012-payment-receipts: three routes for the receipts sub-flow. Entry
+  // point is the sent-status branch of OrderSummary (no new detail screen).
+  OrderReceipts: { orderId: string };
+  // correctionOf, when set, flips the form to createCorrection() and
+  // pre-links the new receipt to the original.
+  PaymentReceiptForm: { orderId: string; correctionOf?: string };
+  PaymentReceiptDetail: { receiptId: string };
 };
 
 export type OrdersNavigatorParams =
   | { screen: 'OrderDraft'; params: OrdersStackParamList['OrderDraft'] }
   | { screen: 'AddToOrder'; params: OrdersStackParamList['AddToOrder'] }
   | { screen: 'OrderSummary'; params: OrdersStackParamList['OrderSummary'] }
-  | { screen: 'OrderSent'; params: OrdersStackParamList['OrderSent'] };
+  | { screen: 'OrderSent'; params: OrdersStackParamList['OrderSent'] }
+  | { screen: 'OrderReceipts'; params: OrdersStackParamList['OrderReceipts'] }
+  | {
+      screen: 'PaymentReceiptForm';
+      params: OrdersStackParamList['PaymentReceiptForm'];
+    }
+  | {
+      screen: 'PaymentReceiptDetail';
+      params: OrdersStackParamList['PaymentReceiptDetail'];
+    };
 
 declare global {
   namespace ReactNavigation {

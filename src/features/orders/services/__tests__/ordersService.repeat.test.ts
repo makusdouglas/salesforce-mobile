@@ -19,8 +19,21 @@
  *     orderIds (no-dedupe edge case).
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+ 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
+import { generateId } from '@/data/ids';
+import { ordersRepository } from '@/data/repositories/ordersRepository';
+import { orderItemsRepository } from '@/data/repositories/orderItemsRepository';
+import { productVariantsRepository } from '@/data/repositories/productVariantsRepository';
+import { productsRepository } from '@/data/repositories/productsRepository';
+
+import {
+  AllItemsUnavailableError,
+  CannotRepeatDraftError,
+  OrderNotFoundError,
+  ordersService,
+} from '../ordersService';
 
 // ---------- database.write & collection mocks ----------
 type RecordCallback = (r: Record<string, unknown>) => void;
@@ -62,19 +75,6 @@ jest.mock('@/data/repositories/productVariantsRepository', () => ({
 jest.mock('@/data/repositories/productsRepository', () => ({
   productsRepository: { findById: jest.fn() },
 }));
-
-import { generateId } from '@/data/ids';
-import { ordersRepository } from '@/data/repositories/ordersRepository';
-import { orderItemsRepository } from '@/data/repositories/orderItemsRepository';
-import { productVariantsRepository } from '@/data/repositories/productVariantsRepository';
-import { productsRepository } from '@/data/repositories/productsRepository';
-
-import {
-  AllItemsUnavailableError,
-  CannotRepeatDraftError,
-  OrderNotFoundError,
-  ordersService,
-} from '../ordersService';
 
 const orders = ordersRepository as jest.Mocked<typeof ordersRepository>;
 const items = orderItemsRepository as jest.Mocked<typeof orderItemsRepository>;

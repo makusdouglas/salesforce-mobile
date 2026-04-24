@@ -30,7 +30,8 @@
       "expo-secure-store",
       "expo-local-authentication",
       "expo-mail-composer",
-      "expo-sharing"
+      "expo-sharing",
+      "@react-native-community/datetimepicker"
     ]
   }
 }

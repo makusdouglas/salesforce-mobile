@@ -53,12 +53,29 @@ export type ClientFilterState = {
 
 export type OrderHistoryStatus = 'draft' | 'sent' | 'canceled';
 
+/**
+ * 012-payment-receipts: payment status derived from the order's receipts
+ * against its total. Null for non-sent orders (draft, canceled) — they
+ * don't have a payment expectation.
+ *
+ *   - 'paid'    — sum(receipts) >= total
+ *   - 'partial' — 0 < sum(receipts) < total
+ *   - 'pending' — sum(receipts) === 0 on a sent order
+ *   - 'adjust'  — sum(receipts) > total (overpayment) OR < 0 (over-correction);
+ *                 seller needs to reconcile with a correction
+ */
+export type OrderPaymentStatus = 'paid' | 'partial' | 'pending' | 'adjust';
+
 export type OrderHistoryRowDTO = {
   readonly id: string;
   readonly createdAtMs: number;
   readonly status: OrderHistoryStatus;
   readonly total: number;
   readonly itemCount: number;
+  /** 012-payment-receipts: sum of receipts.amount. 0 when no receipts. */
+  readonly received: number;
+  /** 012-payment-receipts: null for draft / canceled (no payment expectation). */
+  readonly paymentStatus: OrderPaymentStatus | null;
 };
 
 export type ActiveSalespersonState =

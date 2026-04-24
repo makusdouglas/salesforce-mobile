@@ -4,14 +4,14 @@
 
 // Shim the transitive adapter load (database.ts imports the real SQLite
 // adapter which needs a native module unavailable under node/jest).
-jest.mock('@/data/database', () => ({ database: { write: (fn: () => unknown) => fn(), get: () => ({}) } }));
-
 import {
   OrderNumberOverflowError,
   allocateNextNumber,
   formatOrderNumber,
   parseOrderNumber,
 } from './allocateNextOrderNumber';
+
+jest.mock('@/data/database', () => ({ database: { write: (fn: () => unknown) => fn(), get: () => ({}) } }));
 
 describe('formatOrderNumber', () => {
   test.each([

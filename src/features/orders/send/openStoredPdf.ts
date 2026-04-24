@@ -2,7 +2,7 @@
 // sent order. OrderSent and OrderSummary (status=sent) both call this so
 // the FR-017 regeneration branch is never duplicated.
 
-// eslint-disable-next-line import/no-unresolved -- subpath provided by expo-file-system
+ 
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 

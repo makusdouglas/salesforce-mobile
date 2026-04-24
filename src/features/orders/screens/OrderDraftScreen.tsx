@@ -100,7 +100,7 @@ export function OrderDraftScreen({ navigation, route }: Props) {
       .then(() => navigation.getParent()?.navigate('HomePlaceholder'))
       .catch((err: unknown) => {
                   // 010-repeat-last-order debug: previously swallowed silently.
-                  // eslint-disable-next-line no-console
+                   
                   console.warn('[OrderDraft] mutation failed:', err);
                 });
   };
@@ -165,7 +165,7 @@ export function OrderDraftScreen({ navigation, route }: Props) {
                   .updateLineQty({ orderItemId: line.id, quantity: next })
                   .catch((err: unknown) => {
                   // 010-repeat-last-order debug: previously swallowed silently.
-                  // eslint-disable-next-line no-console
+                   
                   console.warn('[OrderDraft] mutation failed:', err);
                 })
               }
@@ -174,7 +174,7 @@ export function OrderDraftScreen({ navigation, route }: Props) {
                   .removeLine({ orderItemId: line.id })
                   .catch((err: unknown) => {
                   // 010-repeat-last-order debug: previously swallowed silently.
-                  // eslint-disable-next-line no-console
+                   
                   console.warn('[OrderDraft] mutation failed:', err);
                 })
               }
@@ -201,7 +201,7 @@ export function OrderDraftScreen({ navigation, route }: Props) {
                       })
                       .catch((err: unknown) => {
                   // 010-repeat-last-order debug: previously swallowed silently.
-                  // eslint-disable-next-line no-console
+                   
                   console.warn('[OrderDraft] mutation failed:', err);
                 })
                   }
@@ -216,7 +216,7 @@ export function OrderDraftScreen({ navigation, route }: Props) {
                         })
                         .catch((err: unknown) => {
                   // 010-repeat-last-order debug: previously swallowed silently.
-                  // eslint-disable-next-line no-console
+                   
                   console.warn('[OrderDraft] mutation failed:', err);
                 })
                     }

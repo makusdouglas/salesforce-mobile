@@ -6,6 +6,14 @@ import {
   OrderSentScreen,
   OrderSummaryScreen,
 } from '@/features/orders';
+// 012-payment-receipts: three receipts screens registered below. The
+// screens are Phase-1 placeholders; real implementations land in Phases
+// 3–6.
+import {
+  OrderReceiptsScreen,
+  PaymentReceiptDetailScreen,
+  PaymentReceiptFormScreen,
+} from '@/features/orders/receipts';
 
 import type { OrdersStackParamList } from './types';
 
@@ -26,6 +34,13 @@ export function OrdersStack() {
         component={OrderSentScreen}
         options={{ gestureEnabled: false, headerBackVisible: false }}
       />
+      <Stack.Screen name="OrderReceipts" component={OrderReceiptsScreen} />
+      <Stack.Screen
+        name="PaymentReceiptForm"
+        component={PaymentReceiptFormScreen}
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen name="PaymentReceiptDetail" component={PaymentReceiptDetailScreen} />
     </Stack.Navigator>
   );
 }

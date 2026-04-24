@@ -11,8 +11,22 @@
  *     VariantNotFoundError)
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+ 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
+import { ordersRepository } from '@/data/repositories/ordersRepository';
+import { orderItemsRepository } from '@/data/repositories/orderItemsRepository';
+import { productVariantsRepository } from '@/data/repositories/productVariantsRepository';
+
+import {
+  AlreadyTerminalError,
+  EmptyDraftError,
+  LineNotFoundError,
+  OrderNotDraftError,
+  OrderNotFoundError,
+  VariantNotFoundError,
+  ordersService,
+} from './ordersService';
 
 // 010-repeat-last-order: ordersService now imports `database` directly so
 // that repeat() can run multi-row writes inside a single database.write().
@@ -52,20 +66,6 @@ jest.mock('@/data/repositories/orderItemsRepository', () => ({
 jest.mock('@/data/repositories/productVariantsRepository', () => ({
   productVariantsRepository: { findById: jest.fn() },
 }));
-
-import { ordersRepository } from '@/data/repositories/ordersRepository';
-import { orderItemsRepository } from '@/data/repositories/orderItemsRepository';
-import { productVariantsRepository } from '@/data/repositories/productVariantsRepository';
-
-import {
-  AlreadyTerminalError,
-  EmptyDraftError,
-  LineNotFoundError,
-  OrderNotDraftError,
-  OrderNotFoundError,
-  VariantNotFoundError,
-  ordersService,
-} from './ordersService';
 
 const orders = ordersRepository as jest.Mocked<typeof ordersRepository>;
 const items = orderItemsRepository as jest.Mocked<typeof orderItemsRepository>;

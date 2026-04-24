@@ -122,9 +122,33 @@ describe('deriveOrderHistoryRow', () => {
 describe('sortByRecentFirst', () => {
   test('orders rows by createdAtMs descending', () => {
     const rows = [
-      { id: 'a', createdAtMs: 1, status: 'draft', total: 0, itemCount: 0 },
-      { id: 'b', createdAtMs: 3, status: 'sent', total: 0, itemCount: 0 },
-      { id: 'c', createdAtMs: 2, status: 'canceled', total: 0, itemCount: 0 },
+      {
+        id: 'a',
+        createdAtMs: 1,
+        status: 'draft',
+        total: 0,
+        itemCount: 0,
+        received: 0,
+        paymentStatus: null,
+      },
+      {
+        id: 'b',
+        createdAtMs: 3,
+        status: 'sent',
+        total: 0,
+        itemCount: 0,
+        received: 0,
+        paymentStatus: 'pending',
+      },
+      {
+        id: 'c',
+        createdAtMs: 2,
+        status: 'canceled',
+        total: 0,
+        itemCount: 0,
+        received: 0,
+        paymentStatus: null,
+      },
     ] as const;
     const sorted = sortByRecentFirst(rows);
     expect(sorted.map((r) => r.id)).toEqual(['b', 'c', 'a']);
@@ -132,5 +156,91 @@ describe('sortByRecentFirst', () => {
 
   test('empty input returns empty', () => {
     expect(sortByRecentFirst([])).toEqual([]);
+  });
+});
+
+describe('deriveOrderHistoryRow — payment status (012-payment-receipts)', () => {
+  const sent: OrderLike = {
+    id: 'o-sent',
+    createdAtMs: 1,
+    sentAtMs: 2,
+    canceledAtMs: null,
+    status: 'sent',
+    discountAmount: 0,
+  };
+  const items = [item(1, 100)]; // total = 100
+
+  test('no receipts on a sent order → pending, received=0', () => {
+    const row = deriveOrderHistoryRow(sent, items, []);
+    expect(row.received).toBe(0);
+    expect(row.paymentStatus).toBe('pending');
+  });
+
+  test('partial payment → partial', () => {
+    const row = deriveOrderHistoryRow(sent, items, [{ amount: 30 }]);
+    expect(row.received).toBe(30);
+    expect(row.paymentStatus).toBe('partial');
+  });
+
+  test('exact payment → paid (EPS tolerance)', () => {
+    const row = deriveOrderHistoryRow(sent, items, [{ amount: 100 }]);
+    expect(row.paymentStatus).toBe('paid');
+  });
+
+  test('overpayment → adjust', () => {
+    const row = deriveOrderHistoryRow(sent, items, [{ amount: 150 }]);
+    expect(row.paymentStatus).toBe('adjust');
+  });
+
+  test('over-correction (received < 0) → adjust', () => {
+    const row = deriveOrderHistoryRow(sent, items, [
+      { amount: 10 },
+      { amount: -50 },
+    ]);
+    expect(row.received).toBe(-40);
+    expect(row.paymentStatus).toBe('adjust');
+  });
+
+  test('multiple receipts summing to exactly total → paid', () => {
+    const row = deriveOrderHistoryRow(sent, items, [
+      { amount: 60 },
+      { amount: 40 },
+    ]);
+    expect(row.received).toBe(100);
+    expect(row.paymentStatus).toBe('paid');
+  });
+
+  test('correction bringing total to exact → paid', () => {
+    // 60 + 50 − 10 = 100
+    const row = deriveOrderHistoryRow(sent, items, [
+      { amount: 60 },
+      { amount: 50 },
+      { amount: -10 },
+    ]);
+    expect(row.paymentStatus).toBe('paid');
+  });
+
+  test('drafts ignore receipts (paymentStatus null)', () => {
+    const row = deriveOrderHistoryRow(
+      { ...sent, status: 'draft' },
+      items,
+      [{ amount: 100 }],
+    );
+    expect(row.paymentStatus).toBeNull();
+  });
+
+  test('canceled ignores receipts (paymentStatus null)', () => {
+    const row = deriveOrderHistoryRow(
+      { ...sent, status: 'canceled' },
+      items,
+      [{ amount: 100 }],
+    );
+    expect(row.paymentStatus).toBeNull();
+  });
+
+  test('omitting receipts yields received=0 and status=pending for sent', () => {
+    const row = deriveOrderHistoryRow(sent, items);
+    expect(row.received).toBe(0);
+    expect(row.paymentStatus).toBe('pending');
   });
 });

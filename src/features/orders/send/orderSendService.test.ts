@@ -4,6 +4,20 @@
 // just runs fn() — we assert side-effect ordering via the mocks, not via a
 // real SQLite instance.
 
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+
+import { clientsRepository } from '@/data/repositories/clientsRepository';
+import { orderItemsRepository } from '@/data/repositories/orderItemsRepository';
+import { ordersRepository } from '@/data/repositories/ordersRepository';
+import { productVariantsRepository } from '@/data/repositories/productVariantsRepository';
+import { productsRepository } from '@/data/repositories/productsRepository';
+import { salespeopleRepository } from '@/data/repositories/salespeopleRepository';
+
+import { allocateNextOrderNumber } from './allocateNextOrderNumber';
+import { orderSendService } from './orderSendService';
+
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: 'file:///doc/',
   cacheDirectory: 'file:///cache/',
@@ -49,20 +63,6 @@ jest.mock('./allocateNextOrderNumber', () => ({
   ...jest.requireActual('./allocateNextOrderNumber'),
   allocateNextOrderNumber: jest.fn(),
 }));
-
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-
-import { clientsRepository } from '@/data/repositories/clientsRepository';
-import { orderItemsRepository } from '@/data/repositories/orderItemsRepository';
-import { ordersRepository } from '@/data/repositories/ordersRepository';
-import { productVariantsRepository } from '@/data/repositories/productVariantsRepository';
-import { productsRepository } from '@/data/repositories/productsRepository';
-import { salespeopleRepository } from '@/data/repositories/salespeopleRepository';
-
-import { allocateNextOrderNumber } from './allocateNextOrderNumber';
-import { orderSendService } from './orderSendService';
 
 function makeOrder(over: Record<string, unknown> = {}): any {
   const state: Record<string, unknown> = {

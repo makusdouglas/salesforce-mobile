@@ -1,4 +1,8 @@
-import type { OrderHistoryRowDTO, OrderHistoryStatus } from '../types';
+import type {
+  OrderHistoryRowDTO,
+  OrderHistoryStatus,
+  OrderPaymentStatus,
+} from '../types';
 
 export type OrderLike = {
   readonly id: string;
@@ -15,20 +19,51 @@ export type OrderItemLike = {
   readonly discountAmount: number;
 };
 
+/** 012-payment-receipts: one receipt amount contribution to the order. */
+export type ReceiptLike = {
+  readonly amount: number;
+};
+
+/**
+ * 012-payment-receipts: derive payment status from received-vs-total.
+ * Null for non-sent orders — they don't carry a payment expectation.
+ */
+function derivePaymentStatus(
+  status: OrderHistoryStatus,
+  total: number,
+  received: number,
+): OrderPaymentStatus | null {
+  if (status !== 'sent') return null;
+  // Tolerance in case floats drift. Unit: BRL decimal; 1 cent = 0.01.
+  const EPS = 0.005;
+  if (received < 0) return 'adjust';
+  if (received > total + EPS) return 'adjust';
+  if (received >= total - EPS) return 'paid';
+  if (received > 0) return 'partial';
+  return 'pending';
+}
+
 /**
  * Pure derivation per research R-004:
  *   subtotal = Σ (q × p − item.discount)
  *   total    = max(0, subtotal − order.discount)
+ *
+ * 012-payment-receipts: optional `receipts` param folds the order's payment
+ * history into `received` + `paymentStatus`. Omitting it keeps the old
+ * behavior (received=0, paymentStatus=null).
  */
 export function deriveOrderHistoryRow(
   order: OrderLike,
   items: readonly OrderItemLike[],
+  receipts: readonly ReceiptLike[] = [],
 ): OrderHistoryRowDTO {
   const subtotal = items.reduce(
     (acc, item) => acc + (item.quantity * item.unitPrice - item.discountAmount),
     0,
   );
   const total = Math.max(0, subtotal - order.discountAmount);
+  const received = receipts.reduce((acc, r) => acc + r.amount, 0);
+  const paymentStatus = derivePaymentStatus(order.status, total, received);
   // effectiveAtMs = the timestamp that best represents "when did this order
   // happen" from the salesperson's perspective:
   //   - sent order  → sentAtMs     (when it actually went out)
@@ -48,6 +83,8 @@ export function deriveOrderHistoryRow(
     status: order.status,
     total,
     itemCount: items.length,
+    received,
+    paymentStatus,
   };
 }
 
