@@ -37,12 +37,22 @@ export type OrdersStackParamList = {
   // skipped by the availability gate when the draft was cloned from a past
   // order. The summary renders a non-dismissable notice listing them.
   OrderSummary: { orderId: string; droppedNames?: string[] };
+  // 011-order-email-delivery: terminal confirmation reached after the user
+  // returns from the OS mail/share intent with a SENT outcome.
+  OrderSent: {
+    orderId: string;
+    orderNumber: string;
+    pdfPath: string;
+    recipientEmail: string | null;
+    clientId: string;
+  };
 };
 
 export type OrdersNavigatorParams =
   | { screen: 'OrderDraft'; params: OrdersStackParamList['OrderDraft'] }
   | { screen: 'AddToOrder'; params: OrdersStackParamList['AddToOrder'] }
-  | { screen: 'OrderSummary'; params: OrdersStackParamList['OrderSummary'] };
+  | { screen: 'OrderSummary'; params: OrdersStackParamList['OrderSummary'] }
+  | { screen: 'OrderSent'; params: OrdersStackParamList['OrderSent'] };
 
 declare global {
   namespace ReactNavigation {

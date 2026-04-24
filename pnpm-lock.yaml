@@ -47,9 +47,18 @@ dependencies:
   expo-local-authentication:
     specifier: ^55.0.13
     version: 55.0.13(expo@55.0.15)
+  expo-mail-composer:
+    specifier: ~55.0.13
+    version: 55.0.13(expo@55.0.15)
+  expo-print:
+    specifier: ~55.0.13
+    version: 55.0.13(expo@55.0.15)(react-native@0.83.4)
   expo-secure-store:
     specifier: ^55.0.13
     version: 55.0.13(expo@55.0.15)
+  expo-sharing:
+    specifier: ~55.0.18
+    version: 55.0.18(expo@55.0.15)(react-native@0.83.4)(react@19.2.0)
   expo-status-bar:
     specifier: ~55.0.5
     version: 55.0.5(react-native@0.83.4)(react@19.2.0)
@@ -4455,6 +4464,14 @@ packages:
       invariant: 2.2.4
     dev: false
 
+  /expo-mail-composer@55.0.13(expo@55.0.15):
+    resolution: {integrity: sha512-XMcP5uosKy1vW63c+8/Gb6FA5VU3W6UQpZGkDNRZQtFj8+F4GGneZVh07wQlFXW1FYvRR+yGfQgzDDLgRdTm8w==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+    dev: false
+
   /expo-manifests@55.0.15(expo@55.0.15)(typescript@5.9.3):
     resolution: {integrity: sha512-p40ftXpgLTFGddFy35MYZMyjm/E6IQdn3l6fBZZ6zeraEzYLt+VLHYsplOL9ccTYvUSWKN9aOWRpoEYpyGVBVw==}
     peerDependencies:
@@ -4496,6 +4513,16 @@ packages:
       react-native: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
     dev: false
 
+  /expo-print@55.0.13(expo@55.0.15)(react-native@0.83.4):
+    resolution: {integrity: sha512-RjQTg9ntBy+Rwhzlp3PQMKN4NWo9GvPxEw7dLyOOhoFusVA5bJqffuEqHLQvlTZeiLlNbga+rJ4NCW21Dy4mLg==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+      react-native: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+    dev: false
+
   /expo-secure-store@55.0.13(expo@55.0.15):
     resolution: {integrity: sha512-I6r0JNO1Fd4o0Gu7Ixiic7s89lqgdUHq17uBH9y1f/AntoyKn71TdtYJH82RgfsBbu5qNVzrwImmvlANyOlITQ==}
     peerDependencies:
@@ -4507,6 +4534,23 @@ packages:
   /expo-server@55.0.7:
     resolution: {integrity: sha512-Cc1btFyPsD9P4DT2xd1pG/uR96TLVMx0W+dPm9Gjk1uDV9xuzvMcUsY7nf9bt4U5pGyWWkCXmPJcKwWfdl51Pw==}
     engines: {node: '>=20.16.0'}
+    dev: false
+
+  /expo-sharing@55.0.18(expo@55.0.15)(react-native@0.83.4)(react@19.2.0):
+    resolution: {integrity: sha512-Tqy4LXRLw/UEg5mT7BKhx8y4ReNz8fVldvhHJV5cesH3kRgEerHkYxVwid2vd7v34KnNp0RH1OqUyDlzZTQ9AQ==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
+    dependencies:
+      '@expo/config-plugins': 55.0.8
+      '@expo/config-types': 55.0.5
+      '@expo/plist': 0.5.2
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+      react: 19.2.0
+      react-native: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+    transitivePeerDependencies:
+      - supports-color
     dev: false
 
   /expo-status-bar@55.0.5(react-native@0.83.4)(react@19.2.0):

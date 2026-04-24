@@ -22,6 +22,12 @@ export type OrderHistoryListProps = {
    * to the row whose per-row ↺ was just blocked (FR-008).
    */
   readonly renderBelowRow?: (row: OrderHistoryRowDTO) => ReactNode;
+  /**
+   * 011-order-email-delivery: optional row tap handler. Called when the
+   * user taps the body of a row (not the trailing button). Used on sent
+   * rows to re-open the stored PDF.
+   */
+  readonly onRowPress?: (row: OrderHistoryRowDTO) => void;
 };
 
 export function OrderHistoryList({
@@ -29,6 +35,7 @@ export function OrderHistoryList({
   viewport,
   renderRowTrailing,
   renderBelowRow,
+  onRowPress,
 }: OrderHistoryListProps) {
   if (rows.length === 0) {
     return <OrderHistoryEmptyView viewport={viewport} />;
@@ -41,6 +48,7 @@ export function OrderHistoryList({
             row={row}
             viewport={viewport}
             trailing={renderRowTrailing?.(row)}
+            {...(onRowPress ? { onPress: () => onRowPress(row) } : {})}
           />
           {renderBelowRow?.(row)}
         </View>

@@ -30,6 +30,9 @@ export default class Order extends Model {
   @field('sent_at_ms') sentAtMs!: number | null;
   @field('canceled_at_ms') canceledAtMs!: number | null;
   @field('pdf_uri') pdfUri!: string | null;
+  // 011-order-email-delivery: #YYYY-NNNN human-readable order number,
+  // allocated at send-intent time. NULL until the draft is first sent.
+  @field('order_number') orderNumber!: string | null;
 
   @field('server_id') serverId!: string | null;
   @field('updated_at') updatedAt!: number;

@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type Viewport } from '../hooks/useViewport';
 import { type OrderHistoryRowDTO, type OrderHistoryStatus } from '../types';
@@ -12,6 +12,13 @@ export type OrderHistoryRowProps = {
    * (after the total). Callers pass <RepeatIconButton /> here.
    */
   readonly trailing?: ReactNode;
+  /**
+   * 011-order-email-delivery: optional tap handler. When provided, the
+   * entire row becomes pressable (excluding the trailing button, whose
+   * own Pressable wins via event stopPropagation). Used on sent rows to
+   * re-open the stored PDF (FR-016).
+   */
+  readonly onPress?: () => void;
 };
 
 function formatDate(ms: number): string {
@@ -43,19 +50,13 @@ const STATUS: Record<OrderHistoryStatus, StatusStyle> = {
   canceled: { label: 'Cancelado', pillBg: '#FEE2E2', pillFg: '#991B1B' },
 };
 
-export function OrderHistoryRow({ row, viewport, trailing }: OrderHistoryRowProps) {
+export function OrderHistoryRow({ row, viewport, trailing, onPress }: OrderHistoryRowProps) {
   const isTablet = viewport === 'tablet';
   const isCanceled = row.status === 'canceled';
   const meta = STATUS[row.status];
 
-  return (
-    <View
-      style={[
-        styles.row,
-        isTablet && styles.rowTablet,
-        isCanceled && styles.rowCanceled,
-      ]}
-    >
+  const inner = (
+    <>
       <View style={styles.leading}>
         <Text style={[styles.date, isCanceled && styles.dateMuted]}>
           {formatDate(row.createdAtMs)}
@@ -74,6 +75,35 @@ export function OrderHistoryRow({ row, viewport, trailing }: OrderHistoryRowProp
         {formatTotal(row.total)}
       </Text>
       {trailing ?? null}
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.row,
+          isTablet && styles.rowTablet,
+          isCanceled && styles.rowCanceled,
+          pressed && styles.rowPressed,
+        ]}
+      >
+        {inner}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.row,
+        isTablet && styles.rowTablet,
+        isCanceled && styles.rowCanceled,
+      ]}
+    >
+      {inner}
     </View>
   );
 }
@@ -99,6 +129,9 @@ const styles = StyleSheet.create({
   rowCanceled: {
     backgroundColor: '#FAFAFA',
     opacity: 0.85,
+  },
+  rowPressed: {
+    opacity: 0.7,
   },
   leading: {
     flex: 1,

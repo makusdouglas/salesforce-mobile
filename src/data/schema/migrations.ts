@@ -1,4 +1,4 @@
-import { schemaMigrations, addColumns } from '@nozbe/watermelondb/Schema/migrations';
+import { schemaMigrations, addColumns, createTable } from '@nozbe/watermelondb/Schema/migrations';
 
 export const migrations = schemaMigrations({
   migrations: [
@@ -30,6 +30,28 @@ export const migrations = schemaMigrations({
         addColumns({
           table: 'order_items',
           columns: [{ name: 'discount_mode', type: 'string' }],
+        }),
+      ],
+    },
+    {
+      // 011-order-email-delivery: adds order_number to orders and creates
+      // the local-only order_number_counters table for the per-year
+      // human-readable #YYYY-NNNN allocator. pdf_uri already exists from
+      // v3; this feature populates it on send.
+      toVersion: 4,
+      steps: [
+        addColumns({
+          table: 'orders',
+          columns: [{ name: 'order_number', type: 'string', isOptional: true, isIndexed: true }],
+        }),
+        createTable({
+          name: 'order_number_counters',
+          columns: [
+            { name: 'year', type: 'number' },
+            { name: 'next_value', type: 'number' },
+            { name: 'server_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'updated_at', type: 'number' },
+          ],
         }),
       ],
     },

@@ -1,0 +1,31 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/011-order-email-delivery/design",
+  "screens": [
+    {
+      "name": "OrderSummary / Phone",
+      "frame_id": "Z36e3",
+      "screenshot": "specs/011-order-email-delivery/design/order-summary-phone.png"
+    },
+    {
+      "name": "OrderSummary / Tablet",
+      "frame_id": "JDXoD",
+      "screenshot": "specs/011-order-email-delivery/design/order-summary-tablet.png"
+    },
+    {
+      "name": "OrderSent / Phone",
+      "frame_id": "K99dc",
+      "screenshot": "specs/011-order-email-delivery/design/order-sent-phone.png"
+    },
+    {
+      "name": "OrderSent / Tablet",
+      "frame_id": "qWpse",
+      "screenshot": "specs/011-order-email-delivery/design/order-sent-tablet.png"
+    },
+    {
+      "name": "PDF Template / A4",
+      "frame_id": "6iIjz",
+      "screenshot": "specs/011-order-email-delivery/design/pdf-template-a4.png"
+    }
+  ]
+}

@@ -3,24 +3,25 @@
 // the four-row breakdown.
 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { OrdersStackParamList } from '@/app/navigation/types';
+import { clientsRepository } from '@/data/repositories/clientsRepository';
 
 import { DiscountControl } from '../components/DiscountControl';
 import { DroppedItemsNotice } from '../components/DroppedItemsNotice';
+import { SendHint } from '../components/SendHint';
 import { TotalsBreakdown } from '../components/TotalsBreakdown';
 import { formatBRL } from '../formatting/formatBRL';
 import { useDraftOrder } from '../hooks/useDraftOrder';
 import { useOrderItems } from '../hooks/useOrderItems';
 import { useOrderTotals } from '../hooks/useOrderTotals';
 import { useViewport } from '../hooks/useViewport';
-import {
-  EmptyDraftError,
-  ordersService,
-} from '../services/ordersService';
+import { isLikelyEmail } from '../send/clientSlug';
+import { useSendOrder } from '../send/useSendOrder';
+import { ordersService } from '../services/ordersService';
 import type { DiscountInput } from '../totals/types';
 
 type Props = NativeStackScreenProps<OrdersStackParamList, 'OrderSummary'>;
@@ -36,6 +37,26 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
 
   const [sendError, setSendError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // 011-order-email-delivery: pull the client's email so the SendHint and
+  // the send button label can branch on it. One-shot fetch (email doesn't
+  // change mid-session); a full observation would be overkill here.
+  const [clientEmail, setClientEmail] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    if (!order?.clientId) return;
+    void clientsRepository
+      .findById(order.clientId)
+      .then((c) => {
+        if (!cancelled) setClientEmail(c?.email ?? null);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [order?.clientId]);
+
+  const { send: runSend } = useSendOrder();
 
   if (error !== null) {
     return (
@@ -66,14 +87,53 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
     setSubmitting(true);
     setSendError(null);
     try {
-      await ordersService.send({ orderId });
-      navigation.getParent()?.navigate('HomePlaceholder');
-    } catch (err) {
-      if (err instanceof EmptyDraftError) {
-        setSendError('O rascunho está vazio. Adicione pelo menos um item.');
-      } else {
-        setSendError(err instanceof Error ? err.message : String(err));
+      const result = await runSend(orderId);
+      if (result.kind === 'sent') {
+        // Reset the OrdersStack so the whole draft→summary→sent chain is
+        // replaced with a single OrderSent entry. Prevents the native back
+        // button from returning the salesperson to the draft editor.
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'OrderSent',
+              params: {
+                orderId,
+                orderNumber: result.orderNumber,
+                pdfPath: result.pdfPath,
+                recipientEmail: result.recipientEmail,
+                clientId: order.clientId,
+              },
+            },
+          ],
+        });
+        return;
       }
+      if (result.kind === 'cancelled') {
+        // Salesperson dismissed the share sheet; draft stays intact.
+        setSubmitting(false);
+        return;
+      }
+      switch (result.reason) {
+        case 'empty_draft':
+          setSendError('O rascunho está vazio. Adicione pelo menos um item.');
+          break;
+        case 'not_draft':
+          setSendError('Este pedido já foi enviado ou cancelado.');
+          break;
+        case 'not_found':
+          setSendError('Pedido não encontrado.');
+          break;
+        case 'pdf_failed':
+          setSendError('Não foi possível gerar o PDF. Tente novamente.');
+          break;
+        case 'intent_unavailable':
+          setSendError('Este dispositivo não tem app de email ou compartilhamento configurado.');
+          break;
+      }
+      setSubmitting(false);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : String(err));
       setSubmitting(false);
     }
   };
@@ -121,7 +181,10 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
         <View style={styles.itemsCard}>
           <View style={styles.itemsHeader}>
             <Text style={styles.itemsHeaderText}>{itemCount} itens</Text>
-            <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+            <Pressable
+              onPress={() => navigation.navigate('OrderDraft', { orderId })}
+              hitSlop={8}
+            >
               <Text style={styles.itemsHeaderLink}>Editar</Text>
             </Pressable>
           </View>
@@ -190,6 +253,8 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
             ℹ Status: draft → sent ao enviar
           </Text>
         </View>
+
+        <SendHint recipientEmail={clientEmail} itemCount={itemCount} />
       </ScrollView>
 
       <View style={[styles.footer, isTablet && styles.footerTablet]}>
@@ -217,7 +282,9 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
             pressed && canSend && styles.pressed,
           ]}
         >
-          <Text style={styles.footerBtnPrimaryText}>Enviar pedido</Text>
+          <Text style={styles.footerBtnPrimaryText}>
+            {isLikelyEmail(clientEmail) ? 'Enviar por email' : 'Compartilhar PDF'}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>

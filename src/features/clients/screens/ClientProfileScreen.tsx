@@ -1,10 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+import { ConfirmModal } from '@/app/ui/modal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
 import { useRepeatOrder } from '@/features/orders/hooks/useRepeatOrder';
+import { openStoredPdf } from '@/features/orders/send/openStoredPdf';
 import { SyncStatusIndicator } from '@/features/sync';
 
 import { AllUnavailableNotice } from '../components/AllUnavailableNotice';
@@ -50,6 +53,7 @@ export function ClientProfileScreen({ navigation, route }: Props) {
   const { repeat } = useRepeatOrder();
   const [blocked, setBlocked] = useState<BlockedKey | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   // 009-order-assembly: "Novo pedido em branco" enters the OrdersStack.
   const handleNewOrder = () =>
@@ -190,6 +194,29 @@ export function ClientProfileScreen({ navigation, route }: Props) {
             <AllUnavailableNotice onDismiss={() => setBlocked(null)} />
           ) : null
         }
+        onRowPress={(row) => {
+          // Tap dispatch by status:
+          //   draft → resume the draft in the editor (OrderDraft screen).
+          //   sent  → open the stored PDF (011-order-email-delivery US3;
+          //           regenerate from persisted order_number if missing —
+          //           FR-017). Errors are surfaced via Alert so a silent
+          //           failure doesn't look like the row is ignoring the tap.
+          //   canceled → no-op (row is visually dim via the existing
+          //           rowCanceled style).
+          if (row.status === 'draft') {
+            navigation.navigate('Orders', {
+              screen: 'OrderDraft',
+              params: { orderId: row.id },
+            });
+            return;
+          }
+          if (row.status === 'sent') {
+            void openStoredPdf(row.id).catch((err: unknown) => {
+              const msg = err instanceof Error ? err.message : String(err);
+              setPdfError(msg);
+            });
+          }
+        }}
       />
     </View>
   );
@@ -257,6 +284,13 @@ export function ClientProfileScreen({ navigation, route }: Props) {
           <View style={styles.phoneCtaBar}>{cta}</View>
         </>
       )}
+      <ConfirmModal
+        open={pdfError !== null}
+        title="Não foi possível abrir o PDF"
+        body={pdfError ?? ''}
+        primaryLabel="OK"
+        onPrimary={() => setPdfError(null)}
+      />
     </SafeAreaView>
   );
 }
