@@ -1,7 +1,7 @@
+import { derivePaymentStatus } from '../../orders/payment/derivePaymentStatus';
 import type {
   OrderHistoryRowDTO,
   OrderHistoryStatus,
-  OrderPaymentStatus,
 } from '../types';
 
 export type OrderLike = {
@@ -25,25 +25,6 @@ export type ReceiptLike = {
 };
 
 /**
- * 012-payment-receipts: derive payment status from received-vs-total.
- * Null for non-sent orders — they don't carry a payment expectation.
- */
-function derivePaymentStatus(
-  status: OrderHistoryStatus,
-  total: number,
-  received: number,
-): OrderPaymentStatus | null {
-  if (status !== 'sent') return null;
-  // Tolerance in case floats drift. Unit: BRL decimal; 1 cent = 0.01.
-  const EPS = 0.005;
-  if (received < 0) return 'adjust';
-  if (received > total + EPS) return 'adjust';
-  if (received >= total - EPS) return 'paid';
-  if (received > 0) return 'partial';
-  return 'pending';
-}
-
-/**
  * Pure derivation per research R-004:
  *   subtotal = Σ (q × p − item.discount)
  *   total    = max(0, subtotal − order.discount)
@@ -63,7 +44,11 @@ export function deriveOrderHistoryRow(
   );
   const total = Math.max(0, subtotal - order.discountAmount);
   const received = receipts.reduce((acc, r) => acc + r.amount, 0);
-  const paymentStatus = derivePaymentStatus(order.status, total, received);
+  const paymentStatus = derivePaymentStatus({
+    status: order.status,
+    total,
+    received,
+  });
   // effectiveAtMs = the timestamp that best represents "when did this order
   // happen" from the salesperson's perspective:
   //   - sent order  → sentAtMs     (when it actually went out)
