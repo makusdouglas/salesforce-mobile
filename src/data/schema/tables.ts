@@ -12,7 +12,7 @@ const syncColumns = [
 ];
 
 export const schema = appSchema({
-  version: 4,
+  version: 5,
   tables: [
     tableSchema({
       name: 'salespeople',
@@ -111,8 +111,21 @@ export const schema = appSchema({
         { name: 'amount', type: 'number' },
         { name: 'method', type: 'string' },
         { name: 'received_at_ms', type: 'number' },
+        // 012-payment-receipts (schema v5). image_url is left in place as
+        // dead storage — WatermelonDB migrations cannot rename columns.
+        // New code reads/writes attachment_url instead; there are no v4
+        // rows in the wild that carry a value here.
         { name: 'image_url', type: 'string', isOptional: true },
         { name: 'notes', type: 'string', isOptional: true },
+        // 012-payment-receipts (schema v5). The six new columns below are
+        // append-only metadata introduced for receipt attachments + the
+        // correction-reference self-FK. See data-model.md for semantics.
+        { name: 'attachment_url', type: 'string', isOptional: true },
+        { name: 'attachment_local_path', type: 'string', isOptional: true },
+        { name: 'attachment_mime_type', type: 'string', isOptional: true },
+        { name: 'attachment_size_bytes', type: 'number', isOptional: true },
+        { name: 'attachment_upload_state', type: 'string', isOptional: true },
+        { name: 'correction_of_receipt_id', type: 'string', isOptional: true, isIndexed: true },
         ...syncColumns,
       ],
     }),

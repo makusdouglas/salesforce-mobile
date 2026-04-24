@@ -55,5 +55,41 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      // 012-payment-receipts — widens payment_receipts with attachment
+      // metadata (4 cols) + the correction-reference self-FK.
+      // image_url is kept as legacy dead storage: WatermelonDB cannot
+      // rename columns, so this feature adds `attachment_url` alongside
+      // and stops reading the old column. Supabase-side renames properly
+      // (see supabase/migrations/0012_payment_receipts.sql).
+      //
+      // The PaymentMethod enum value 'card' → 'check' rewrite needs no
+      // client step: enum values are stored as plain strings with no
+      // Watermelon-enforced CHECK, and dev-fixture rows are refreshed on
+      // install. The Postgres-side migration UPDATEs existing rows and
+      // swaps the table constraint.
+      //
+      // received_at_ms intentionally stays un-indexed — MVP row counts
+      // are small (< 5 per order) and observeByOrder sorts in-memory.
+      toVersion: 5,
+      steps: [
+        addColumns({
+          table: 'payment_receipts',
+          columns: [
+            { name: 'attachment_url', type: 'string', isOptional: true },
+            { name: 'attachment_local_path', type: 'string', isOptional: true },
+            { name: 'attachment_mime_type', type: 'string', isOptional: true },
+            { name: 'attachment_size_bytes', type: 'number', isOptional: true },
+            { name: 'attachment_upload_state', type: 'string', isOptional: true },
+            {
+              name: 'correction_of_receipt_id',
+              type: 'string',
+              isOptional: true,
+              isIndexed: true,
+            },
+          ],
+        }),
+      ],
+    },
   ],
 });

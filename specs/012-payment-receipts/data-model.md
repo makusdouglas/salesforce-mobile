@@ -18,7 +18,7 @@ Existing table from feature 002 (skeleton). Migration `0012_payment_receipts` **
 | `attachment_mime_type` | string | yes | no | **new** | One of `image/jpeg`, `image/png`, `image/heic`, `application/pdf`. |
 | `attachment_size_bytes` | integer | yes | no | **new** | After any on-device shrink (`expo-image-manipulator`). |
 | `attachment_upload_state` | string | yes | no | **new** | Enum `pending | synced | failed`, or NULL when no attachment. **Device-local** — excluded from Supabase push. |
-| `correction_of_receipt_id` | string | yes | yes | **new** | Self-FK to `payment_receipts.id`. Populated only by `createCorrection()`. |
+| `correction_of_receipt_id` | string (client) / uuid (server) | yes | yes | **new** | Self-FK to `payment_receipts.id`. Populated only by `createCorrection()`. Client-side is WatermelonDB `string`; server-side MUST be `uuid` to match the PK type (Postgres casts the JSON string to uuid at push time for valid UUIDs). |
 | `notes` | string | yes | no | unchanged | |
 | `server_id` | string | yes | no | unchanged | Sync column. |
 | `created_at` | number | no | no | unchanged | Sync column. |

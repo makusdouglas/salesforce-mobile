@@ -2,9 +2,14 @@
 
 **Audience**: developer setting up a fresh dev environment, or admin configuring a new Supabase project (dev or prod).
 **Stack**: Expo SDK 55 managed workflow, TypeScript strict, WatermelonDB (local), Supabase (remote DB + Auth + Storage), pnpm, EAS Build.
-**Status**: covers features 001 (foundation) → 006 (catalog). Update this file whenever a later feature introduces a new server-side prerequisite.
+**Status**: covers features 001 (foundation) → 012 (payment receipts). Update this file whenever a later feature introduces a new server-side prerequisite.
 
-Run the SQL blocks top-to-bottom in a single SQL Editor session against a fresh Supabase project — everything is `CREATE ... IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS`, so re-running is safe.
+You have **two equivalent paths** to set up the Postgres + Storage side of a fresh project:
+
+- **Consolidated (inline)** — run the SQL blocks in §4 below top-to-bottom in a single Supabase SQL Editor session. Everything is `CREATE ... IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS`, so re-running is safe.
+- **Incremental (per-feature files)** — apply the feature-numbered files in [`supabase/migrations/`](../supabase/migrations/) in order, either via `supabase db push` (CLI) or by opening each file in the SQL Editor. This is the right path for an existing DB that is already on an older feature and needs to advance.
+
+Both paths converge on the same final shape. Do not run both. The per-feature files are also the source of truth for any SQL that changes outside this bootstrap (new columns, new buckets, new policies) — the consolidated §4 is kept in sync as a snapshot for fresh installs.
 
 ---
 
@@ -65,7 +70,7 @@ Then open **SQL Editor → New query** and run the four sections below in order.
 
 ### 4.1. Core tables (7 entities from constitution R2)
 
-Creates the seven business tables with UUID primary keys, foreign keys, indexes, and the **sync-readiness columns** (`updated_at`, `deleted_at`) + **product catalog's `category` column** already included. Brand-new projects get the full schema in one shot.
+Creates the seven business tables with UUID primary keys, foreign keys, indexes, and the **sync-readiness columns** (`updated_at`, `deleted_at`). This snapshot covers **all** schema additions through feature 012: `products.category` (006), `orders.discount_mode` + `orders.canceled_at_ms` + `order_items.discount_mode` (009), `orders.order_number` with a partial-unique index (011), and the `payment_receipts` attachment block + `correction_of_receipt_id` self-FK + `attachment_url` rename + `method = 'check'` allow-list (012). Brand-new projects get the full schema in one shot.
 
 ```sql
 -- Salespeople: one row per user of the app.
@@ -129,16 +134,21 @@ create index if not exists product_variants_updated_at_idx on public.product_var
 create index if not exists product_variants_deleted_at_idx on public.product_variants (deleted_at) where deleted_at is not null;
 
 -- Orders: intent-orders assembled in the field.
+-- 009: discount_mode + canceled_at_ms.
+-- 011: order_number (nullable; unique when non-null via partial index below).
 create table if not exists public.orders (
   id                uuid primary key default gen_random_uuid(),
   client_id         uuid not null references public.clients(id) on delete restrict,
   salesperson_id    uuid not null references public.salespeople(id) on delete restrict,
   status            text not null default 'draft' check (status in ('draft', 'sent', 'canceled')),
   discount_amount   numeric(12, 2) not null default 0 check (discount_amount >= 0),
+  discount_mode     text not null default 'amount' check (discount_mode in ('amount', 'percent')),
   notes             text null,
   created_at_ms     bigint not null,
   sent_at_ms        bigint null,
+  canceled_at_ms    bigint null,
   pdf_uri           text null,
+  order_number      text null,
   updated_at        timestamptz not null default now(),
   deleted_at        timestamptz null
 );
@@ -147,8 +157,14 @@ create index if not exists orders_salesperson_id_idx on public.orders (salespers
 create index if not exists orders_status_idx on public.orders (status);
 create index if not exists orders_updated_at_idx on public.orders (updated_at);
 create index if not exists orders_deleted_at_idx on public.orders (deleted_at) where deleted_at is not null;
+-- Partial unique on non-null order_number so drafts (NULL) can coexist but
+-- two sent orders cannot collide. Sync push catches the violation and the
+-- client allocates the next free number.
+create unique index if not exists orders_order_number_unique_idx
+  on public.orders (order_number) where order_number is not null;
 
 -- Order items: single lines on an order.
+-- 009: discount_mode.
 create table if not exists public.order_items (
   id                   uuid primary key default gen_random_uuid(),
   order_id             uuid not null references public.orders(id) on delete cascade,
@@ -156,6 +172,7 @@ create table if not exists public.order_items (
   quantity             numeric(12, 3) not null default 1 check (quantity > 0),
   unit_price           numeric(12, 2) not null default 0 check (unit_price >= 0),
   discount_amount      numeric(12, 2) not null default 0 check (discount_amount >= 0),
+  discount_mode        text not null default 'amount' check (discount_mode in ('amount', 'percent')),
   updated_at           timestamptz not null default now(),
   deleted_at           timestamptz null
 );
@@ -165,20 +182,29 @@ create index if not exists order_items_updated_at_idx on public.order_items (upd
 create index if not exists order_items_deleted_at_idx on public.order_items (deleted_at) where deleted_at is not null;
 
 -- Payment receipts: append-only payment records.
+-- 012: image_url → attachment_url rename (applied inline here for fresh
+-- projects; existing DBs that shipped 002's image_url get renamed by
+-- 0012_payment_receipts.sql). Method allow-list includes 'check' (from
+-- 012). attachment_url + correction_of_receipt_id are shared server-side
+-- and sync through as regular columns.
 create table if not exists public.payment_receipts (
-  id                uuid primary key default gen_random_uuid(),
-  order_id          uuid not null references public.orders(id) on delete cascade,
-  amount            numeric(12, 2) not null check (amount > 0),
-  method            text not null check (method in ('cash', 'pix', 'transfer', 'card', 'other')),
-  received_at_ms    bigint not null,
-  image_url         text null,
-  notes             text null,
-  updated_at        timestamptz not null default now(),
-  deleted_at        timestamptz null
+  id                         uuid primary key default gen_random_uuid(),
+  order_id                   uuid not null references public.orders(id) on delete cascade,
+  amount                     numeric(12, 2) not null check (amount > 0),
+  method                     text not null constraint payment_receipts_method_check
+                             check (method in ('cash', 'pix', 'transfer', 'check', 'other')),
+  received_at_ms             bigint not null,
+  attachment_url             text null,
+  correction_of_receipt_id   uuid null references public.payment_receipts(id) on delete set null,
+  notes                      text null,
+  updated_at                 timestamptz not null default now(),
+  deleted_at                 timestamptz null
 );
 create index if not exists payment_receipts_order_id_idx on public.payment_receipts (order_id);
 create index if not exists payment_receipts_updated_at_idx on public.payment_receipts (updated_at);
 create index if not exists payment_receipts_deleted_at_idx on public.payment_receipts (deleted_at) where deleted_at is not null;
+create index if not exists payment_receipts_correction_of_idx
+  on public.payment_receipts (correction_of_receipt_id) where correction_of_receipt_id is not null;
 ```
 
 **Notes**:
@@ -317,6 +343,55 @@ create policy "Admin can delete product images"
 
 Rationale for public-read: product images are not secrets; every salesperson sees the same catalog. Public-read simplifies the client (no bearer token on image URLs, no signed-URL expiry to refresh). See 006's [research R10](../specs/006-product-catalog/research.md) for the full justification.
 
+### 4.5. Storage bucket for receipt attachments (feature 012)
+
+Unlike product images, payment-receipt proofs are **private** — each attachment belongs to the seller who authored the parent order. The bucket is created via SQL (no dashboard step needed) and gated by two RLS policies.
+
+```sql
+-- Private bucket (no public read).
+insert into storage.buckets (id, name, public)
+values ('receipt-attachments', 'receipt-attachments', false)
+on conflict (id) do nothing;
+
+-- Path convention: receipt-attachments/<seller_id>/<receipt_id>.<ext>
+-- The seller_id prefix is checked cheaply on the Storage row; the full
+-- join against payment_receipts → orders.seller_id is the authoritative
+-- ownership check. No UPDATE or DELETE policy — attachments are
+-- append-only, mirroring the receipt row itself.
+
+drop policy if exists receipts_attachments_read on storage.objects;
+create policy receipts_attachments_read
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'receipt-attachments'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and exists (
+      select 1
+      from public.payment_receipts r
+      join public.orders o on o.id = r.order_id
+      where o.salesperson_id = auth.uid()
+        and r.id::text = split_part((storage.foldername(name))[2], '.', 1)
+    )
+  );
+
+drop policy if exists receipts_attachments_insert on storage.objects;
+create policy receipts_attachments_insert
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'receipt-attachments'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and exists (
+      select 1
+      from public.payment_receipts r
+      join public.orders o on o.id = r.order_id
+      where o.salesperson_id = auth.uid()
+        and r.id::text = split_part((storage.foldername(name))[2], '.', 1)
+    )
+  );
+```
+
+See 012's [research R7](../specs/012-payment-receipts/research.md) for the path-convention rationale.
+
 ---
 
 ## 5. Verification
@@ -360,6 +435,28 @@ select id, name, public
   from storage.buckets
  where id = 'product-images';
 -- Expected: 1 row, public = true
+
+-- Post-009 + post-011 order columns present.
+select column_name
+  from information_schema.columns
+ where table_schema = 'public'
+   and table_name = 'orders'
+   and column_name in ('discount_mode', 'canceled_at_ms', 'order_number');
+-- Expected: 3 rows.
+
+-- Post-012 payment_receipts shape.
+select column_name
+  from information_schema.columns
+ where table_schema = 'public'
+   and table_name = 'payment_receipts'
+   and column_name in ('attachment_url', 'correction_of_receipt_id');
+-- Expected: 2 rows. Note that image_url should NO LONGER be present.
+
+-- Receipt-attachments bucket exists and is private.
+select id, name, public
+  from storage.buckets
+ where id = 'receipt-attachments';
+-- Expected: 1 row, public = false
 ```
 
 If any check fails, re-run the corresponding sub-section of §4.
@@ -549,6 +646,10 @@ For deep dives, each feature's `contracts/` folder contains the authoritative de
 | Sync server-side schema changes | [specs/005-sync-engine/contracts/supabase-schema.md](../specs/005-sync-engine/contracts/supabase-schema.md) |
 | Product catalog | [specs/006-product-catalog/](../specs/006-product-catalog/) |
 | Catalog server-side changes | [specs/006-product-catalog/contracts/supabase-schema.md](../specs/006-product-catalog/contracts/supabase-schema.md) |
+| Order assembly (discount mode, cancellation) | [specs/009-order-assembly/plan.md](../specs/009-order-assembly/plan.md) |
+| Order email delivery (PDF + order_number) | [specs/011-order-email-delivery/plan.md](../specs/011-order-email-delivery/plan.md) |
+| Payment receipts (attachments, corrections) | [specs/012-payment-receipts/plan.md](../specs/012-payment-receipts/plan.md) |
+| Per-feature server migrations | [supabase/migrations/](../supabase/migrations/) |
 | Constitution (inviolable principles) | [.specify/memory/constitution.md](../.specify/memory/constitution.md) |
 
 ---
@@ -557,4 +658,4 @@ For deep dives, each feature's `contracts/` folder contains the authoritative de
 
 This file is the **single source of truth for setting up a fresh environment**. Each new feature that introduces a server-side prerequisite MUST update §4 (or add a new sub-section) in the same PR as the feature's implementation. Treat it like any other contract — drift between this file and the per-feature `contracts/supabase-schema.md` is a defect.
 
-Last updated: through feature 006 (product catalog).
+Last updated: through feature 012 (payment receipts). Per-feature incremental SQL also available under [`supabase/migrations/`](../supabase/migrations/).

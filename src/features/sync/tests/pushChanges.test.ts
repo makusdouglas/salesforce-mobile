@@ -96,11 +96,26 @@ describe('payload mappers drop sync bookkeeping', () => {
       amount: 100,
       method: 'pix',
       received_at_ms: 123,
-      image_url: null,
+      attachment_url: null,
+      correction_of_receipt_id: null,
       notes: null,
+      // 012-payment-receipts device-local columns — must be stripped
+      // from the outbound payload.
+      attachment_local_path: '/tmp/x.jpg',
+      attachment_mime_type: 'image/jpeg',
+      attachment_size_bytes: 100,
+      attachment_upload_state: 'pending',
     };
     const payload = mapPaymentReceiptWMDBRecordToServerPayload(rec);
     for (const f of syncFields) expect(payload).not.toHaveProperty(f);
+    // Device-local attachment columns MUST NOT travel upstream.
+    expect(payload).not.toHaveProperty('attachment_local_path');
+    expect(payload).not.toHaveProperty('attachment_mime_type');
+    expect(payload).not.toHaveProperty('attachment_size_bytes');
+    expect(payload).not.toHaveProperty('attachment_upload_state');
+    // Shared columns MUST be present.
+    expect(payload).toHaveProperty('attachment_url', null);
+    expect(payload).toHaveProperty('correction_of_receipt_id', null);
   });
 });
 

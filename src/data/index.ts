@@ -41,8 +41,10 @@ export type {
 } from './repositories/orderItemsRepository';
 export type {
   PaymentReceiptCreateInput,
-  PaymentReceiptUpdatePatch,
+  PaymentReceiptCreateCorrectionInput,
+  AttachmentInput,
 } from './repositories/paymentReceiptsRepository';
+export type { AttachmentMimeType, AttachmentUploadState } from './types';
 
 export { supabase } from './supabase';
 

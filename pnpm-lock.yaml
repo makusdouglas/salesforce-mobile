@@ -38,12 +38,21 @@ dependencies:
   expo-dev-client:
     specifier: ^55.0.27
     version: 55.0.27(expo@55.0.15)(typescript@5.9.3)
+  expo-document-picker:
+    specifier: ~55.0.13
+    version: 55.0.13(expo@55.0.15)
   expo-file-system:
     specifier: ^55.0.17
     version: 55.0.17(expo@55.0.15)(react-native@0.83.4)
   expo-font:
     specifier: ^55.0.6
     version: 55.0.6(expo@55.0.15)(react-native@0.83.4)(react@19.2.0)
+  expo-image-manipulator:
+    specifier: ~55.0.15
+    version: 55.0.15(expo@55.0.15)
+  expo-image-picker:
+    specifier: ~55.0.19
+    version: 55.0.19(expo@55.0.15)
   expo-local-authentication:
     specifier: ^55.0.13
     version: 55.0.13(expo@55.0.15)
@@ -4418,6 +4427,14 @@ packages:
       expo-dev-menu-interface: 55.0.2(expo@55.0.15)
     dev: false
 
+  /expo-document-picker@55.0.13(expo@55.0.15):
+    resolution: {integrity: sha512-IhswJElhdzs3fKDEKW8KXYRoFkWGEsXRMYAZT46Yo56zqqy8yQXrczo33RSwD2hFzNQBdLT97SJL9N311UyS3g==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+    dev: false
+
   /expo-file-system@55.0.17(expo@55.0.15)(react-native@0.83.4):
     resolution: {integrity: sha512-d27K1cagUOt2BwxwPka9KW8Znu5kN1tnairozCzzCRZviZFtWnBxwFuJ3KU6MAbav/9UhSMkp5Ve/oZ+SR0UgQ==}
     peerDependencies:
@@ -4439,6 +4456,32 @@ packages:
       fontfaceobserver: 2.3.0
       react: 19.2.0
       react-native: 0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)
+    dev: false
+
+  /expo-image-loader@55.0.0(expo@55.0.15):
+    resolution: {integrity: sha512-NOjp56wDrfuA5aiNAybBIjqIn1IxKeGJ8CECWZncQ/GzjZfyTYAHTCyeApYkdKkMBLHINzI4BbTGSlbCa0fXXQ==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+    dev: false
+
+  /expo-image-manipulator@55.0.15(expo@55.0.15):
+    resolution: {integrity: sha512-AbwC1PHhoJb7OeMlbb52RK/nsTZMAuJDz2RlbDHtrD6zFOKV1LcMomdJqVYCC5v7ILH5qLF01iygpZt54GlydQ==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+      expo-image-loader: 55.0.0(expo@55.0.15)
+    dev: false
+
+  /expo-image-picker@55.0.19(expo@55.0.15):
+    resolution: {integrity: sha512-PqOOfRz7+hbB9IFN0LfNxpJJwuPlUG0Abr0qM3Wc61OJ7FFyuKJ50QJ/fFItzSuoXifET1YIFBiXx5nA8Gkinw==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 55.0.15(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(react-native@0.83.4)(react@19.2.0)(typescript@5.9.3)
+      expo-image-loader: 55.0.0(expo@55.0.15)
     dev: false
 
   /expo-json-utils@55.0.2:

@@ -195,6 +195,14 @@ export function mapOrderItemWMDBRecordToServerPayload(
 }
 
 // ---- PaymentReceipt ----
+//
+// 012-payment-receipts: attachment_url (replaces image_url) and
+// correction_of_receipt_id are sync-visible on both sides. Device-local
+// attachment metadata columns (attachment_local_path,
+// attachment_upload_state, attachment_mime_type, attachment_size_bytes)
+// are EXCLUDED from the outbound payload — they describe local cache
+// state that is meaningless on another installation. Inbound pull
+// initializes them to null so the model's typing stays satisfied.
 
 export function mapPaymentReceiptServerRowToWMDB(row: SupabaseRow): WMDBDirtyRaw {
   return {
@@ -206,8 +214,15 @@ export function mapPaymentReceiptServerRowToWMDB(row: SupabaseRow): WMDBDirtyRaw
       typeof row.received_at_ms === 'number'
         ? row.received_at_ms
         : toMs(String(row.received_at_ms)),
-    image_url: row.image_url ?? null,
+    attachment_url: row.attachment_url ?? null,
+    correction_of_receipt_id: row.correction_of_receipt_id ?? null,
     notes: row.notes ?? null,
+    // Device-local columns: pulls always reset them to null; the local
+    // uploader never runs against rows that originated remotely.
+    attachment_local_path: null,
+    attachment_mime_type: null,
+    attachment_size_bytes: null,
+    attachment_upload_state: null,
   };
 }
 
@@ -219,7 +234,8 @@ export function mapPaymentReceiptWMDBRecordToServerPayload(
     amount: rec.amount,
     method: rec.method,
     received_at_ms: rec.received_at_ms,
-    image_url: rec.image_url ?? null,
+    attachment_url: rec.attachment_url ?? null,
+    correction_of_receipt_id: rec.correction_of_receipt_id ?? null,
     notes: rec.notes ?? null,
   };
 }
