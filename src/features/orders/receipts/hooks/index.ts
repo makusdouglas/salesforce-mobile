@@ -7,3 +7,4 @@ export type {
   UseReceiptFormResult,
   ReceiptFormState,
 } from './useReceiptForm';
+export { useReceipt } from './useReceipt';

@@ -14,6 +14,7 @@ import type { OrdersStackParamList } from '@/app/navigation/types';
 
 import { useViewport } from '../../hooks/useViewport';
 import { openStoredPdf } from '../../send/openStoredPdf';
+import { ReceiptRow } from '../components/ReceiptRow';
 import { useOrderReceipts } from '../hooks/useOrderReceipts';
 import { formatBRL, formatShortDatePt, methodLabel } from '../formatting';
 
@@ -120,56 +121,31 @@ export function OrderReceiptsScreen({ navigation, route }: Props) {
             {receipts.map((r, i) => {
               const isLast = i === receipts.length - 1;
               const isCorrection = r.correctionOfReceiptId !== null;
-              const amountColor = isCorrection
-                ? '#B91C1C'
-                : r.amount < 0
-                  ? '#B91C1C'
-                  : '#0A0A0A';
+              // T043: enrich a correction row with a caption that points at
+              // the original's method + date. If the original is not in the
+              // locally-loaded list (orphan correction — sync pull hasn't
+              // brought it in yet per research R8), correctionCaption is
+              // null and the row falls back to just the raw date.
+              let correctionCaption: string | null = null;
+              if (isCorrection && r.correctionOfReceiptId !== null) {
+                const original = receipts.find((x) => x.id === r.correctionOfReceiptId);
+                if (original !== undefined) {
+                  correctionCaption = `Estorno de ${formatShortDatePt(original.receivedAtMs)} · ${methodLabel(original.method)}`;
+                }
+              }
               return (
-                <Pressable
+                <ReceiptRow
                   key={r.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Recebimento ${formatBRL(r.amount)}`}
-                  onPress={() => handleReceiptPress(r.id)}
-                  style={({ pressed }) => [
-                    styles.row,
-                    !isLast && styles.rowDivider,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <View style={styles.rowLeft}>
-                    <View style={styles.rowTopLine}>
-                      <Text style={[styles.rowAmount, { color: amountColor }]}>
-                        {formatBRL(r.amount)}
-                      </Text>
-                      <View
-                        style={[
-                          styles.methodBadge,
-                          isCorrection && styles.methodBadgeCorrection,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.methodBadgeText,
-                            isCorrection && styles.methodBadgeTextCorrection,
-                          ]}
-                        >
-                          {isCorrection ? 'Correção' : methodLabel(r.method)}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={styles.rowSub}>
-                      {formatShortDatePt(r.receivedAtMs)}
-                      {isCorrection ? ' · correção de recebimento anterior' : ''}
-                    </Text>
-                  </View>
-                  <View style={styles.rowRight}>
-                    {r.attachmentUrl !== null || r.attachmentLocalPath !== null ? (
-                      <Feather name="paperclip" size={16} color="#737373" />
-                    ) : null}
-                    <Feather name="chevron-right" size={18} color="#A3A3A3" />
-                  </View>
-                </Pressable>
+                  id={r.id}
+                  amount={r.amount}
+                  method={r.method}
+                  receivedAtMs={r.receivedAtMs}
+                  hasAttachment={r.attachmentUrl !== null || r.attachmentLocalPath !== null}
+                  isCorrection={isCorrection}
+                  correctionCaption={correctionCaption}
+                  hasDivider={!isLast}
+                  onPress={handleReceiptPress}
+                />
               );
             })}
           </View>
@@ -296,31 +272,6 @@ const styles = StyleSheet.create({
     borderColor: '#E4E4E7',
     overflow: 'hidden',
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 14,
-    gap: 10,
-  },
-  rowDivider: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F5F5F5',
-  },
-  rowLeft: { flex: 1, gap: 4 },
-  rowTopLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rowAmount: { fontSize: 15, fontWeight: '700' },
-  rowSub: { fontSize: 12, color: '#737373' },
-  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  methodBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    backgroundColor: '#EEF2FF',
-  },
-  methodBadgeCorrection: { backgroundColor: '#FEF2F2' },
-  methodBadgeText: { fontSize: 11, fontWeight: '600', color: '#3730A3' },
-  methodBadgeTextCorrection: { color: '#B91C1C' },
   footer: {
     flexDirection: 'row',
     padding: 16,
