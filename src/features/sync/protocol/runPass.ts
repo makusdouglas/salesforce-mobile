@@ -6,6 +6,7 @@ import { authService } from '@/features/auth';
 import { SyncError, type SyncErrorCode } from '../service/errors';
 import { pullChanges } from '../supabase/pullChanges';
 import { pushChanges } from '../supabase/pushChanges';
+import { syncLogger } from '../service/syncLogger';
 
 import { conflictResolver } from './conflictResolver';
 
@@ -21,6 +22,7 @@ export type SyncRunResult =
  * Never rejects — always returns one of the two SyncRunResult shapes.
  */
 export async function runPass(_trigger: SyncTrigger): Promise<SyncRunResult> {
+  syncLogger.log('info', `Sync pass started (${_trigger})`);
   try {
     await synchronize({
       database,
@@ -35,11 +37,16 @@ export async function runPass(_trigger: SyncTrigger): Promise<SyncRunResult> {
         conflictResolver(table, local, remote, resolved),
       sendCreatedAsUpdated: true,
     });
+    syncLogger.log('info', `Sync pass ok (${_trigger})`);
     return { outcome: 'ok' };
   } catch (err) {
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
       console.warn('[sync] runPass failed', err);
     }
+    syncLogger.log('error', `Sync pass failed`, { 
+      error: err instanceof Error ? err.message : String(err),
+      trigger: _trigger 
+    });
     if (err instanceof SyncError) {
       if (err.code === 'AUTH_REJECTED') {
         // Hand off to auth — do NOT retry inside the same pass.
