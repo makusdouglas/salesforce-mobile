@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { AdminStackParamList } from '@/app/navigation/types';
+import { useAdminGate } from '@/features/auth';
 
 import { useAdminSellersLayout } from '../responsive/useAdminSellersLayout';
 import { adminColors, adminFonts, adminRadii } from '../theme';
@@ -24,20 +25,38 @@ export function AdminMenuScreen() {
   const viewport = useAdminSellersLayout();
   const tablet = viewport === 'tablet';
 
-  const cards: Card[] = [
-    {
+  // 016-product-lifecycle-roles — each tile is gated by the role that
+  // its sub-module requires. Tiles are hidden (not disabled) when the
+  // role is absent, per UX6 "hide affordances, don't show ghost tiles".
+  const canProducts = useAdminGate('manage-products');
+  const canSellers = useAdminGate('manage-salespersons');
+  const canUsers = useAdminGate('superuser');
+
+  const cards: Card[] = [];
+  if (canProducts) {
+    cards.push({
       label: 'Produtos',
       description: 'Catálogo, variantes e fotos.',
       icon: 'package',
       onPress: () => nav.navigate('AdminProducts'),
-    },
-    {
+    });
+  }
+  if (canSellers) {
+    cards.push({
       label: 'Vendedores',
       description: 'Criar, editar e desativar contas.',
       icon: 'users',
       onPress: () => nav.navigate('AdminSellersList'),
-    },
-  ];
+    });
+  }
+  if (canUsers) {
+    cards.push({
+      label: 'Usuários & Roles',
+      description: 'Conceder funções admin e gerenciar acesso.',
+      icon: 'shield',
+      onPress: () => nav.navigate('AdminUsersList'),
+    });
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>

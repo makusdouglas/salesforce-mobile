@@ -26,6 +26,10 @@ export type AdminStackParamList = {
   AdminSellerForm:
     | { mode: 'create' }
     | { mode: 'edit'; authUserId: string };
+  // 016-product-lifecycle-roles: users-and-roles module routes.
+  // Both are superuser-only at the navigator level (see AdminStack).
+  AdminUsersList: undefined;
+  AdminUserRolesForm: { userId: string };
 };
 
 export type AuthStackParamList = {

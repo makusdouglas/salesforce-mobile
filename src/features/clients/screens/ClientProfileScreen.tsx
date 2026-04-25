@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ConfirmModal } from '@/app/ui/modal';
 import type { HomeStackParamList } from '@/app/navigation/types';
+import { RepeatOrderDiscontinuedAlert } from '@/features/orders/components/RepeatOrderDiscontinuedAlert';
 import { useRepeatOrder } from '@/features/orders/hooks/useRepeatOrder';
 import { SyncStatusIndicator } from '@/features/sync';
 
@@ -49,10 +50,18 @@ export function ClientProfileScreen({ navigation, route }: Props) {
   const client = useObservableClient(clientId);
   const history = useClientOrderHistory(clientId);
   const lastSent = useLastSentOrderSummary(clientId);
-  const { repeat } = useRepeatOrder();
+  const { repeat, preview } = useRepeatOrder();
   const [blocked, setBlocked] = useState<BlockedKey | null>(null);
   const [busy, setBusy] = useState(false);
   const [repeatTarget, setRepeatTarget] = useState<BlockedKey | null>(null);
+  // 016-product-lifecycle-roles — pre-clone confirmation for repeats
+  // whose source contains discontinued products. null = not shown.
+  const [discontinuedState, setDiscontinuedState] = useState<{
+    sourceOrderId: string;
+    key: BlockedKey;
+    discontinuedNames: string[];
+    clonableCount: number;
+  } | null>(null);
 
   // 009-order-assembly: "Novo pedido em branco" enters the OrdersStack.
   const handleNewOrder = () =>
@@ -100,12 +109,46 @@ export function ClientProfileScreen({ navigation, route }: Props) {
     if (!repeatTarget) return;
     const target = repeatTarget;
     setRepeatTarget(null);
-    if (target.kind === 'hero' && lastSent) {
-      void runRepeat(lastSent.orderId, target);
-    } else if (target.kind === 'row') {
-      void runRepeat(target.orderId, target);
-    }
+    const sourceOrderId =
+      target.kind === 'hero' ? lastSent?.orderId : target.orderId;
+    if (!sourceOrderId) return;
+    // 016 — preview first; if any line is discontinued, route through
+    // RepeatOrderDiscontinuedAlert (FR-012). Otherwise clone directly.
+    void (async () => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        const outcome = await preview(sourceOrderId);
+        if (outcome.kind === 'error') return;
+        if (outcome.kind === 'resume') {
+          await runRepeat(sourceOrderId, target);
+          return;
+        }
+        if (outcome.preview.discontinuedProductNames.length > 0) {
+          setDiscontinuedState({
+            sourceOrderId,
+            key: target,
+            discontinuedNames: outcome.preview.discontinuedProductNames,
+            clonableCount: outcome.preview.clonableCount,
+          });
+          return;
+        }
+        // No discontinued lines — proceed as before.
+        await runRepeat(sourceOrderId, target);
+      } finally {
+        setBusy(false);
+      }
+    })();
   };
+
+  const confirmDiscontinuedRepeat = () => {
+    if (!discontinuedState) return;
+    const { sourceOrderId, key } = discontinuedState;
+    setDiscontinuedState(null);
+    void runRepeat(sourceOrderId, key);
+  };
+
+  const cancelDiscontinuedRepeat = () => setDiscontinuedState(null);
 
   if (client === null) {
     return (
@@ -317,6 +360,14 @@ export function ClientProfileScreen({ navigation, route }: Props) {
         primaryLabel="Criar rascunho"
         onCancel={cancelRepeat}
         onPrimary={confirmRepeat}
+      />
+      <RepeatOrderDiscontinuedAlert
+        visible={discontinuedState !== null}
+        discontinuedNames={discontinuedState?.discontinuedNames ?? []}
+        clonableCount={discontinuedState?.clonableCount ?? 0}
+        busy={busy}
+        onConfirm={confirmDiscontinuedRepeat}
+        onCancel={cancelDiscontinuedRepeat}
       />
     </SafeAreaView>
   );

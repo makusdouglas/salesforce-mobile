@@ -17,14 +17,22 @@ import type { AdminStackParamList } from '@/app/navigation/types';
 import { ProductRow } from '../components/ProductRow';
 import { useProducts } from '../hooks/useProducts';
 import { useAdminProductsLayout } from '../responsive/useAdminProductsLayout';
+import type { ActiveFilter } from '../service/productsApi';
 import { adminColors, adminFonts, adminRadii } from '../theme';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList, 'AdminProducts'>;
 
+const FILTER_OPTIONS: { value: ActiveFilter; label: string }[] = [
+  { value: 'active', label: 'Ativos' },
+  { value: 'inactive', label: 'Inativos' },
+  { value: 'all', label: 'Todos' },
+];
+
 export function AdminProductsListScreen() {
   const nav = useNavigation<Nav>();
   const viewport = useAdminProductsLayout();
-  const { state, reload } = useProducts();
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('active');
+  const { state, reload } = useProducts(activeFilter);
   const focused = useIsFocused();
   const [query, setQuery] = useState('');
 
@@ -34,10 +42,10 @@ export function AdminProductsListScreen() {
 
   const products = useMemo(() => {
     if (state.status !== 'ready') return [];
-    const trimmed = query.trim().toLowerCase();
+    const trimmed = normalize(query.trim());
     if (trimmed.length === 0) return state.products;
     return state.products.filter((p) => {
-      const hay = `${p.name} ${p.category ?? ''}`.toLowerCase();
+      const hay = normalize(`${p.name} ${p.category ?? ''}`);
       return hay.includes(trimmed);
     });
   }, [state, query]);
@@ -58,17 +66,36 @@ export function AdminProductsListScreen() {
         </Pressable>
       </View>
 
-      {viewport === 'tablet' ? (
-        <View style={styles.searchWrap}>
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Buscar por nome ou categoria"
-            placeholderTextColor={adminColors.textMuted}
-            style={styles.search}
-          />
+      <View style={viewport === 'tablet' ? styles.toolbarTablet : styles.toolbarPhone}>
+        <View style={styles.segment}>
+          {FILTER_OPTIONS.map((opt) => {
+            const selected = activeFilter === opt.value;
+            return (
+              <Pressable
+                key={opt.value}
+                style={[styles.segmentItem, selected && styles.segmentItemSelected]}
+                onPress={() => setActiveFilter(opt.value)}
+              >
+                <Text
+                  style={[
+                    styles.segmentItemText,
+                    selected && styles.segmentItemTextSelected,
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
-      ) : null}
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Buscar por nome ou categoria"
+          placeholderTextColor={adminColors.textMuted}
+          style={styles.search}
+        />
+      </View>
 
       {state.status === 'loading' ? (
         <View style={styles.fillCenter}>
@@ -83,10 +110,19 @@ export function AdminProductsListScreen() {
         </View>
       ) : products.length === 0 ? (
         <View style={styles.fillCenter}>
-          <Text style={styles.emptyTitle}>Nenhum produto ainda</Text>
-          <Text style={styles.emptyHint}>
-            Toque em &quot;Novo&quot; para cadastrar o primeiro produto.
-          </Text>
+          <Text style={styles.emptyTitle}>{emptyTitle(activeFilter, query)}</Text>
+          <Text style={styles.emptyHint}>{emptyHint(activeFilter, query)}</Text>
+          {query.length > 0 || activeFilter !== 'active' ? (
+            <Pressable
+              onPress={() => {
+                setQuery('');
+                setActiveFilter('active');
+              }}
+              style={styles.retry}
+            >
+              <Text style={styles.retryText}>Limpar filtros</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : (
         <FlatList
@@ -108,6 +144,33 @@ export function AdminProductsListScreen() {
       )}
     </SafeAreaView>
   );
+}
+
+function normalize(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '');
+}
+
+function emptyTitle(filter: ActiveFilter, query: string): string {
+  if (query.length > 0) return 'Nenhum produto encontrado';
+  if (filter === 'inactive') return 'Nenhum produto inativo';
+  if (filter === 'all') return 'Nenhum produto ainda';
+  return 'Nenhum produto ativo';
+}
+
+function emptyHint(filter: ActiveFilter, query: string): string {
+  if (query.length > 0) {
+    return 'Ajuste o termo de busca ou limpe os filtros.';
+  }
+  if (filter === 'inactive') {
+    return 'Quando você desativar um produto, ele aparece aqui.';
+  }
+  if (filter === 'all') {
+    return 'Toque em "+ Novo" para cadastrar o primeiro produto.';
+  }
+  return 'Toque em "+ Novo" para cadastrar o primeiro produto.';
 }
 
 const styles = StyleSheet.create({
@@ -145,9 +208,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  searchWrap: { padding: 28, paddingBottom: 0 },
+  toolbarPhone: { padding: 16, paddingBottom: 0, gap: 10 },
+  toolbarTablet: { padding: 28, paddingBottom: 0, gap: 12 },
+  segment: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  segmentItem: {
+    flex: 1,
+    height: 34,
+    borderRadius: adminRadii.control,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: adminColors.stroke,
+  },
+  segmentItemSelected: {
+    backgroundColor: adminColors.textPrimary,
+    borderColor: adminColors.textPrimary,
+  },
+  segmentItemText: {
+    color: adminColors.textPrimary,
+    fontFamily: adminFonts.body,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  segmentItemTextSelected: { color: '#FAFAFA' },
   search: {
-    height: 44,
+    height: 40,
     backgroundColor: adminColors.surface,
     borderRadius: adminRadii.input,
     borderWidth: 1,

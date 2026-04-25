@@ -1,4 +1,9 @@
-import { schemaMigrations, addColumns, createTable } from '@nozbe/watermelondb/Schema/migrations';
+import {
+  addColumns,
+  createTable,
+  schemaMigrations,
+  unsafeExecuteSql,
+} from '@nozbe/watermelondb/Schema/migrations';
 
 export const migrations = schemaMigrations({
   migrations: [
@@ -89,6 +94,50 @@ export const migrations = schemaMigrations({
             },
           ],
         }),
+      ],
+    },
+    {
+      // 016-product-lifecycle-roles — adds `active` (boolean) and
+      // `deactivated_at_ms` (nullable) to products. The invariant
+      //   (active=true  AND deactivated_at_ms IS NULL)
+      //   XOR
+      //   (active=false AND deactivated_at_ms IS NOT NULL)
+      // is enforced at the Postgres layer (see
+      // supabase/migrations/0018_product_lifecycle_and_granular_roles.sql).
+      // Watermelon cannot express a CHECK constraint, so the repository is
+      // responsible for keeping both columns consistent on write. Existing
+      // rows default to active=true via the productsRepository helper that
+      // runs on first app open post-migration; sync pulls overwrite with
+      // server state anyway.
+      toVersion: 6,
+      steps: [
+        addColumns({
+          table: 'products',
+          columns: [
+            { name: 'active', type: 'boolean', isIndexed: true },
+            { name: 'deactivated_at_ms', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
+    {
+      // 016-product-lifecycle-roles — v6 added `active` via addColumns,
+      // which leaves existing rows with NULL (SQLite ALTER TABLE ADD
+      // COLUMN has no default). The seller catalog filter excludes NULL
+      // rows in some Watermelon Q-builder paths, hiding the entire
+      // legacy catalog until the next sync pull touches each row.
+      //
+      // Backfill any NULL → 1 (true) on devices that already migrated
+      // through v6. Idempotent — running on a fresh v5→v7 device is a
+      // no-op because v6's addColumns ran first in the same migration
+      // pass and left rows NULL, then this step flips them to true.
+      // SQLite stores booleans as integers; `1` matches Watermelon's
+      // serialised representation for `true`.
+      toVersion: 7,
+      steps: [
+        unsafeExecuteSql(
+          'UPDATE products SET active = 1 WHERE active IS NULL;',
+        ),
       ],
     },
   ],

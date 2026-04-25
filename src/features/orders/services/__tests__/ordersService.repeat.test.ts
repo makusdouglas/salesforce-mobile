@@ -99,8 +99,11 @@ function liveVariant(id: string, productId: string, price: number) {
   return { id, productId, price, _raw: { _status: 'synced' } } as never;
 }
 
-function liveProduct(id: string, name: string) {
-  return { id, name, _raw: { _status: 'synced' } } as never;
+function liveProduct(id: string, name: string, active = true) {
+  // 016-product-lifecycle-roles — `active` defaults to true so existing
+  // tests keep their meaning. Tests that care about deactivation pass
+  // `active=false` explicitly.
+  return { id, name, active, _raw: { _status: 'synced' } } as never;
 }
 
 function sourceLine(overrides: Record<string, unknown> = {}) {
@@ -323,5 +326,103 @@ describe('repeat — atomicity (rollback lock, R-005)', () => {
     await expect(ordersService.repeat({ sourceOrderId: 'src-1' })).rejects.toThrow('db blew up');
     // All the collection.create calls happened INSIDE the single write call.
     expect(writeMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+// 016-product-lifecycle-roles — discontinued product handling for
+// repeat() and the new previewRepeat().
+describe('repeat — discontinued products (016)', () => {
+  it('drops inactive products and surfaces their names alongside clonable lines', async () => {
+    orders.findById.mockResolvedValueOnce(sourceOrder());
+    items.findByOrder.mockResolvedValueOnce([
+      sourceLine({ productVariantId: 'v-1' }),
+      sourceLine({ productVariantId: 'v-2', id: 'li-2' }),
+    ]);
+    variants.findById
+      .mockResolvedValueOnce(liveVariant('v-1', 'p-1', 10))
+      .mockResolvedValueOnce(liveVariant('v-2', 'p-2', 20));
+    products.findById
+      .mockResolvedValueOnce(liveProduct('p-1', 'Café Pilão 500g', true))
+      .mockResolvedValueOnce(liveProduct('p-2', 'Leite Moça 395g', false)); // discontinued
+
+    const result = await ordersService.repeat({ sourceOrderId: 'src-1' });
+
+    expect(result.droppedProductNames).toEqual(['Leite Moça 395g']);
+    // Only the active product was cloned into a line.
+    expect(lineCreateMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses when EVERY line is inactive (AllItemsUnavailable)', async () => {
+    orders.findById.mockResolvedValueOnce(sourceOrder());
+    items.findByOrder.mockResolvedValueOnce([sourceLine({ productVariantId: 'v-1' })]);
+    variants.findById.mockResolvedValueOnce(liveVariant('v-1', 'p-1', 10));
+    products.findById.mockResolvedValueOnce(liveProduct('p-1', 'Só esse', false));
+
+    await expect(
+      ordersService.repeat({ sourceOrderId: 'src-1' }),
+    ).rejects.toBeInstanceOf(AllItemsUnavailableError);
+    expect(writeMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('previewRepeat', () => {
+  it('separates discontinued from unavailable and counts clonable lines', async () => {
+    orders.findById.mockResolvedValueOnce(sourceOrder());
+    items.findByOrder.mockResolvedValueOnce([
+      sourceLine({ productVariantId: 'v-1', id: 'l1' }),
+      sourceLine({ productVariantId: 'v-2', id: 'l2' }),
+      sourceLine({ productVariantId: 'v-3', id: 'l3' }),
+    ]);
+    variants.findById
+      .mockResolvedValueOnce(liveVariant('v-1', 'p-1', 10))
+      .mockResolvedValueOnce(liveVariant('v-2', 'p-2', 20))
+      // v-3 is soft-deleted — resolves to null-ish to emulate missing.
+      .mockResolvedValueOnce(null as never);
+    products.findById
+      .mockResolvedValueOnce(liveProduct('p-1', 'Keeper', true))
+      .mockResolvedValueOnce(liveProduct('p-2', 'Descontinuado', false));
+
+    const preview = await ordersService.previewRepeat({ sourceOrderId: 'src-1' });
+    expect(preview.clonableCount).toBe(1);
+    expect(preview.discontinuedProductNames).toEqual(['Descontinuado']);
+    expect(preview.unavailableProductNames).toEqual(['Item indisponível']);
+    expect(writeMock).not.toHaveBeenCalled();
+  });
+
+  it('returns all clonable when no product is inactive or missing', async () => {
+    orders.findById.mockResolvedValueOnce(sourceOrder());
+    items.findByOrder.mockResolvedValueOnce([sourceLine({ productVariantId: 'v-1' })]);
+    variants.findById.mockResolvedValueOnce(liveVariant('v-1', 'p-1', 10));
+    products.findById.mockResolvedValueOnce(liveProduct('p-1', 'Keeper', true));
+
+    const preview = await ordersService.previewRepeat({ sourceOrderId: 'src-1' });
+    expect(preview.clonableCount).toBe(1);
+    expect(preview.discontinuedProductNames).toEqual([]);
+    expect(preview.unavailableProductNames).toEqual([]);
+  });
+
+  it('returns clonableCount=0 with only discontinued names when every line is inactive', async () => {
+    orders.findById.mockResolvedValueOnce(sourceOrder());
+    items.findByOrder.mockResolvedValueOnce([sourceLine({ productVariantId: 'v-1' })]);
+    variants.findById.mockResolvedValueOnce(liveVariant('v-1', 'p-1', 10));
+    products.findById.mockResolvedValueOnce(liveProduct('p-1', 'Só descontinuados', false));
+
+    const preview = await ordersService.previewRepeat({ sourceOrderId: 'src-1' });
+    expect(preview.clonableCount).toBe(0);
+    expect(preview.discontinuedProductNames).toEqual(['Só descontinuados']);
+  });
+
+  it('throws CannotRepeatDraftError for a draft source', async () => {
+    orders.findById.mockResolvedValueOnce(sourceOrder({ status: 'draft' }));
+    await expect(
+      ordersService.previewRepeat({ sourceOrderId: 'src-1' }),
+    ).rejects.toBeInstanceOf(CannotRepeatDraftError);
+  });
+
+  it('returns error for a missing source via the hook wrapper path', async () => {
+    orders.findById.mockResolvedValueOnce(null);
+    await expect(
+      ordersService.previewRepeat({ sourceOrderId: 'ghost' }),
+    ).rejects.toBeInstanceOf(OrderNotFoundError);
   });
 });

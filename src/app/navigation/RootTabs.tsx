@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useHasRole } from '@/features/auth';
+import { useAnyAdminRole } from '@/features/auth';
 
 import { AdminStack } from './AdminStack';
 import { HomeStack } from './HomeStack';
@@ -22,7 +22,10 @@ function AdminTabIcon({ focused }: { focused: boolean }) {
 }
 
 export function RootTabs() {
-  const isAdmin = useHasRole('admin');
+  // 016-product-lifecycle-roles — Admin tab is visible whenever the user
+  // carries ANY admin-grade role (superuser, manage-products,
+  // manage-salespersons, manage-clients) — not just the legacy 'admin'.
+  const isAdmin = useAnyAdminRole();
 
   return (
     <Tabs.Navigator

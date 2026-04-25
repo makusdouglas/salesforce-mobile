@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
+  findProductByBarcode,
   getProductById,
   ProductsApiError,
   saveProduct,
+  setProductActive,
   type ProductWithVariants,
   type SaveInput,
   type VariantInput,
@@ -21,6 +23,10 @@ export type ProductFormState = {
   basePrice: string; // string so the input can hold "29,90" / "29.90"
   barcode: string;
   imageUrl: string | null;
+  // 016-product-lifecycle-roles. Only meaningful when editing an
+  // existing product (id !== undefined). New products start active.
+  active: boolean;
+  deactivatedAt: string | null;
   variants: VariantFormItem[];
 };
 
@@ -57,6 +63,8 @@ function emptyState(prefilledBarcode?: string): ProductFormState {
     basePrice: '',
     barcode: prefilledBarcode ?? '',
     imageUrl: null,
+    active: true,
+    deactivatedAt: null,
     variants: [],
   };
 }
@@ -70,6 +78,8 @@ function toFormState(product: ProductWithVariants): ProductFormState {
     basePrice: product.base_price.toString().replace('.', ','),
     barcode: product.barcode ?? '',
     imageUrl: product.image_url,
+    active: product.active,
+    deactivatedAt: product.deactivated_at,
     variants: product.variants.map((v) => ({
       id: v.id,
       label: v.label,
@@ -127,9 +137,89 @@ export function useProductForm(options: Options) {
   const setBarcode = useCallback((value: string) => {
     setState((s) => ({ ...s, barcode: value }));
   }, []);
+
+  // Live duplicate check (FR: barcode uniqueness). Debounced ~400ms so
+  // typing each digit doesn't hammer Supabase. Save-time conflict handling
+  // remains the source of truth — this just gives the admin an early
+  // inline warning instead of waiting for "Salvar" to bounce them to
+  // AdminBarcodeMatch.
+  const [barcodeConflict, setBarcodeConflict] = useState<
+    { productId: string; productName: string } | null
+  >(null);
+  const [barcodeChecking, setBarcodeChecking] = useState(false);
+  useEffect(() => {
+    const code = state.barcode.trim();
+    if (code.length === 0) {
+      setBarcodeConflict(null);
+      setBarcodeChecking(false);
+      return;
+    }
+    let cancelled = false;
+    setBarcodeChecking(true);
+    const handle = setTimeout(() => {
+      findProductByBarcode(code)
+        .then((found) => {
+          if (cancelled) return;
+          if (found && found.id !== state.id) {
+            setBarcodeConflict({ productId: found.id, productName: found.name });
+          } else {
+            setBarcodeConflict(null);
+          }
+        })
+        .catch(() => {
+          // Network / RLS errors: stay quiet — save-time validation will
+          // still catch conflicts. Inline check is a UX nicety, not a gate.
+          if (!cancelled) setBarcodeConflict(null);
+        })
+        .finally(() => {
+          if (!cancelled) setBarcodeChecking(false);
+        });
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [state.barcode, state.id]);
   const setImageUrl = useCallback((value: string | null) => {
     setState((s) => ({ ...s, imageUrl: value }));
   }, []);
+
+  // 016-product-lifecycle-roles — flip active locally AND on the server
+  // in one call. Caller should confirm with the admin first; the form
+  // does not itself show a confirmation dialog (that's the screen's
+  // job via AdminProductDeactivateConfirmModal).
+  const [toggling, setToggling] = useState(false);
+  const [toggleError, setToggleError] = useState<string | null>(null);
+  const toggleActive = useCallback(
+    async (nextActive: boolean): Promise<'ok' | 'offline' | 'forbidden' | 'error'> => {
+      const id = state.id;
+      if (id === undefined) return 'error';
+      setToggling(true);
+      setToggleError(null);
+      try {
+        await setProductActive(id, nextActive);
+        setState((s) => ({
+          ...s,
+          active: nextActive,
+          deactivatedAt: nextActive ? null : new Date().toISOString(),
+        }));
+        return 'ok';
+      } catch (err) {
+        if (err instanceof ProductsApiError) {
+          setToggleError(err.message);
+          if (err.kind === 'offline') return 'offline';
+          if (err.kind === 'rls_denied') return 'forbidden';
+          return 'error';
+        }
+        const message = (err as { message?: string })?.message ?? 'Erro ao atualizar.';
+        setToggleError(message);
+        return 'error';
+      } finally {
+        setToggling(false);
+      }
+    },
+    [state.id],
+  );
 
   const addVariant = useCallback(() => {
     setState((s) => ({
@@ -249,7 +339,11 @@ export function useProductForm(options: Options) {
     loadError,
     saving,
     saveError,
+    toggling,
+    toggleError,
     validation,
+    barcodeConflict,
+    barcodeChecking,
     setName,
     setDescription,
     setCategory,
@@ -260,5 +354,6 @@ export function useProductForm(options: Options) {
     updateVariant,
     removeVariant,
     save,
+    toggleActive,
   } as const;
 }

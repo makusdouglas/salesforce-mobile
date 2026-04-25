@@ -130,6 +130,20 @@ export interface RepeatResult {
   droppedProductNames: string[];
 }
 
+// 016-product-lifecycle-roles — preview of what would happen if the
+// admin tapped Confirm on a repeat. Mirrors the availability scan in
+// `repeat()` but performs NO database write, so the UI can show a
+// discontinued-items confirmation modal before cloning.
+export interface RepeatPreview {
+  /** Count of lines that would be cloned into the new draft. */
+  clonableCount: number;
+  /** Names of products that will be dropped because the product is
+   *  `active = false` (admin deactivated). */
+  discontinuedProductNames: string[];
+  /** Names of products whose variant or product row is soft-deleted. */
+  unavailableProductNames: string[];
+}
+
 // Watermelon returns soft-deleted rows from `.find()` (the query-level
 // `notDeleted` filter doesn't apply to findById). The repeat() availability
 // gate therefore has to check `_raw._status` on each record itself. We
@@ -310,6 +324,13 @@ export const ordersService = {
         droppedProductNames.push(product?.name ?? 'Item indisponível');
         continue;
       }
+      // 016-product-lifecycle-roles — also drop inactive (discontinued)
+      // products. The preview path surfaces these in a dedicated list
+      // so the UI can confirm with the seller before cloning.
+      if (product.active === false) {
+        droppedProductNames.push(product.name);
+        continue;
+      }
       kept.push({
         productVariantId: line.productVariantId,
         quantity: line.quantity,
@@ -360,5 +381,41 @@ export const ordersService = {
     });
 
     return { orderId: newOrderId, droppedProductNames };
+  },
+
+  // 016-product-lifecycle-roles — read-only scan. No DB writes; returns
+  // the split between what would clone and what would drop (by reason).
+  // UI hook calls this first; if `discontinuedProductNames.length > 0`
+  // it opens RepeatOrderDiscontinuedAlert before touching `repeat()`.
+  async previewRepeat(input: RepeatInput): Promise<RepeatPreview> {
+    const source = await ordersRepository.findById(input.sourceOrderId);
+    if (!source) throw new OrderNotFoundError(input.sourceOrderId);
+    assertValidStatus(source.status);
+    if (source.status === 'draft') {
+      throw new CannotRepeatDraftError(input.sourceOrderId);
+    }
+
+    const sourceLines = await orderItemsRepository.findByOrder(input.sourceOrderId);
+    let clonableCount = 0;
+    const discontinuedProductNames: string[] = [];
+    const unavailableProductNames: string[] = [];
+    for (const line of sourceLines) {
+      const variant = await productVariantsRepository.findById(line.productVariantId);
+      if (!variant || !isLive(variant)) {
+        unavailableProductNames.push('Item indisponível');
+        continue;
+      }
+      const product = await productsRepository.findById(variant.productId);
+      if (!product || !isLive(product)) {
+        unavailableProductNames.push(product?.name ?? 'Item indisponível');
+        continue;
+      }
+      if (product.active === false) {
+        discontinuedProductNames.push(product.name);
+        continue;
+      }
+      clonableCount += 1;
+    }
+    return { clonableCount, discontinuedProductNames, unavailableProductNames };
   },
 };

@@ -2,7 +2,16 @@ import { supabase } from '@/data/supabase';
 
 import { _internalSessionStore, sessionStore, type SessionRole } from './session';
 
-const VALID_ROLES: readonly SessionRole[] = ['admin', 'seller'];
+const VALID_ROLES: readonly SessionRole[] = [
+  'seller',
+  'manage-products',
+  'manage-salespersons',
+  'manage-clients',
+  'superuser',
+  // Legacy — kept so a client that talks to a pre-0018 database still
+  // recognises admin rows. Migration 0018 rewrites these to 'superuser'.
+  'admin',
+];
 
 function isSessionRole(value: unknown): value is SessionRole {
   return typeof value === 'string' && (VALID_ROLES as readonly string[]).includes(value);
