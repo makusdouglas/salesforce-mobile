@@ -2,10 +2,10 @@ import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 import type { OrdersOverviewStatusFilter } from '../types';
 
-const CHIPS: ReadonlyArray<{
+const CHIPS: readonly {
   readonly key: OrdersOverviewStatusFilter;
   readonly label: string;
-}> = [
+}[] = [
   { key: 'all', label: 'Todos' },
   { key: 'draft', label: 'Rascunhos' },
   { key: 'pending', label: 'Pendente' },

@@ -1,10 +1,15 @@
-import { useCallback, useMemo, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer } from 'react';
 
 import { currentMonthKey, shiftMonth } from '../selectors/monthRange';
 import type {
   OrdersOverviewFilter,
   OrdersOverviewStatusFilter,
 } from '../types';
+
+export interface UseOrdersOverviewFiltersOptions {
+  /** When provided, the reducer initializes with this month instead of the current one. */
+  readonly initialMonth?: string | undefined;
+}
 
 type FilterAction =
   | { type: 'setMonth'; month: string }
@@ -47,12 +52,28 @@ export type UseOrdersOverviewFiltersResult = {
  * Default month is the current local month; default status is 'all';
  * default query is ''.
  */
-export function useOrdersOverviewFilters(): UseOrdersOverviewFiltersResult {
+export function useOrdersOverviewFilters(
+  options: UseOrdersOverviewFiltersOptions = {},
+): UseOrdersOverviewFiltersResult {
+  const { initialMonth } = options;
   const [filter, dispatch] = useReducer(reducer, undefined as never, () => ({
-    month: currentMonthKey(),
+    month: initialMonth ?? currentMonthKey(),
     status: 'all' as const,
     query: '',
   }));
+
+  // 017-revenue-dashboard: when the screen is reached via a deep link
+  // from the dashboard, initialMonth carries the targeted month. Sync
+  // late-arriving values (route param swap inside a single screen
+  // instance) so the visible month matches.
+  useEffect(() => {
+    if (initialMonth && initialMonth !== filter.month) {
+      dispatch({ type: 'setMonth', month: initialMonth });
+    }
+    // We intentionally watch initialMonth only — local user-driven
+    // month changes shouldn't snap back to the param value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMonth]);
 
   const setMonth = useCallback((month: string) => dispatch({ type: 'setMonth', month }), []);
   const nextMonth = useCallback(() => dispatch({ type: 'nextMonth' }), []);

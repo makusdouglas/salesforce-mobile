@@ -21,8 +21,8 @@ import type { OrderOverviewRowDTO } from '../types';
 
 function pipelineRow(
   order: { id: string; status: 'draft' | 'sent' | 'canceled'; discountAmount: number },
-  items: Array<{ orderId: string; quantity: number; unitPrice: number; discountAmount: number }>,
-  receipts: Array<{ amount: number }>,
+  items: { orderId: string; quantity: number; unitPrice: number; discountAmount: number }[],
+  receipts: { amount: number }[],
 ): OrderOverviewRowDTO {
   const total = totalFromItemsAndOrder(order, items);
   const received = receipts.reduce((acc, r) => acc + r.amount, 0);

@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { AdminStackParamList } from '@/app/navigation/types';
-import { useAdminGate } from '@/features/auth';
+import { useAdminGate, useAnyAdminRole } from '@/features/auth';
 
 import { useAdminSellersLayout } from '../responsive/useAdminSellersLayout';
 import { adminColors, adminFonts, adminRadii } from '../theme';
@@ -31,8 +31,20 @@ export function AdminMenuScreen() {
   const canProducts = useAdminGate('manage-products');
   const canSellers = useAdminGate('manage-salespersons');
   const canUsers = useAdminGate('superuser');
+  // 017-revenue-dashboard: any admin-grade role sees the Receita tile.
+  // No new role is introduced (FR-039); the existing useAnyAdminRole gate
+  // is sufficient.
+  const canRevenue = useAnyAdminRole();
 
   const cards: Card[] = [];
+  if (canRevenue) {
+    cards.push({
+      label: 'Receita',
+      description: 'KPIs, tendência, ranking, top clientes, aging.',
+      icon: 'trending-up',
+      onPress: () => nav.navigate('AdminRevenue'),
+    });
+  }
   if (canProducts) {
     cards.push({
       label: 'Produtos',

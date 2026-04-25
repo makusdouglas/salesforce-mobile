@@ -11,6 +11,7 @@ import {
 } from '@/features/clients';
 import { DraftsListScreen, HomeScreen, SettingsScreen } from '@/features/home';
 import { OrdersOverviewScreen } from '@/features/orders/overview/screens/OrdersOverviewScreen';
+import { SellerRevenueScreen } from '@/features/revenue';
 
 import { OrdersStack } from './OrdersStack';
 import type { HomeStackParamList } from './types';
@@ -70,6 +71,12 @@ export function HomeStack() {
       <Stack.Screen
         name="OrdersOverview"
         component={OrdersOverviewScreen}
+        options={{ headerShown: false }}
+      />
+      {/* 017-revenue-dashboard: seller-scope dashboard reached from the Home tile. */}
+      <Stack.Screen
+        name="Revenue"
+        component={SellerRevenueScreen}
         options={{ headerShown: false }}
       />
 

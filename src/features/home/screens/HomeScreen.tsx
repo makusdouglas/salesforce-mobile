@@ -1,6 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { HomeStackParamList } from '@/app/navigation/types';
@@ -119,6 +120,10 @@ export function HomeScreen({ navigation }: Props) {
   const goRecentActivityPlaceholder = (): void => {
     navigation.navigate('OrdersOverview');
   };
+  // 017-revenue-dashboard
+  const goRevenue = (): void => {
+    navigation.navigate('Revenue');
+  };
 
   const catalogHandlers = {
     onPress: goCatalog,
@@ -153,6 +158,12 @@ export function HomeScreen({ navigation }: Props) {
           <QuickActionCard card={snapshot.orders} viewport={viewport} {...ordersHandlers} />
         </View>
       </View>
+      <View style={[styles.tabletRow, { gap: cardGap, marginTop: cardGap }]}>
+        <View style={{ flex: 1 }}>
+          <RevenueTile isTablet onPress={goRevenue} />
+        </View>
+        <View style={{ flex: 1 }} />
+      </View>
     </View>
   );
 
@@ -162,6 +173,7 @@ export function HomeScreen({ navigation }: Props) {
       <QuickActionCard card={snapshot.clients} viewport={viewport} {...clientsHandlers} />
       <QuickActionCard card={snapshot.drafts} viewport={viewport} {...draftsHandlers} />
       <QuickActionCard card={snapshot.orders} viewport={viewport} {...ordersHandlers} />
+      <RevenueTile isTablet={false} onPress={goRevenue} />
     </View>
   );
 
@@ -264,4 +276,74 @@ const styles = StyleSheet.create({
   tabletCell: {
     flex: 1,
   },
+  // 017-revenue-dashboard tile
+  revTile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    minHeight: 72,
+  },
+  revTileTablet: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    paddingVertical: 22,
+    paddingHorizontal: 22,
+    gap: 12,
+    minHeight: 140,
+  },
+  revIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#F0FDF4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  revIconBoxTablet: { width: 52, height: 52, borderRadius: 12 },
+  revBody: { flex: 1, gap: 4 },
+  revTitle: {
+    color: '#0A0A0A',
+    fontFamily: 'Funnel Sans',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  revTitleTablet: { fontSize: 18 },
+  revSubtitle: {
+    color: '#525252',
+    fontFamily: 'Inter',
+    fontSize: 13,
+  },
 });
+
+// 017-revenue-dashboard — small inline tile placed alongside the
+// catalog / clients / pedidos / rascunhos quick actions on the seller
+// home (FR-002). Always visible to any signed-in seller.
+function RevenueTile(props: { readonly isTablet: boolean; readonly onPress: () => void }) {
+  const { isTablet, onPress } = props;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Minha receita"
+      style={({ pressed }) => [
+        styles.revTile,
+        isTablet && styles.revTileTablet,
+        pressed && { opacity: 0.7 },
+      ]}
+    >
+      <View style={[styles.revIconBox, isTablet && styles.revIconBoxTablet]}>
+        <Ionicons name="trending-up-outline" size={isTablet ? 26 : 22} color="#15803D" />
+      </View>
+      <View style={styles.revBody}>
+        <Text style={[styles.revTitle, isTablet && styles.revTitleTablet]}>Minha receita</Text>
+        <Text style={styles.revSubtitle}>KPIs, tendência e aging dos seus pedidos.</Text>
+      </View>
+    </Pressable>
+  );
+}

@@ -17,6 +17,7 @@ import {
   AdminUsersListScreen,
   AdminUserRolesFormScreen,
 } from '@/features/admin/users';
+import { AdminRevenueScreen } from '@/features/admin/revenue';
 
 import type { AdminStackParamList } from './types';
 
@@ -56,6 +57,8 @@ export function AdminStack() {
       */}
       <Stack.Screen name="AdminUsersList" component={AdminUsersListScreen} />
       <Stack.Screen name="AdminUserRolesForm" component={AdminUserRolesFormScreen} />
+      {/* 017-revenue-dashboard — entry point gated upstream by useAnyAdminRole on the AdminMenu tile (FR-001). */}
+      <Stack.Screen name="AdminRevenue" component={AdminRevenueScreen} />
     </Stack.Navigator>
   );
 }
