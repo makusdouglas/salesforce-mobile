@@ -107,6 +107,7 @@ function FormBody({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [errorModal, setErrorModal] = useState<string | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const navTitle = mode.kind === 'edit' ? 'Editar vendedor' : 'Novo vendedor';
 
   const submit = useCallback(async () => {
@@ -222,16 +223,27 @@ function FormBody({
                     <TextInput
                       value={form.form.password}
                       onChangeText={form.setPassword}
-                      secureTextEntry
+                      secureTextEntry={!passwordVisible}
+                      autoCapitalize="none"
+                      autoCorrect={false}
                       placeholder="Mínimo 8 caracteres"
                       placeholderTextColor={adminColors.textFaint}
                       style={styles.inputInner}
                     />
-                    <Feather
-                      name="eye-off"
-                      size={18}
-                      color={adminColors.textMuted}
-                    />
+                    <Pressable
+                      onPress={() => setPasswordVisible((v) => !v)}
+                      hitSlop={10}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        passwordVisible ? 'Ocultar senha' : 'Mostrar senha'
+                      }
+                    >
+                      <Feather
+                        name={passwordVisible ? 'eye' : 'eye-off'}
+                        size={18}
+                        color={adminColors.textMuted}
+                      />
+                    </Pressable>
                   </View>
                   <Text style={styles.hint}>
                     O vendedor poderá trocar no primeiro acesso.
