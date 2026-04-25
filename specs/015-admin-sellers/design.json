@@ -1,0 +1,14 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/015-admin-sellers/design",
+  "screens": [
+    { "name": "Admin menu / Phone",             "frame_id": "5r1fS", "screenshot": "specs/015-admin-sellers/design/admin-menu-phone.png" },
+    { "name": "Admin menu / Tablet",            "frame_id": "qAGM6", "screenshot": "specs/015-admin-sellers/design/admin-menu-tablet.png" },
+    { "name": "Sellers list / Phone",           "frame_id": "yxfXA", "screenshot": "specs/015-admin-sellers/design/admin-sellers-list-phone.png" },
+    { "name": "Sellers list / Tablet",          "frame_id": "kU63v", "screenshot": "specs/015-admin-sellers/design/admin-sellers-list-tablet.png" },
+    { "name": "Seller form / Phone",            "frame_id": "6K3QQ", "screenshot": "specs/015-admin-sellers/design/admin-seller-form-phone.png" },
+    { "name": "Seller form / Tablet",           "frame_id": "eDUrn", "screenshot": "specs/015-admin-sellers/design/admin-seller-form-tablet.png" },
+    { "name": "Deactivate confirm / Phone",     "frame_id": "t28UU", "screenshot": "specs/015-admin-sellers/design/admin-seller-deactivate-phone.png" },
+    { "name": "Deactivate confirm / Tablet",    "frame_id": "SW4Mf", "screenshot": "specs/015-admin-sellers/design/admin-seller-deactivate-tablet.png" }
+  ]
+}

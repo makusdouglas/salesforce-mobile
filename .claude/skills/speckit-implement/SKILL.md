@@ -54,6 +54,65 @@ You **MUST** consider the user input before proceeding (if not empty).
     ```
 - If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
 
+## Pencil MCP Design Gate (UI tasks only)
+
+Before touching any UI/screen code, the implementer **must** be able to read the design from the Pencil MCP so the screens are built against the source of truth (`layout.pen` + the feature's `design/` exports), not from memory or the PNG thumbnails.
+
+### Applicability
+
+Skip this entire section (proceed directly to Outline) **only if** the feature has no UI work. UI work is present if **any** of these are true:
+
+- `layout.pen` exists at the repo root
+- The feature directory contains `design/`, `design.json`, `design/screens.md`, or any `*.png` under `design/`
+- `tasks.md` mentions any of: `screen`, `component`, `UI`, `view`, `layout.pen`, a path under `src/features/**/screens/`, or a path under `src/features/**/components/`
+
+If none apply, note "No UI tasks detected — Pencil gate skipped." and continue to Outline.
+
+### Probe order (stop at the first success)
+
+1. **Probe MCP availability.** Call `mcp__pencil__get_editor_state`. A successful response (any editor state, even with no active document) means the MCP is live — continue to Outline.
+
+2. **First failure → rescue path.** If the probe errors (tool not available, timeout, "no editor connected", etc.):
+
+   a. **Preserve any in-flight design edits.** Run `git status --porcelain layout.pen` from the repo root. If `layout.pen` is dirty:
+      - Stage and commit it on the current branch with message `chore(design): checkpoint layout.pen before Pencil MCP restart` so no Pencil work is lost if the app is force-quit.
+      - If the working tree has other unrelated dirty files, only `git add layout.pen` — never `git add -A`.
+      - If no changes, skip the commit.
+
+   b. **Ask the user to restart Pencil with MCP.** Print this block verbatim and end the turn:
+
+      ```
+      ⏸ Pencil MCP indisponível
+      Fiz checkpoint do layout.pen (commit: <sha or "nada a salvar">).
+      Ação necessária:
+        1) Feche o Pencil.
+        2) Reabra o Pencil garantindo que o servidor MCP esteja ativo (check: mcp list → "pencil").
+        3) Abra o arquivo: layout.pen
+        4) Responda "ok" ou rode /speckit-implement novamente para retomar.
+      ```
+
+3. **Second attempt (after user says to retry).** When the skill is re-invoked, probe `mcp__pencil__get_editor_state` again.
+
+   - **Success** → continue to Outline.
+   - **Still failing** → do **not** loop again. Pause hard with:
+
+     ```
+     ⏸ Pencil MCP ainda indisponível após restart
+     O implement depende do MCP do Pencil para desenvolver as telas com fidelidade.
+     Sugestões:
+       • Verifique mcp list / mcp doctor pencil e corrija a configuração.
+       • Ou abra uma nova sessão do Claude Code com o MCP carregado e rode /speckit-implement resume lá.
+     Não vou tentar mais sozinho — me avise quando estiver pronto.
+     ```
+
+     End the turn. Do not fall back to reading design info from PNGs or from memory — that defeats the purpose of the gate.
+
+### While implementing UI tasks
+
+- For every screen/component task, before writing code, read the corresponding node(s) via `mcp__pencil__batch_get` (by id from `design/screens.md` or by name pattern).
+- Match spacing, colors, typography, and hierarchy against what `batch_get` returns — not against the PNG exports, which may lag the `.pen` file.
+- If a referenced node is missing from `layout.pen`, stop the task and route back to `/speckit-pencil-design` rather than inventing UI.
+
 ## Outline
 
 1. Run `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
