@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -160,8 +161,8 @@ function FormBody({
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={[styles.topBar, tablet && styles.topBarTablet]}>
-        <Pressable onPress={onDone} style={styles.backBtn} hitSlop={8}>
-          <Text style={styles.backGlyph}>‹</Text>
+        <Pressable onPress={onDone} style={styles.iconBtn} hitSlop={8}>
+          <Feather name="chevron-left" size={22} color={adminColors.textPrimary} />
         </Pressable>
         <Text style={[styles.topTitle, tablet && styles.topTitleTablet]}>{navTitle}</Text>
         <Pressable onPress={() => void submit()} disabled={form.submitting} hitSlop={8} style={styles.saveBtn}>
@@ -217,14 +218,21 @@ function FormBody({
               />
               {form.form.credentialMode === 'password' ? (
                 <Field label="Senha inicial">
-                  <TextInput
-                    value={form.form.password}
-                    onChangeText={form.setPassword}
-                    secureTextEntry
-                    placeholder="Mínimo 8 caracteres"
-                    placeholderTextColor={adminColors.textFaint}
-                    style={styles.input}
-                  />
+                  <View style={styles.inputWithIcon}>
+                    <TextInput
+                      value={form.form.password}
+                      onChangeText={form.setPassword}
+                      secureTextEntry
+                      placeholder="Mínimo 8 caracteres"
+                      placeholderTextColor={adminColors.textFaint}
+                      style={styles.inputInner}
+                    />
+                    <Feather
+                      name="eye-off"
+                      size={18}
+                      color={adminColors.textMuted}
+                    />
+                  </View>
                   <Text style={styles.hint}>
                     O vendedor poderá trocar no primeiro acesso.
                   </Text>
@@ -319,8 +327,7 @@ const styles = StyleSheet.create({
     borderBottomColor: adminColors.stroke,
   },
   topBarTablet: { height: 64, paddingHorizontal: 20 },
-  backBtn: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  backGlyph: { color: adminColors.textPrimary, fontSize: 22 },
+  iconBtn: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   topTitle: { color: adminColors.textPrimary, fontFamily: adminFonts.heading, fontSize: 17, fontWeight: '600' },
   topTitleTablet: { fontSize: 20 },
   saveBtn: { height: 40, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
@@ -375,6 +382,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   inputDisabled: { backgroundColor: adminColors.surfaceMuted, color: adminColors.textMuted },
+  inputWithIcon: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: adminColors.stroke,
+    borderRadius: adminRadii.input,
+    backgroundColor: adminColors.surface,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  inputInner: {
+    flex: 1,
+    height: '100%',
+    color: adminColors.textPrimary,
+    fontFamily: adminFonts.body,
+    fontSize: 14,
+  },
   hint: { color: adminColors.textFaint, fontFamily: adminFonts.body, fontSize: 12 },
   toggleRow: {
     flexDirection: 'row',

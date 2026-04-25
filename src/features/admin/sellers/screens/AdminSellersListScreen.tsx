@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
@@ -52,17 +53,18 @@ export function AdminSellersListScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={[styles.topBar, tablet && styles.topBarTablet]}>
-        <Pressable onPress={() => nav.goBack()} style={styles.backBtn} hitSlop={8}>
-          <Text style={styles.backGlyph}>‹</Text>
+        <Pressable onPress={() => nav.goBack()} style={styles.iconBtn} hitSlop={8}>
+          <Feather name="chevron-left" size={22} color={adminColors.textPrimary} />
         </Pressable>
         <Text style={[styles.topTitle, tablet && styles.topTitleTablet]}>Vendedores</Text>
         {tablet ? (
           <Pressable onPress={openCreate} style={styles.primaryBtn}>
-            <Text style={styles.primaryBtnText}>+ Novo vendedor</Text>
+            <Feather name="plus" size={16} color={adminColors.primaryOn} />
+            <Text style={styles.primaryBtnText}>Novo vendedor</Text>
           </Pressable>
         ) : (
-          <Pressable onPress={openCreate} style={styles.backBtn} hitSlop={8}>
-            <Text style={styles.plusGlyph}>+</Text>
+          <Pressable onPress={openCreate} style={styles.iconBtn} hitSlop={8}>
+            <Feather name="plus" size={22} color={adminColors.textPrimary} />
           </Pressable>
         )}
       </View>
@@ -83,13 +85,21 @@ export function AdminSellersListScreen() {
           })}
         </View>
         {tablet ? (
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Buscar por nome ou e-mail"
-            placeholderTextColor={adminColors.textFaint}
-            style={styles.search}
-          />
+          <View style={styles.searchWrap}>
+            <Feather
+              name="search"
+              size={16}
+              color={adminColors.textMuted}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Buscar por nome ou e-mail"
+              placeholderTextColor={adminColors.textFaint}
+              style={styles.search}
+            />
+          </View>
         ) : null}
       </View>
 
@@ -152,15 +162,13 @@ const styles = StyleSheet.create({
     borderBottomColor: adminColors.stroke,
   },
   topBarTablet: { height: 64, paddingHorizontal: 20 },
-  backBtn: {
+  iconBtn: {
     width: 40,
     height: 40,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backGlyph: { color: adminColors.textPrimary, fontSize: 22 },
-  plusGlyph: { color: adminColors.textPrimary, fontSize: 22, fontWeight: '600' },
   topTitle: {
     color: adminColors.textPrimary,
     fontFamily: adminFonts.heading,
@@ -169,12 +177,14 @@ const styles = StyleSheet.create({
   },
   topTitleTablet: { fontSize: 20 },
   primaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     height: 40,
     paddingHorizontal: 16,
     backgroundColor: adminColors.primary,
     borderRadius: adminRadii.input,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   primaryBtnText: {
     color: adminColors.primaryOn,
@@ -218,14 +228,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   segLabelActive: { color: adminColors.primaryOn },
-  search: {
+  searchWrap: {
     flex: 1,
     height: 36,
     borderRadius: adminRadii.input,
     borderWidth: 1,
     borderColor: adminColors.stroke,
     backgroundColor: adminColors.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
+    gap: 8,
+  },
+  searchIcon: { /* spacing handled by flex gap */ },
+  search: {
+    flex: 1,
+    height: '100%',
     fontFamily: adminFonts.body,
     fontSize: 13,
     color: adminColors.textPrimary,

@@ -1,7 +1,10 @@
+import { Feather } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { adminColors, adminFonts, adminRadii } from '../theme';
 import type { CredentialMode } from '../hooks/useSellerForm';
+
+type FeatherIcon = React.ComponentProps<typeof Feather>['name'];
 
 type Props = {
   value: CredentialMode;
@@ -32,14 +35,14 @@ export function CredentialPicker({ value, onChange, variant }: Props) {
       <CardOption
         label="Definir senha inicial"
         description="Você digita, o vendedor troca no 1º acesso."
-        iconGlyph="🔑"
+        icon="key"
         active={value === 'password'}
         onPress={() => onChange('password')}
       />
       <CardOption
         label="Enviar convite por e-mail"
         description="O vendedor define a senha pelo link."
-        iconGlyph="✉"
+        icon="mail"
         active={value === 'invite'}
         onPress={() => onChange('invite')}
       />
@@ -73,13 +76,13 @@ function SegmentButton({
 function CardOption({
   label,
   description,
-  iconGlyph,
+  icon,
   active,
   onPress,
 }: {
   label: string;
   description: string;
-  iconGlyph: string;
+  icon: FeatherIcon;
   active: boolean;
   onPress: () => void;
 }) {
@@ -92,7 +95,11 @@ function CardOption({
         pressed && { opacity: 0.75 },
       ]}
     >
-      <Text style={styles.cardIcon}>{iconGlyph}</Text>
+      <Feather
+        name={icon}
+        size={20}
+        color={active ? adminColors.textPrimary : adminColors.textMuted}
+      />
       <Text style={styles.cardTitle}>{label}</Text>
       <Text style={styles.cardDesc}>{description}</Text>
     </Pressable>
@@ -150,7 +157,6 @@ const styles = StyleSheet.create({
     borderColor: adminColors.textPrimary,
     borderWidth: 2,
   },
-  cardIcon: { fontSize: 20 },
   cardTitle: {
     color: adminColors.textPrimary,
     fontFamily: adminFonts.heading,

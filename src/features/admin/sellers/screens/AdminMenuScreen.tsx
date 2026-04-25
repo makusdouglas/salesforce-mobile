@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -10,10 +11,11 @@ import { adminColors, adminFonts, adminRadii } from '../theme';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList, 'AdminMenu'>;
 
+type FeatherIcon = React.ComponentProps<typeof Feather>['name'];
 type Card = {
   label: string;
   description: string;
-  glyph: string;
+  icon: FeatherIcon;
   onPress: () => void;
 };
 
@@ -26,13 +28,13 @@ export function AdminMenuScreen() {
     {
       label: 'Produtos',
       description: 'Catálogo, variantes e fotos.',
-      glyph: '📦',
+      icon: 'package',
       onPress: () => nav.navigate('AdminProducts'),
     },
     {
       label: 'Vendedores',
       description: 'Criar, editar e desativar contas.',
-      glyph: '👥',
+      icon: 'users',
       onPress: () => nav.navigate('AdminSellersList'),
     },
   ];
@@ -61,7 +63,11 @@ export function AdminMenuScreen() {
               ]}
             >
               <View style={[styles.iconBox, tablet && styles.iconBoxTablet]}>
-                <Text style={[styles.iconGlyph, tablet && styles.iconGlyphTablet]}>{c.glyph}</Text>
+                <Feather
+                  name={c.icon}
+                  size={tablet ? 26 : 22}
+                  color={adminColors.textPrimary}
+                />
               </View>
               <View style={styles.cardBody}>
                 <Text style={[styles.cardTitle, tablet && styles.cardTitleTablet]}>{c.label}</Text>
@@ -69,7 +75,9 @@ export function AdminMenuScreen() {
                   {c.description}
                 </Text>
               </View>
-              {!tablet ? <Text style={styles.chevron}>›</Text> : null}
+              {!tablet ? (
+                <Feather name="chevron-right" size={20} color={adminColors.textFaint} />
+              ) : null}
             </Pressable>
           ))}
         </View>
@@ -115,7 +123,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    padding: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
     backgroundColor: adminColors.surface,
     borderRadius: adminRadii.modal,
     borderWidth: 1,
@@ -139,8 +148,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconBoxTablet: { width: 52, height: 52, borderRadius: 12 },
-  iconGlyph: { fontSize: 20 },
-  iconGlyphTablet: { fontSize: 24 },
   cardBody: { flex: 1, gap: 4 },
   cardTitle: {
     color: adminColors.textPrimary,
@@ -155,9 +162,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   cardDescTablet: { fontSize: 14 },
-  chevron: {
-    color: adminColors.textFaint,
-    fontSize: 22,
-    lineHeight: 22,
-  },
 });

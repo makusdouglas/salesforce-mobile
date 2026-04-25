@@ -37421,42 +37421,6 @@
                   ]
                 }
               ]
-            },
-            {
-              "type": "frame",
-              "id": "LYYmX",
-              "name": "fpDang",
-              "width": "fill_container",
-              "height": 44,
-              "cornerRadius": 10,
-              "stroke": {
-                "align": "inside",
-                "thickness": 1,
-                "fill": "#FECACA"
-              },
-              "gap": 8,
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "VM3ZQ",
-                  "width": 16,
-                  "height": 16,
-                  "iconFontName": "user-x",
-                  "iconFontFamily": "lucide",
-                  "fill": "#B91C1C"
-                },
-                {
-                  "type": "text",
-                  "id": "IT4zu",
-                  "fill": "#B91C1C",
-                  "content": "Desativar vendedor",
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "600"
-                }
-              ]
             }
           ]
         }

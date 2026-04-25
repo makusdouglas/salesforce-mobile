@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { SellerRecord } from '../service/sellersApi';
@@ -60,7 +61,7 @@ export function SellerRow({ seller, onPress, variant = 'phone' }: Props) {
           {seller.active ? 'Ativo' : 'Inativo'}
         </Text>
       </View>
-      <Text style={styles.chevron}>›</Text>
+      <Feather name="chevron-right" size={18} color={adminColors.textFaint} />
     </Pressable>
   );
 }
@@ -120,10 +121,5 @@ const styles = StyleSheet.create({
     fontFamily: adminFonts.body,
     fontSize: 11,
     fontWeight: '600',
-  },
-  chevron: {
-    color: adminColors.textFaint,
-    fontSize: 20,
-    lineHeight: 20,
   },
 });

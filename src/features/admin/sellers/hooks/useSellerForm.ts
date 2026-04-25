@@ -1,11 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { adminCreateSeller, type CreateSellerInput } from '../service/adminCreateSeller';
-import {
-  deactivateSeller,
-  reactivateSeller,
-  updateSellerName,
-} from '../service/sellersApi';
+import { updateSellerName } from '../service/sellersApi';
 import type { SellerApiError, SellerRecord } from '../service/sellersApi.types';
 
 import {
@@ -98,7 +94,7 @@ export function useSellerForm(mode: FormMode, selfAuthUserId: string | null) {
     } finally {
       setSubmitting(false);
     }
-  }, [form, mode, isSelf, validate]);
+  }, [form, mode, validate]);
 
   return {
     form,
