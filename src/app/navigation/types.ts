@@ -10,6 +10,8 @@ export type RootTabsParamList = {
 };
 
 export type AdminStackParamList = {
+  // 015-admin-sellers: landing menu that lists admin areas.
+  AdminMenu: undefined;
   AdminProducts: undefined;
   AdminProductSource: undefined;
   AdminBarcodeScanner: undefined;
@@ -19,6 +21,11 @@ export type AdminStackParamList = {
     prefilledBarcode?: string;
   };
   AdminImageSource: undefined;
+  // 015-admin-sellers: sellers module routes.
+  AdminSellersList: undefined;
+  AdminSellerForm:
+    | { mode: 'create' }
+    | { mode: 'edit'; authUserId: string };
 };
 
 export type AuthStackParamList = {
