@@ -45,3 +45,6 @@ temp.env
 # generated native folders
 /ios
 /android
+
+# supabase CLI local state (link, project ref cache, version probes)
+/supabase/.temp/

@@ -22,7 +22,19 @@ module.exports = [
   ...expoConfig,
   prettierConfig,
   {
-    ignores: ['node_modules/', '.expo/', 'dist/', 'web-build/', 'assets/', 'ios/', 'android/'],
+    ignores: [
+      'node_modules/',
+      '.expo/',
+      'dist/',
+      'web-build/',
+      'assets/',
+      'ios/',
+      'android/',
+      // Supabase Edge Functions run on Deno and import via https:// URLs.
+      // ESLint's Node resolver can't follow those; lint inside the
+      // Supabase CLI / deno lint instead.
+      'supabase/functions/',
+    ],
   },
   {
     files: ['src/**/*.{ts,tsx,js,jsx}'],
