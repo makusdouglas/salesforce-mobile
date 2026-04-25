@@ -1,4 +1,5 @@
 import { supabase } from '@/data';
+import { resetLockStateAfterLogout } from '@/features/lock/state/logoutReset';
 import { deletePinCredential } from '@/features/lock/storage/lockStorage';
 
 import { fetchAndPublishRoles } from '../session/rolesRepository';
@@ -147,6 +148,10 @@ export const authService = {
     }
     await Promise.all(wipes);
     await deletePinCredential();
+    // Reset the lock state in memory so the next login on the same boot
+    // surfaces PinSetup. Without this, the lockStore stayed at the
+    // previous session's `Unlocked` and PinSetupScreen never rendered.
+    resetLockStateAfterLogout();
     _internalSessionStore.setNotAuthenticated({
       preserveEmail: options?.preserveEmail === true
         ? await secureStore.getLastEmail()
