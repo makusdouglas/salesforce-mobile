@@ -4,7 +4,7 @@
 // Cancel is an inline two-step affordance (design decision — no modal).
 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { OrdersStackParamList } from '@/app/navigation/types';
 
 import { DiscountControl } from '../components/DiscountControl';
+import { DraftDiscontinuedAlert } from '../components/DraftDiscontinuedAlert';
 import { OrderHeaderChip } from '../components/OrderHeaderChip';
 import { OrderLineCard } from '../components/OrderLineCard';
 import { formatBRL } from '../formatting/formatBRL';
@@ -53,6 +54,38 @@ export function OrderDraftScreen({ navigation, route }: Props) {
     cancelArmedAt !== null &&
     Date.now() - cancelArmedAt < CANCEL_CONFIRM_WINDOW_MS;
 
+  // 016-product-lifecycle-roles — detect discontinued lines (FR-010).
+  // The draft MUST NOT send while any inactive product remains. Alert
+  // opens on initial detection and on any sync pull that introduces new
+  // inactives; dismissing hides the modal without removing lines, but
+  // the Continue button stays disabled until the lines are gone.
+  const discontinuedItems = useMemo(
+    () => itemsWithCatalog.filter(({ product }) => product !== null && product.active === false),
+    [itemsWithCatalog],
+  );
+  const discontinuedIds = discontinuedItems
+    .map(({ line }) => line.id)
+    .sort()
+    .join(',');
+  const [alertDismissed, setAlertDismissed] = useState(false);
+  const [removingDiscontinued, setRemovingDiscontinued] = useState(false);
+
+  // Re-open the alert if the discontinued-set grows (new inactive line
+  // arrives via sync pull or deep-link add). Re-arming on signature
+  // change handles both the initial mount and the live-update case.
+  useEffect(() => {
+    if (discontinuedIds.length === 0) {
+      setAlertDismissed(true);
+      return;
+    }
+    setAlertDismissed(false);
+  }, [discontinuedIds]);
+
+  const hasDiscontinued = discontinuedItems.length > 0;
+  const discontinuedNames = discontinuedItems.map(
+    ({ product, variant }) => product?.name ?? variant?.label ?? 'Produto',
+  );
+
   if (error !== null) {
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
@@ -81,7 +114,7 @@ export function OrderDraftScreen({ navigation, route }: Props) {
   }
 
   const itemCount = lines.length;
-  const canContinue = itemCount > 0;
+  const canContinue = itemCount > 0 && !hasDiscontinued;
 
   const handleBack = (): void => navigation.goBack();
   const handleAddItem = (): void => {
@@ -96,6 +129,21 @@ export function OrderDraftScreen({ navigation, route }: Props) {
     if (!canContinue) return;
     navigation.navigate('OrderSummary', { orderId: order.id });
   };
+  const handleRemoveDiscontinued = (): void => {
+    if (removingDiscontinued) return;
+    setRemovingDiscontinued(true);
+    void Promise.all(
+      discontinuedItems.map(({ line }) =>
+        ordersService.removeLine({ orderItemId: line.id }).catch((err: unknown) => {
+          console.warn('[OrderDraft] remove discontinued failed:', err);
+        }),
+      ),
+    ).finally(() => {
+      setRemovingDiscontinued(false);
+      setAlertDismissed(true);
+    });
+  };
+
   const handleCancelPress = (): void => {
     if (!cancelArmed) {
       setCancelArmedAt(Date.now());
@@ -312,6 +360,27 @@ export function OrderDraftScreen({ navigation, route }: Props) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
       {renderedTopBar}
+      {hasDiscontinued ? (
+        <View style={styles.discontinuedBar}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.discontinuedBarTitle}>
+              Pedido bloqueado por{' '}
+              {discontinuedItems.length === 1
+                ? 'um produto descontinuado'
+                : `${discontinuedItems.length} produtos descontinuados`}
+            </Text>
+            <Text style={styles.discontinuedBarBody}>
+              Remova as linhas destacadas para enviar.
+            </Text>
+          </View>
+          <Pressable
+            style={styles.discontinuedBarBtn}
+            onPress={() => setAlertDismissed(false)}
+          >
+            <Text style={styles.discontinuedBarBtnText}>Revisar</Text>
+          </Pressable>
+        </View>
+      ) : null}
       {isTablet ? (
         <View style={styles.splitBody}>
           <ScrollView
@@ -381,6 +450,13 @@ export function OrderDraftScreen({ navigation, route }: Props) {
         </Pressable>
       </View>
       </KeyboardAvoidingView>
+      <DraftDiscontinuedAlert
+        visible={hasDiscontinued && !alertDismissed}
+        productNames={discontinuedNames}
+        busy={removingDiscontinued}
+        onRemoveAll={handleRemoveDiscontinued}
+        onDismiss={() => setAlertDismissed(true)}
+      />
     </SafeAreaView>
   );
 }
@@ -561,5 +637,23 @@ const styles = StyleSheet.create({
   errorBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 10 },
   errorTitle: { fontSize: 15, fontWeight: '700', color: '#0A0A0A' },
   errorBody: { fontSize: 12, color: '#525252', textAlign: 'center' },
+  discontinuedBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    backgroundColor: '#FEF3C7',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#FCD34D',
+  },
+  discontinuedBarTitle: { color: '#92400E', fontSize: 13, fontWeight: '700' },
+  discontinuedBarBody: { color: '#92400E', fontSize: 11, marginTop: 2 },
+  discontinuedBarBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#B45309',
+    borderRadius: 10,
+  },
+  discontinuedBarBtnText: { color: '#FAFAFA', fontSize: 12, fontWeight: '600' },
 });
 

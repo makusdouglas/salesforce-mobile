@@ -10,9 +10,15 @@ export type ProductRow = {
   base_price: number;
   barcode: string | null;
   image_url: string | null;
+  // 016-product-lifecycle-roles. active=false hides the product from
+  // seller catalogs on next sync (FR-008) and blocks new order lines.
+  active: boolean;
+  deactivated_at: string | null;
   updated_at: string;
   deleted_at: string | null;
 };
+
+export type ActiveFilter = 'active' | 'inactive' | 'all';
 
 export type VariantRow = {
   id: string;
@@ -78,14 +84,22 @@ function mapSaveError(error: unknown): ProductsApiError {
   return new ProductsApiError('unknown', message || 'Não foi possível salvar agora.');
 }
 
-export async function listProducts(): Promise<ProductWithVariants[]> {
-  const { data, error } = await supabase
+export async function listProducts(
+  options: { activeFilter?: ActiveFilter } = {},
+): Promise<ProductWithVariants[]> {
+  const activeFilter: ActiveFilter = options.activeFilter ?? 'active';
+  let query = supabase
     .from('products')
     .select(
-      'id,name,description,category,base_price,barcode,image_url,updated_at,deleted_at, variants:product_variants(id,product_id,label,price,barcode,updated_at,deleted_at)',
+      'id,name,description,category,base_price,barcode,image_url,active,deactivated_at,updated_at,deleted_at, variants:product_variants(id,product_id,label,price,barcode,updated_at,deleted_at)',
     )
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false });
+    .is('deleted_at', null);
+
+  if (activeFilter === 'active') query = query.eq('active', true);
+  else if (activeFilter === 'inactive') query = query.eq('active', false);
+  // 'all' — no filter on active.
+
+  const { data, error } = await query.order('updated_at', { ascending: false });
 
   if (error) {
     throw mapSaveError(error);
@@ -99,11 +113,76 @@ export async function listProducts(): Promise<ProductWithVariants[]> {
   }));
 }
 
+/**
+ * 016-product-lifecycle-roles — flip a product's `active` flag.
+ *
+ * - `setProductActive(id, false)` stamps `deactivated_at` with the
+ *   server timestamp and triggers a seller-side sync pull.
+ * - `setProductActive(id, true)` clears `deactivated_at`.
+ *
+ * RLS (migration 0018) requires `is_superuser() OR is_manage_products()`.
+ */
+export async function setProductActive(id: string, active: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('products')
+    .update({
+      active,
+      deactivated_at: active ? null : new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+  if (error) throw mapSaveError(error);
+  void triggerSyncAfterAdminWrite();
+}
+
+/**
+ * 016-product-lifecycle-roles — count draft orders (status='draft')
+ * that reference this product via any of its variants. Consumed by
+ * AdminProductDeactivateConfirmModal to surface real impact before
+ * the admin confirms (FR-003).
+ *
+ * Three explicit queries (no embed): variants → live order_items →
+ * orders filtered to status='draft'. The earlier `!inner` embed was
+ * silently dropping rows when PostgREST couldn't resolve the
+ * relationship hint, so the modal always reported 0.
+ */
+export async function listDraftsUsingProduct(productId: string): Promise<number> {
+  const { data: variantRows, error: variantErr } = await supabase
+    .from('product_variants')
+    .select('id')
+    .eq('product_id', productId)
+    .is('deleted_at', null);
+  if (variantErr) throw mapSaveError(variantErr);
+  const variantIds = (variantRows ?? []).map((v) => (v as { id: string }).id);
+  if (variantIds.length === 0) return 0;
+
+  const { data: itemRows, error: itemErr } = await supabase
+    .from('order_items')
+    .select('order_id')
+    .in('product_variant_id', variantIds)
+    .is('deleted_at', null);
+  if (itemErr) throw mapSaveError(itemErr);
+
+  const orderIds = Array.from(
+    new Set((itemRows ?? []).map((r) => (r as { order_id: string }).order_id)),
+  );
+  if (orderIds.length === 0) return 0;
+
+  const { data: orderRows, error: orderErr } = await supabase
+    .from('orders')
+    .select('id')
+    .in('id', orderIds)
+    .eq('status', 'draft')
+    .is('deleted_at', null);
+  if (orderErr) throw mapSaveError(orderErr);
+  return (orderRows ?? []).length;
+}
+
 export async function getProductById(id: string): Promise<ProductWithVariants | null> {
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id,name,description,category,base_price,barcode,image_url,updated_at,deleted_at, variants:product_variants(id,product_id,label,price,barcode,updated_at,deleted_at)',
+      'id,name,description,category,base_price,barcode,image_url,active,deactivated_at,updated_at,deleted_at, variants:product_variants(id,product_id,label,price,barcode,updated_at,deleted_at)',
     )
     .eq('id', id)
     .maybeSingle();
@@ -239,7 +318,7 @@ export async function findProductByBarcode(
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id,name,description,category,base_price,barcode,image_url,updated_at,deleted_at, variants:product_variants(id,product_id,label,price,barcode,updated_at,deleted_at)',
+      'id,name,description,category,base_price,barcode,image_url,active,deactivated_at,updated_at,deleted_at, variants:product_variants(id,product_id,label,price,barcode,updated_at,deleted_at)',
     )
     .eq('barcode', normalized)
     .is('deleted_at', null)

@@ -1,6 +1,26 @@
 export type SessionStatus = 'NotAuthenticated' | 'Authenticated' | 'RequiresRelogin';
 
-export type SessionRole = 'admin' | 'seller';
+// 016-product-lifecycle-roles — widened from {'admin','seller'} to the
+// granular admin-grade roles plus the legacy 'admin' alias kept for the
+// migration window. 'admin' is treated as equivalent to 'superuser' by
+// useAdminGate / useAnyAdminRole until every Supabase row is rewritten
+// by migration 0018 and every feature's RLS switches off is_admin().
+export type SessionRole =
+  | 'seller'
+  | 'manage-products'
+  | 'manage-salespersons'
+  | 'manage-clients'
+  | 'superuser'
+  | 'admin';
+
+// Subset of SessionRole that grants access to the Admin tab.
+export type AdminSessionRole = Exclude<SessionRole, 'seller'>;
+
+// The set of roles that are ACTIVELY managed by AdminUserRolesForm
+// (feature 016 Part B). `seller` is managed by feature 015's Edge
+// Function and is NOT toggleable from the roles form. `admin` is legacy
+// alias that the migration rewrites to `superuser`.
+export type ManagedAdminRole = Exclude<AdminSessionRole, 'admin'>;
 
 export type SessionSnapshot = {
   status: SessionStatus;

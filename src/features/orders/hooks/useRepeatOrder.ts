@@ -11,15 +11,29 @@ import { useCallback } from 'react';
 
 import { ordersRepository } from '@/data/repositories/ordersRepository';
 
-import { AllItemsUnavailableError, OrderNotFoundError, ordersService } from '../services/ordersService';
+import {
+  AllItemsUnavailableError,
+  OrderNotFoundError,
+  ordersService,
+  type RepeatPreview,
+} from '../services/ordersService';
 
 export type RepeatOutcome =
   | { kind: 'landed'; orderId: string; droppedNames: string[] }
   | { kind: 'blocked'; reason: 'all_unavailable' }
   | { kind: 'error'; reason: 'not_found' };
 
+// 016-product-lifecycle-roles — surface of the preview step. Hook
+// consumers decide whether to open `RepeatOrderDiscontinuedAlert`
+// based on `discontinuedProductNames.length > 0`.
+export type RepeatPreviewOutcome =
+  | { kind: 'resume'; orderId: string }
+  | { kind: 'preview'; preview: RepeatPreview }
+  | { kind: 'error'; reason: 'not_found' };
+
 export interface UseRepeatOrderResult {
   readonly repeat: (sourceOrderId: string) => Promise<RepeatOutcome>;
+  readonly preview: (sourceOrderId: string) => Promise<RepeatPreviewOutcome>;
 }
 
 /**
@@ -59,7 +73,32 @@ export async function runRepeatOrder(sourceOrderId: string): Promise<RepeatOutco
   }
 }
 
+/**
+ * 016-product-lifecycle-roles — read-only scan of a repeat target.
+ * Returns `resume` for Draft sources (no preview needed), or `preview`
+ * carrying the clonable count + discontinued/unavailable names.
+ */
+export async function runRepeatPreview(
+  sourceOrderId: string,
+): Promise<RepeatPreviewOutcome> {
+  const source = await ordersRepository.findById(sourceOrderId);
+  if (!source) return { kind: 'error', reason: 'not_found' };
+  if (source.status === 'draft') {
+    return { kind: 'resume', orderId: source.id };
+  }
+  try {
+    const preview = await ordersService.previewRepeat({ sourceOrderId });
+    return { kind: 'preview', preview };
+  } catch (err) {
+    if (err instanceof OrderNotFoundError) {
+      return { kind: 'error', reason: 'not_found' };
+    }
+    throw err;
+  }
+}
+
 export function useRepeatOrder(): UseRepeatOrderResult {
   const repeat = useCallback(runRepeatOrder, []);
-  return { repeat };
+  const preview = useCallback(runRepeatPreview, []);
+  return { repeat, preview };
 }

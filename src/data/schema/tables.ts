@@ -12,7 +12,7 @@ const syncColumns = [
 ];
 
 export const schema = appSchema({
-  version: 5,
+  version: 7,
   tables: [
     tableSchema({
       name: 'salespeople',
@@ -43,6 +43,14 @@ export const schema = appSchema({
         { name: 'image_url', type: 'string', isOptional: true },
         { name: 'unit', type: 'string', isOptional: true },
         { name: 'category', type: 'string', isOptional: true, isIndexed: true },
+        // 016-product-lifecycle-roles (schema v6). Indexed so the seller
+        // catalog selector can filter `active=true` cheaply. `deactivated_at_ms`
+        // follows the project's `*_at_ms` timestamp convention
+        // (sent_at_ms / canceled_at_ms). Invariant enforced server-side only:
+        // (active=true  AND deactivated_at_ms IS NULL) XOR
+        // (active=false AND deactivated_at_ms IS NOT NULL).
+        { name: 'active', type: 'boolean', isIndexed: true },
+        { name: 'deactivated_at_ms', type: 'number', isOptional: true },
         ...syncColumns,
       ],
     }),

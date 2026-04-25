@@ -6,13 +6,14 @@ type Props = {
   value: string;
   onChange: (value: string) => void;
   onScanPress: () => void;
+  error?: string | null;
 };
 
-export function BarcodeField({ value, onChange, onScanPress }: Props) {
+export function BarcodeField({ value, onChange, onScanPress, error }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Código de barras</Text>
-      <View style={styles.input}>
+      <View style={[styles.input, error ? styles.inputError : null]}>
         <TextInput
           value={value}
           onChangeText={onChange}
@@ -26,6 +27,7 @@ export function BarcodeField({ value, onChange, onScanPress }: Props) {
           <Text style={styles.scanText}>Escanear</Text>
         </Pressable>
       </View>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 }
@@ -69,5 +71,14 @@ const styles = StyleSheet.create({
     fontFamily: adminFonts.body,
     fontSize: 12,
     fontWeight: '500',
+  },
+  inputError: {
+    borderColor: '#B91C1C',
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontFamily: adminFonts.body,
+    fontSize: 12,
+    marginTop: 2,
   },
 });

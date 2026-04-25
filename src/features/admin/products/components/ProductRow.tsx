@@ -18,19 +18,42 @@ export function ProductRow({ product, onPress, showEditButton, onEditPress }: Pr
   const subtitle = [product.category ?? 'Sem categoria', `${product.variants.length} variante${product.variants.length === 1 ? '' : 's'}`]
     .filter(Boolean)
     .join(' · ');
+  const inactive = product.active === false;
 
   return (
-    <Pressable onPress={onPress} style={styles.row}>
+    <Pressable onPress={onPress} style={[styles.row, inactive && styles.rowInactive]}>
       <View style={styles.thumb}>
         {product.image_url ? (
-          <Image source={{ uri: product.image_url }} style={styles.thumbImage} />
+          <Image
+            source={{ uri: product.image_url }}
+            style={[styles.thumbImage, inactive && styles.thumbImageInactive]}
+          />
         ) : null}
       </View>
       <View style={styles.col}>
-        <Text style={styles.title} numberOfLines={1}>{product.name}</Text>
-        <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
+        <View style={styles.titleRow}>
+          <Text
+            style={[styles.title, inactive && styles.textMuted]}
+            numberOfLines={1}
+          >
+            {product.name}
+          </Text>
+          {inactive ? (
+            <View style={styles.inactiveChip}>
+              <Text style={styles.inactiveChipText}>Inativo</Text>
+            </View>
+          ) : null}
+        </View>
+        <Text
+          style={[styles.subtitle, inactive && styles.textMuted]}
+          numberOfLines={1}
+        >
+          {subtitle}
+        </Text>
       </View>
-      <Text style={styles.price}>{formatBRL(product.base_price)}</Text>
+      <Text style={[styles.price, inactive && styles.textMuted]}>
+        {formatBRL(product.base_price)}
+      </Text>
       {showEditButton ? (
         <Pressable onPress={onEditPress ?? onPress} style={styles.editBtn} hitSlop={8}>
           <Text style={styles.editBtnText}>Editar</Text>
@@ -52,6 +75,24 @@ const styles = StyleSheet.create({
     borderRadius: adminRadii.card,
     borderWidth: 1,
     borderColor: adminColors.stroke,
+  },
+  rowInactive: { opacity: 0.55, backgroundColor: adminColors.background },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  textMuted: { color: adminColors.textMuted },
+  thumbImageInactive: { opacity: 0.7 },
+  inactiveChip: {
+    paddingHorizontal: 8,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: adminColors.stroke,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inactiveChipText: {
+    color: adminColors.textMuted,
+    fontFamily: adminFonts.body,
+    fontSize: 11,
+    fontWeight: '600',
   },
   thumb: {
     // 4:3 landscape thumbnail — matches the uploaded image aspect.

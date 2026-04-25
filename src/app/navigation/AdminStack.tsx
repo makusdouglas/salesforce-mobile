@@ -13,6 +13,10 @@ import {
   AdminSellerFormScreen,
   AdminSellersListScreen,
 } from '@/features/admin/sellers';
+import {
+  AdminUsersListScreen,
+  AdminUserRolesFormScreen,
+} from '@/features/admin/users';
 
 import type { AdminStackParamList } from './types';
 
@@ -44,6 +48,14 @@ export function AdminStack() {
       />
       <Stack.Screen name="AdminSellersList" component={AdminSellersListScreen} />
       <Stack.Screen name="AdminSellerForm" component={AdminSellerFormScreen} />
+      {/*
+        016-product-lifecycle-roles — users-and-roles routes. Entry to
+        these screens is already gated at the AdminMenu tile (visible
+        to superuser only via useAdminGate); RLS enforces the real
+        authorisation boundary on every read/write.
+      */}
+      <Stack.Screen name="AdminUsersList" component={AdminUsersListScreen} />
+      <Stack.Screen name="AdminUserRolesForm" component={AdminUserRolesFormScreen} />
     </Stack.Navigator>
   );
 }

@@ -79,6 +79,12 @@ export function AddToOrderScreen({ navigation, route }: Props) {
   const selectedVariant =
     variants.find((v) => v.id === selectedVariantId) ?? null;
 
+  // 016-product-lifecycle-roles — block additions when the product was
+  // deactivated by an admin (FR-009). The catalog already filters these
+  // out, but the seller can reach this screen via a deep link, a cached
+  // "Repeat last order" path, or a mid-navigation sync pull.
+  const productInactive = product !== null && product.active === false;
+
   const preview = useMemo(() => {
     if (selectedVariant === null) {
       return { subtotal: 0, lineTotal: 0, discountAmount: 0 };
@@ -102,7 +108,8 @@ export function AddToOrderScreen({ navigation, route }: Props) {
     };
   }, [selectedVariant, quantity, discount]);
 
-  const canAdd = selectedVariant !== null && quantity >= 1 && !submitting;
+  const canAdd =
+    selectedVariant !== null && quantity >= 1 && !submitting && !productInactive;
 
   const handleAdd = async (): Promise<void> => {
     if (!canAdd || selectedVariant === null) return;
@@ -298,6 +305,16 @@ export function AddToOrderScreen({ navigation, route }: Props) {
           <View style={styles.iconBtn} />
         )}
       </View>
+
+      {productInactive ? (
+        <View style={styles.inactiveBanner}>
+          <Text style={styles.inactiveBannerTitle}>Produto descontinuado</Text>
+          <Text style={styles.inactiveBannerBody}>
+            {product?.name ?? 'Este produto'} foi desativado pelo admin e não
+            pode ser adicionado a novos pedidos.
+          </Text>
+        </View>
+      ) : null}
 
       {isTablet ? (
         <View style={styles.splitBody}>
@@ -578,6 +595,26 @@ const styles = StyleSheet.create({
   previewTotalLabel: { color: '#0A0A0A', fontSize: 13, fontWeight: '700' },
   previewTotalValue: { color: '#0A0A0A', fontSize: 16, fontWeight: '700' },
   errorText: { color: '#B91C1C', fontSize: 12 },
+  inactiveBanner: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 14,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    gap: 4,
+  },
+  inactiveBannerTitle: {
+    color: '#92400E',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  inactiveBannerBody: {
+    color: '#92400E',
+    fontSize: 12,
+    lineHeight: 16,
+  },
   footer: {
     paddingHorizontal: 16,
     paddingTop: 14,

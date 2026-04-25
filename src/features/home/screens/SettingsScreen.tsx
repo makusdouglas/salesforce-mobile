@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { HomeStackParamList } from '@/app/navigation/types';
 import { colors } from '@/app/theme/colors';
 import { ConfirmModal } from '@/app/ui/modal';
-import { authService, useSession } from '@/features/auth';
+import { authService, roleBadge, useRoles, useSession } from '@/features/auth';
 import { useActiveSalespersonId } from '@/features/clients';
 import { lockService } from '@/features/lock';
 
@@ -21,6 +21,23 @@ export function SettingsScreen({ navigation }: Props) {
   const { email } = useSession();
   const activeSp = useActiveSalespersonId();
   const salespersonName = useActiveSalespersonName(activeSp.salespersonId);
+  // 016-product-lifecycle-roles — surface the signed-in user's active
+  // roles (FR-026). Zero-role users see a friendly empty line, not a
+  // blank section, so the absence is explicit.
+  const roles = useRoles();
+  // Deduplicate admin/superuser (the legacy alias renders as the same
+  // "Super usuário" badge) so users migrated mid-rollout don't see two
+  // identical chips.
+  const uniqueRoleLabels: { key: string; label: string; style: 'default' | 'secondary' | 'destructive' }[] = [];
+  const seen = new Set<string>();
+  for (const r of roles) {
+    const badge = roleBadge(r);
+    const k = `${badge.label}:${badge.style}`;
+    if (!seen.has(k)) {
+      seen.add(k);
+      uniqueRoleLabels.push({ key: r, label: badge.label, style: badge.style });
+    }
+  }
 
   const [selectedMinutes, setSelectedMinutes] = useState<number>(
     lockService.getInactivityTimeout(),
@@ -81,6 +98,35 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={styles.identityText}>
             <Text style={styles.identityName}>{salespersonName || 'Vendedor'}</Text>
             <Text style={styles.identityEmail}>{email}</Text>
+          </View>
+        </View>
+
+        <View style={styles.settingsCard}>
+          <Text style={styles.sectionTitle}>Suas funções</Text>
+          <View style={styles.rolesRow}>
+            {uniqueRoleLabels.length === 0 ? (
+              <Text style={styles.rolesEmpty}>Sem funções atribuídas.</Text>
+            ) : (
+              uniqueRoleLabels.map((r) => (
+                <View
+                  key={r.key}
+                  style={[
+                    styles.roleChip,
+                    r.style === 'destructive' && styles.roleChipDestructive,
+                    r.style === 'secondary' && styles.roleChipSecondary,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.roleChipText,
+                      r.style === 'destructive' && styles.roleChipTextDestructive,
+                    ]}
+                  >
+                    {r.label}
+                  </Text>
+                </View>
+              ))
+            )}
           </View>
         </View>
 
@@ -190,6 +236,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAFAFA', // Match other screen backgrounds
   },
+  rolesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  rolesEmpty: { color: '#71717A', fontSize: 13, fontStyle: 'italic' },
+  roleChip: {
+    paddingHorizontal: 10,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F4F4F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleChipSecondary: { backgroundColor: '#E4E4E7' },
+  roleChipDestructive: { backgroundColor: '#FEE2E2' },
+  roleChipText: { color: '#18181B', fontSize: 12, fontWeight: '600' },
+  roleChipTextDestructive: { color: '#B91C1C' },
   content: {
     flexGrow: 1,
     alignItems: 'center',

@@ -113,6 +113,18 @@ export function mapProductServerRowToWMDB(row: SupabaseRow): WMDBDirtyRaw {
     image_url: row.image_url ?? null,
     unit: row.unit ?? null,
     category: row.category ?? null,
+    // 016-product-lifecycle-roles. `active` defaults to true so legacy
+    // rows whose Supabase row predates the column don't arrive as
+    // undefined. `deactivated_at_ms` follows the project's *_at_ms
+    // convention — same shape as `sent_at_ms` below (see
+    // mapOrderServerRowToWMDB).
+    active: row.active === false ? false : true,
+    deactivated_at_ms:
+      row.deactivated_at === null || row.deactivated_at === undefined
+        ? null
+        : typeof row.deactivated_at === 'number'
+          ? row.deactivated_at
+          : toMs(String(row.deactivated_at)),
   };
 }
 

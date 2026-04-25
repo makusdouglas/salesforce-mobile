@@ -14,12 +14,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AdminStackParamList } from '@/app/navigation/types';
 import { KeyboardAwareScroll } from '@/app/ui/KeyboardAwareScroll';
 
+import { AdminProductDeactivateConfirmModal } from '../components/AdminProductDeactivateConfirmModal';
 import { BarcodeField } from '../components/BarcodeField';
 import { ProductImagePicker } from '../components/ProductImagePicker';
 import { VariantRow } from '../components/VariantRow';
 import { useProductForm } from '../hooks/useProductForm';
 import { useProductImageUpload } from '../hooks/useProductImageUpload';
 import { useAdminProductsLayout } from '../responsive/useAdminProductsLayout';
+import { barcodeCaptureChannel } from '../service/barcodeCaptureChannel';
 import { imageSourceChannel } from '../service/imageSourceChannel';
 import { adminColors, adminFonts, adminRadii } from '../theme';
 
@@ -37,6 +39,33 @@ export function AdminProductFormScreen() {
   });
   const imageUpload = useProductImageUpload();
   const [uploadBanner, setUploadBanner] = useState<string | null>(null);
+
+  // 016-product-lifecycle-roles — confirm before toggling active state.
+  // Reactivation goes through the same modal so the admin sees a
+  // consistent confirmation pattern.
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingActive, setPendingActive] = useState<boolean | null>(null);
+
+  const askToggleActive = (next: boolean) => {
+    setPendingActive(next);
+    setConfirmOpen(true);
+  };
+
+  const confirmToggleActive = async () => {
+    if (pendingActive === null) return;
+    const result = await form.toggleActive(pendingActive);
+    if (result === 'ok') {
+      setConfirmOpen(false);
+      setPendingActive(null);
+    }
+    // On failure we leave the modal open so the error banner can render;
+    // the user can retry or cancel.
+  };
+
+  const cancelToggle = () => {
+    setConfirmOpen(false);
+    setPendingActive(null);
+  };
 
   const handleImagePick = async (source: 'camera' | 'library') => {
     setUploadBanner(null);
@@ -97,8 +126,13 @@ export function AdminProductFormScreen() {
           <Text style={styles.title}>{isEditing ? 'Editar produto' : 'Novo produto'}</Text>
         </Pressable>
         <Pressable
-          style={[styles.save, form.saving && styles.saveDisabled]}
-          onPress={form.saving ? undefined : onSave}
+          style={[
+            styles.save,
+            (form.saving || form.barcodeConflict !== null) && styles.saveDisabled,
+          ]}
+          onPress={
+            form.saving || form.barcodeConflict !== null ? undefined : onSave
+          }
         >
           {form.saving ? (
             <ActivityIndicator color={adminColors.primaryOn} />
@@ -172,7 +206,20 @@ export function AdminProductFormScreen() {
             <BarcodeField
               value={form.state.barcode}
               onChange={form.setBarcode}
-              onScanPress={() => nav.navigate('AdminBarcodeScanner')}
+              onScanPress={() => {
+                // Capture mode: scanner returns the digits to this form
+                // instead of running the lookup → match / new-product
+                // flow (which would discard the in-progress edits).
+                barcodeCaptureChannel.request((code) => {
+                  form.setBarcode(code);
+                });
+                nav.navigate('AdminBarcodeScanner');
+              }}
+              error={
+                form.barcodeConflict
+                  ? `Código já usado por "${form.barcodeConflict.productName}".`
+                  : null
+              }
             />
 
             <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -225,9 +272,58 @@ export function AdminProductFormScreen() {
                   ))
               )}
             </View>
+
+            {isEditing ? (
+              <View style={{ gap: 10, marginTop: 8 }}>
+                <Text style={styles.sectionHeader}>STATUS</Text>
+                <View style={styles.statusRow}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.statusTitle}>
+                      {form.state.active ? 'Ativo' : 'Inativo'}
+                    </Text>
+                    <Text style={styles.statusHint}>
+                      {form.state.active
+                        ? 'Vendedores podem adicionar este produto a novos pedidos.'
+                        : 'Produto oculto do catálogo. Rascunhos existentes ficam bloqueados até os vendedores removerem as linhas.'}
+                    </Text>
+                  </View>
+                  <Pressable
+                    style={[
+                      styles.statusBtn,
+                      form.state.active ? styles.statusBtnDestructive : styles.statusBtnRestore,
+                    ]}
+                    onPress={() => askToggleActive(!form.state.active)}
+                  >
+                    <Text
+                      style={[
+                        styles.statusBtnText,
+                        form.state.active
+                          ? styles.statusBtnTextDestructive
+                          : styles.statusBtnTextRestore,
+                      ]}
+                    >
+                      {form.state.active ? 'Desativar' : 'Reativar'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
           </View>
         </KeyboardAwareScroll>
       )}
+
+      {isEditing && form.state.id !== undefined && pendingActive !== null ? (
+        <AdminProductDeactivateConfirmModal
+          visible={confirmOpen}
+          productId={form.state.id}
+          productName={form.state.name}
+          isReactivating={pendingActive === true}
+          onCancel={cancelToggle}
+          onConfirm={confirmToggleActive}
+          busy={form.toggling}
+          errorMessage={form.toggleError}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -381,4 +477,48 @@ const styles = StyleSheet.create({
     fontFamily: adminFonts.body,
     fontSize: 14,
   },
+  sectionHeader: {
+    color: adminColors.textMuted,
+    fontFamily: adminFonts.body,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    backgroundColor: adminColors.surface,
+    borderRadius: adminRadii.card,
+    borderWidth: 1,
+    borderColor: adminColors.stroke,
+  },
+  statusTitle: {
+    color: adminColors.textPrimary,
+    fontFamily: adminFonts.body,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statusHint: {
+    color: adminColors.textMuted,
+    fontFamily: adminFonts.body,
+    fontSize: 12,
+  },
+  statusBtn: {
+    height: 36,
+    paddingHorizontal: 14,
+    borderRadius: adminRadii.control,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusBtnDestructive: { backgroundColor: '#FEE2E2' },
+  statusBtnRestore: { backgroundColor: '#DCFCE7' },
+  statusBtnText: {
+    fontFamily: adminFonts.body,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  statusBtnTextDestructive: { color: '#B91C1C' },
+  statusBtnTextRestore: { color: '#166534' },
 });

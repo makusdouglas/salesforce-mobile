@@ -26,6 +26,8 @@ const SAMPLE_PRODUCT = {
   base_price: 29.9,
   barcode: '7891234567890',
   image_url: null,
+  active: true,
+  deactivated_at: null,
   updated_at: new Date().toISOString(),
   deleted_at: null,
   variants: [],

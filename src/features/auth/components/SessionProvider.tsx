@@ -7,11 +7,13 @@ import {
 } from '@expo-google-fonts/inter';
 import NetInfo from '@react-native-community/netinfo';
 import { useEffect, useState, type ReactNode } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import { startConnectivityListener } from '../connectivity/connectivity';
 import { authService } from '../service/authService';
 import { authBootstrap } from '../session/bootstrap';
-import { _internalSessionStore } from '../session/session';
+import { fetchAndPublishRoles } from '../session/rolesRepository';
+import { _internalSessionStore, sessionStore } from '../session/session';
 
 type SessionProviderProps = {
   children: ReactNode;
@@ -51,9 +53,25 @@ export function SessionProvider({ children }: SessionProviderProps) {
     })();
 
     const stopConnectivity = startConnectivityListener();
+
+    // 016-product-lifecycle-roles — SC-007/FR-027. Re-fetch roles when
+    // the app comes back to the foreground so a role granted or revoked
+    // by a superuser takes effect without forcing a logout. Gated on
+    // Authenticated so a NotAuthenticated cold start does not fire.
+    let previousAppState: AppStateStatus = AppState.currentState;
+    const appStateSub = AppState.addEventListener('change', (next) => {
+      if (previousAppState !== 'active' && next === 'active') {
+        if (sessionStore.getSnapshot().status === 'Authenticated') {
+          void fetchAndPublishRoles();
+        }
+      }
+      previousAppState = next;
+    });
+
     return () => {
       cancelled = true;
       stopConnectivity();
+      appStateSub.remove();
     };
   }, []);
 

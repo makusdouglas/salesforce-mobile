@@ -6,7 +6,7 @@ import {
   CameraView,
   useCameraPermissions,
 } from 'expo-camera';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -22,11 +22,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AdminStackParamList } from '@/app/navigation/types';
 
 import { useBarcodeLookup } from '../hooks/useBarcodeLookup';
+import { barcodeCaptureChannel } from '../service/barcodeCaptureChannel';
 import { adminColors, adminFonts, adminRadii } from '../theme';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList, 'AdminBarcodeScanner'>;
 
-const SYMBOLOGIES: BarcodeType[] = ['code128', 'ean13', 'ean8', 'upc_a', 'qr'];
+// Retail product symbologies only. `qr` is excluded — products don't
+// carry QR codes and including it lets random posters / receipts on
+// camera trip the scanner.
+const SYMBOLOGIES: BarcodeType[] = ['code128', 'ean13', 'ean8', 'upc_a'];
+
+// EAN-8 has 8 digits, UPC-A has 12, EAN-13 has 13, GS1-128 numeric runs
+// can be longer. Anything outside 8–14 digits is almost certainly a
+// misread, so we ignore it and let the camera resample.
+const MIN_DIGITS = 8;
+const MAX_DIGITS = 14;
 
 export function AdminBarcodeScannerScreen() {
   const nav = useNavigation<Nav>();
@@ -36,19 +46,50 @@ export function AdminBarcodeScannerScreen() {
   const [banner, setBanner] = useState<string | null>(null);
   const [torch, setTorch] = useState(false);
   const scannedRef = useRef(false);
+  // Debounce buffer: require two consecutive identical reads before we
+  // commit a code. Single-frame OCR mistakes on EAN-13s are common, two
+  // matching frames in a row is a strong "the code is stable" signal.
+  const lastCodeRef = useRef<string | null>(null);
+
+  // Auto-request the camera permission on mount so the user doesn't
+  // see the permission box on the very first open.
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      void requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  // If the user backs out without a successful scan, drop any pending
+  // capture-mode listener so the next "Escanear" tap starts clean.
+  useEffect(() => {
+    return () => {
+      if (barcodeCaptureChannel.hasPending()) barcodeCaptureChannel.cancel();
+    };
+  }, []);
 
   const handleCode = useCallback(
     async (code: string) => {
       if (scannedRef.current) return;
+      const trimmed = code.trim();
+
+      // Capture mode: caller (e.g. the product edit form) just wants
+      // the digits — return them and pop back. Skip lookup entirely.
+      if (barcodeCaptureChannel.hasPending()) {
+        scannedRef.current = true;
+        barcodeCaptureChannel.resolve(trimmed);
+        nav.goBack();
+        return;
+      }
+
       scannedRef.current = true;
       setBanner(null);
-      const result = await run(code);
+      const result = await run(trimmed);
       if (result.status === 'match') {
         nav.replace('AdminBarcodeMatch', { productId: result.product.id });
         return;
       }
       if (result.status === 'no_match') {
-        nav.replace('AdminProductForm', { prefilledBarcode: code.trim() });
+        nav.replace('AdminProductForm', { prefilledBarcode: trimmed });
         return;
       }
       if (result.status === 'offline') {
@@ -63,8 +104,22 @@ export function AdminBarcodeScannerScreen() {
 
   const onScanResult = useCallback(
     (event: BarcodeScanningResult) => {
-      if (!event?.data) return;
-      void handleCode(event.data);
+      if (!event?.data || scannedRef.current) return;
+      const raw = event.data.trim();
+      // Strip non-digits (some symbologies decode with check chars
+      // or framing whitespace) and validate length.
+      const digits = raw.replace(/\D/g, '');
+      if (digits.length < MIN_DIGITS || digits.length > MAX_DIGITS) {
+        lastCodeRef.current = null;
+        return;
+      }
+      // Two consecutive matching reads → commit. First read just
+      // primes the buffer; a different read resets it.
+      if (lastCodeRef.current !== digits) {
+        lastCodeRef.current = digits;
+        return;
+      }
+      void handleCode(digits);
     },
     [handleCode],
   );
