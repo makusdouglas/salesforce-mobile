@@ -147,16 +147,15 @@ async function handle(req: Request): Promise<Response> {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  // listUsers doesn't support filter; page through a small result set to
-  // be safe in dev. In production we'd prefer an index on auth.users.email
-  // or a direct SQL query.
   {
-    const { data, error } = await admin.auth.admin.listUsers({
-      page: 1,
-      perPage: 200,
-    });
-    if (error) return fail('provisioning_failed', 500, 'list_users');
-    if (data.users.some((u: { email?: string | null }) => (u.email ?? '').toLowerCase() === email)) {
+    // Use the email_exists_in_auth() RPC (security-definer SQL helper
+    // installed by migration 0017) — O(1) on auth.users.email and
+    // doesn't depend on the Admin API's pagination/scope behaviour.
+    const { data, error } = await admin.rpc('email_exists_in_auth', { p_email: email });
+    if (error) {
+      return fail('provisioning_failed', 500, `email_check:${error.message}`);
+    }
+    if (data === true) {
       return fail('email_in_use', 409);
     }
   }
