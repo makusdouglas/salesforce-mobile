@@ -68,7 +68,7 @@ describe('applyFilters — status chip', () => {
     row({ id: 'c', status: 'canceled' }),
   ];
 
-  const cases: Array<[OrdersOverviewStatusFilter, string[]]> = [
+  const cases: [OrdersOverviewStatusFilter, string[]][] = [
     ['all', ['d', 's-paid', 's-partial', 's-pending', 's-adjust', 'c']],
     ['draft', ['d']],
     ['canceled', ['c']],

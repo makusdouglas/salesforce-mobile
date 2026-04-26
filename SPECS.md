@@ -209,7 +209,7 @@ CRUD de vendedores pelo admin. Criar vendedor = criar usuário Supabase Auth via
 
 ---
 
-### 16. Product Lifecycle + Granular Admin Roles `[admin+core]` `[ui]`
+### 16. Product Lifecycle + Granular Admin Roles `[admin+core]` `[ui]` ✅ **Shipped**
 
 Dois refinamentos encadeados do módulo admin:
 
@@ -230,7 +230,7 @@ Extend user_roles to support multiple named admin-grade roles per user: 'manage-
 
 ---
 
-### 17. Revenue Dashboard (Admin + Seller View) `[admin+core]` `[ui]`
+### 17. Revenue Dashboard (Admin + Seller View) `[admin+core]` `[ui]` ✅ **Shipped**
 
 Dashboard mês-a-mês para acompanhar receita. Admin vê agregado de todos os vendedores com filtro opcional por vendedor; vendedor vê o atalho na própria home (UX3) abrindo a mesma tela escopada a si. Três séries no chart principal — **Faturado** (sum de `orders.total` para `sent`), **Recebido** (sum de `payment_receipts.amount`), **Pendente** (Faturado − Recebido, floor em 0) — derivadas, sem novo valor de status (D4). Admin lê via RPC online (P6); vendedor agrega localmente do WatermelonDB (R1, offline-first). Inclui KPI band com delta MoM, ranking de vendedores (admin), top 3 clientes & produtos, aging de recebíveis, e overlay YoY. Drill-down no mês reusa `OrdersListScreen` (F13).
 
@@ -318,8 +318,8 @@ Export manual do WatermelonDB em formato legível (JSON/ZIP) compartilhável via
 13. ✅ Orders Overview & Accounting Summary        [core/ui]
 14. ✅ Admin Role Foundation + Products CRUD       [admin/ui]
 15. ✅ Admin Sellers Management                    [admin/ui]
-16. Product Lifecycle + Granular Admin Roles    [admin+core/ui]
-17. Revenue Dashboard (Admin + Seller View)     [admin+core/ui]
+16. ✅ Product Lifecycle + Granular Admin Roles    [admin+core/ui]
+17. ✅ Revenue Dashboard (Admin + Seller View)     [admin+core/ui]
 18. Admin Clients Management                    [admin/ui]
 19. Emergency Export                            [infra/light-ui]
 ```

@@ -19,7 +19,7 @@ describe('derivePaymentStatus — non-sent orders carry no expectation', () => {
 });
 
 describe('derivePaymentStatus — sent orders', () => {
-  const cases: Array<[number, number, OrderPaymentStatus]> = [
+  const cases: [number, number, OrderPaymentStatus][] = [
     // [total, received, expected]
     [100, 100, 'paid'],
     [100, 99.996, 'paid'], // within EPS

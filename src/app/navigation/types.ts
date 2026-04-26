@@ -30,6 +30,8 @@ export type AdminStackParamList = {
   // Both are superuser-only at the navigator level (see AdminStack).
   AdminUsersList: undefined;
   AdminUserRolesForm: { userId: string };
+  // 017-revenue-dashboard: aggregated cross-seller dashboard (admin scope).
+  AdminRevenue: undefined;
 };
 
 export type AuthStackParamList = {
@@ -55,7 +57,15 @@ export type HomeStackParamList = {
   // 009-order-assembly: drafts-in-progress list, reached from Home.
   DraftsList: undefined;
   // 013-orders-overview: consolidated orders list (monthly + filters).
-  OrdersOverview: undefined;
+  // 017-revenue-dashboard extended the params with optional `month` (YYYY-MM)
+  // and `salespersonId` so dashboard drill-downs can carry both filters into
+  // the list. OrdersOverview is non-breaking on absence: when both are
+  // undefined it loads with its existing defaults.
+  OrdersOverview:
+    | { month?: string; salespersonId?: string | null }
+    | undefined;
+  // 017-revenue-dashboard: seller-scope dashboard reached from Home tile.
+  Revenue: undefined;
 };
 
 export type OrdersStackParamList = {

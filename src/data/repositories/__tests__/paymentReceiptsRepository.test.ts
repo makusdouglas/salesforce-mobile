@@ -159,7 +159,7 @@ describe('paymentReceiptsRepository.create', () => {
       paymentReceiptsRepository.create({
         orderId: 'order-1',
         amount: 100,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         method: 'boleto' as any,
       }),
     ).rejects.toBeInstanceOf(DataLayerError);
@@ -173,7 +173,7 @@ describe('paymentReceiptsRepository.create', () => {
         method: 'pix',
         attachment: {
           localPath: '/tmp/a.webp',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           mimeType: 'image/webp' as any,
           sizeBytes: 1,
         },
@@ -324,17 +324,17 @@ describe('paymentReceiptsRepository.observeByOrder', () => {
 
 describe('append-only surface', () => {
   it('does not export update()', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     expect((paymentReceiptsRepository as any).update).toBeUndefined();
   });
 
   it('does not export softDelete()', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     expect((paymentReceiptsRepository as any).softDelete).toBeUndefined();
   });
 
   it('does not export destroy()', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     expect((paymentReceiptsRepository as any).destroy).toBeUndefined();
   });
 });

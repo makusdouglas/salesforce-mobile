@@ -9,7 +9,7 @@ export interface ComputeReceiptTotalsInput {
   /** Order total in cents. Derived elsewhere from order + order_items; this selector takes it verbatim. */
   orderTotalCents: number;
   /** Includes both regular receipts (positive amount) and corrections (any non-zero amount). */
-  receipts: ReadonlyArray<{ amount: number }>;
+  receipts: readonly { amount: number }[];
 }
 
 export interface ReceiptTotals {

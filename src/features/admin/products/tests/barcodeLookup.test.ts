@@ -1,3 +1,7 @@
+/* eslint-disable import/order, import/first */
+// IMPORTANT: imports stay below the jest.mock calls so the partial-mock
+// pattern using jest.requireActual below resolves predictably. `lint:fix`
+// will try to hoist them — leave them here.
 jest.mock('@/data/supabase', () => ({ supabase: { from: jest.fn() } }));
 jest.mock('@/features/sync/triggers/adminWriteTrigger', () => ({
   triggerSyncAfterAdminWrite: jest.fn(),

@@ -33,10 +33,14 @@ const _keepAlive = _fallbackShortId;
  * from WatermelonDB; tablet viewport renders a split panel with an
  * in-screen detail preview.
  */
-export function OrdersOverviewScreen({ navigation }: Props) {
+export function OrdersOverviewScreen({ navigation, route }: Props) {
   const viewport = useViewport();
   const activeSp = useActiveSalespersonId();
-  const filters = useOrdersOverviewFilters();
+  // 017-revenue-dashboard: dashboard drill-down can pre-set the visible
+  // month via route param. The salespersonId param is reserved for future
+  // cross-seller admin views; sellers still see only their own orders here.
+  const initialMonth = route.params?.month;
+  const filters = useOrdersOverviewFilters({ initialMonth });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState<boolean>(false);
   const [exportChooserOpen, setExportChooserOpen] = useState<boolean>(false);
@@ -62,7 +66,7 @@ export function OrdersOverviewScreen({ navigation }: Props) {
         await exportReport({ data, format });
       } catch (err) {
         // Surface via console in dev; a toast/snackbar is a nice-to-have.
-        // eslint-disable-next-line no-console
+         
         console.warn('[orders-overview] export failed', err);
       } finally {
         setExportInFlight(false);

@@ -1,4 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable import/order, import/first */
+// IMPORTANT: imports MUST stay below jest.mock + the `fromMock` const.
+// `jest.mock(factory)` is hoisted, but the factory references `fromMock`,
+// which is initialized later. Moving imports to the top makes the factory
+// run before the const, raising "Cannot access 'fromMock' before
+// initialization". `pnpm lint:fix` will try to reorder these — leave
+// them where they are.
 type MockState = {
   productInsertRows: Record<string, unknown>[];
   productUpdateRows: Array<{ id?: string; patch: Record<string, unknown> }>;

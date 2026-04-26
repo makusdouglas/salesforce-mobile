@@ -105,7 +105,7 @@ export function OrderDetailScreen({ navigation, route }: ComposedProps) {
           detail={detail}
           onViewPdf={() => {
             void openStoredPdf(detail.header.id).catch((err) => {
-              // eslint-disable-next-line no-console
+               
               console.warn('[order-detail] openStoredPdf failed', err);
             });
           }}
@@ -183,7 +183,7 @@ export function OrderDetailEmbedded({
               accessibilityLabel="Ver PDF"
               onPress={() => {
                 void openStoredPdf(detail.header.id).catch((err) => {
-                  // eslint-disable-next-line no-console
+                   
                   console.warn('[order-detail] openStoredPdf failed', err);
                 });
               }}
