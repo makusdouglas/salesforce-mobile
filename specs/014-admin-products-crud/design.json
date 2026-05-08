@@ -1,0 +1,18 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/014-admin-products-crud/design",
+  "screens": [
+    { "name": "Admin Products List / Phone", "frame_id": "hq0zE", "screenshot": "specs/014-admin-products-crud/design/admin-products-list-phone.png" },
+    { "name": "Admin Products List / Tablet", "frame_id": "luM9m", "screenshot": "specs/014-admin-products-crud/design/admin-products-list-tablet.png" },
+    { "name": "Admin Product Source / Phone", "frame_id": "XcyOc", "screenshot": "specs/014-admin-products-crud/design/admin-product-source-phone.png" },
+    { "name": "Admin Product Source / Tablet", "frame_id": "1pscT", "screenshot": "specs/014-admin-products-crud/design/admin-product-source-tablet.png" },
+    { "name": "Admin Barcode Scanner / Phone", "frame_id": "flbRO", "screenshot": "specs/014-admin-products-crud/design/admin-barcode-scanner-phone.png" },
+    { "name": "Admin Barcode Scanner / Tablet", "frame_id": "8l9sw", "screenshot": "specs/014-admin-products-crud/design/admin-barcode-scanner-tablet.png" },
+    { "name": "Admin Barcode Match / Phone", "frame_id": "Po9C6", "screenshot": "specs/014-admin-products-crud/design/admin-barcode-match-phone.png" },
+    { "name": "Admin Barcode Match / Tablet", "frame_id": "K1ZsP", "screenshot": "specs/014-admin-products-crud/design/admin-barcode-match-tablet.png" },
+    { "name": "Admin Product Form / Phone", "frame_id": "ImfjY", "screenshot": "specs/014-admin-products-crud/design/admin-product-form-phone.png" },
+    { "name": "Admin Product Form / Tablet", "frame_id": "qmIMf", "screenshot": "specs/014-admin-products-crud/design/admin-product-form-tablet.png" },
+    { "name": "Admin Image Source / Phone", "frame_id": "J9WnG", "screenshot": "specs/014-admin-products-crud/design/admin-image-source-phone.png" },
+    { "name": "Admin Image Source / Tablet", "frame_id": "ZWNU2", "screenshot": "specs/014-admin-products-crud/design/admin-image-source-tablet.png" }
+  ]
+}

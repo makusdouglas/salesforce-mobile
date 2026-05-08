@@ -1,0 +1,26 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/017-revenue-dashboard/design",
+  "screens": [
+    {
+      "name": "RevenueDashboard / Phone (admin)",
+      "frame_id": "mgkvx",
+      "screenshot": "specs/017-revenue-dashboard/design/revenue-dashboard-phone.png"
+    },
+    {
+      "name": "RevenueDashboard / Tablet (admin)",
+      "frame_id": "2LUrw",
+      "screenshot": "specs/017-revenue-dashboard/design/revenue-dashboard-tablet.png"
+    },
+    {
+      "name": "RevenueDashboardSeller / Phone",
+      "frame_id": "VKBOc",
+      "screenshot": "specs/017-revenue-dashboard/design/revenue-dashboard-seller-phone.png"
+    },
+    {
+      "name": "RevenueDashboardSeller / Tablet",
+      "frame_id": "limaj",
+      "screenshot": "specs/017-revenue-dashboard/design/revenue-dashboard-seller-tablet.png"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+# Active Pencil configuration for this project.
+# Overrides the defaults in extension.yml and the structure from config-template.yml.
+
+pen_file: 'layout.pen'
+design_dir: 'design'
+screenshot_format: 'png'
+screens_per_feature: 'auto'
+
+# Target viewports — every logical screen must exist as ONE frame per
+# viewport in the .pen file. Required by constitution §5 UX5.
+# Portrait only; landscape is out of MVP scope.
+viewports:
+  phone:
+    label: 'Phone'
+    width: 390
+    height: 844
+    reference: 'iPhone 14 / modern Android'
+  tablet:
+    label: 'Tablet'
+    width: 820
+    height: 1180
+    reference: 'iPad 11"'
+
+# Design system — applied to every screen planned or adjusted during
+# `/speckit-pencil-design`. Shared by all features so the MVP stays cohesive.
+style_guide:
+  name: 'Anchored Ribbon Grid'
+  typography:
+    headings: 'Funnel Sans'
+    body: 'Inter'
+    captions: 'Geist'
+  color_palette: 'Lavender Cream'
+  roundness: 'Basic Roundness'
+  elevation: 'Gentle Lift'
+  decorative_imagery: 'Fluid Ribbon Gradients'

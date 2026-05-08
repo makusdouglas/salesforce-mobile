@@ -1,0 +1,36 @@
+# Pencil design planning configuration.
+# Copy or symlink this file as `.specify/extensions/pencil/pencil-config.yml` and edit the values.
+
+# Path (relative to repo root) of the .pen file that holds this project's designs.
+# The Pencil MCP will open this file when the design hook runs.
+pen_file: 'layout.pen'
+
+# Sub-directory (inside each feature spec folder, e.g. specs/003-my-feature/<design_dir>/)
+# where design artifacts for that feature are written:
+#   - screens.md  — one-line summary of the screens planned/adjusted for this feature
+#   - *.png       — screenshots exported from the .pen file via get_screenshot
+design_dir: 'design'
+
+# Screenshot format used when exporting node previews (png|jpg).
+screenshot_format: 'png'
+
+# How to determine which screens belong to the feature:
+#   "auto"   — AI infers from the feature description and existing top-level frames
+#   "ask"    — AI lists candidate frames and waits for the user to pick
+#   "all"    — include every top-level frame touched during the design session
+screens_per_feature: 'auto'
+
+# Design system guidelines injected into every Pencil session before any
+# batch_design operation. The AI MUST load matching Pencil guidelines via
+# get_guidelines() and apply these styles consistently across all screens.
+# Leave empty / comment out the section to disable style enforcement.
+style_guide:
+  name: 'Anchored Ribbon Grid'
+  typography:
+    headings: 'Funnel Sans'
+    body: 'Inter'
+    captions: 'Geist'
+  color_palette: 'Lavender Cream'
+  roundness: 'Basic Roundness'
+  elevation: 'Gentle Lift'
+  decorative_imagery: 'Fluid Ribbon Gradients'
