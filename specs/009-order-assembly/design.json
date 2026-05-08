@@ -1,0 +1,12 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/009-order-assembly/design",
+  "screens": [
+    { "name": "OrderDraft / Phone", "frame_id": "Pt4Eg", "screenshot": "specs/009-order-assembly/design/order-draft-phone.png" },
+    { "name": "AddToOrder / Phone", "frame_id": "JOHsf", "screenshot": "specs/009-order-assembly/design/add-to-order-phone.png" },
+    { "name": "OrderSummary / Phone", "frame_id": "Z36e3", "screenshot": "specs/009-order-assembly/design/order-summary-phone.png" },
+    { "name": "OrderDraft / Tablet", "frame_id": "lmZZr", "screenshot": "specs/009-order-assembly/design/order-draft-tablet.png" },
+    { "name": "AddToOrder / Tablet", "frame_id": "8DyNk", "screenshot": "specs/009-order-assembly/design/add-to-order-tablet.png" },
+    { "name": "OrderSummary / Tablet", "frame_id": "JDXoD", "screenshot": "specs/009-order-assembly/design/order-summary-tablet.png" }
+  ]
+}

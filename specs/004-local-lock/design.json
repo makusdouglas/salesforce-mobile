@@ -1,0 +1,42 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/004-local-lock/design",
+  "screens": [
+    {
+      "name": "PinSetup / Phone",
+      "frame_id": "jDrHn",
+      "viewport": "phone",
+      "screenshot": "specs/004-local-lock/design/pinsetup-phone.png"
+    },
+    {
+      "name": "PinSetup / Tablet",
+      "frame_id": "mfbb4",
+      "viewport": "tablet",
+      "screenshot": "specs/004-local-lock/design/pinsetup-tablet.png"
+    },
+    {
+      "name": "Lock / Phone",
+      "frame_id": "Xiob1",
+      "viewport": "phone",
+      "screenshot": "specs/004-local-lock/design/lock-phone.png"
+    },
+    {
+      "name": "Lock / Tablet",
+      "frame_id": "t3bCe",
+      "viewport": "tablet",
+      "screenshot": "specs/004-local-lock/design/lock-tablet.png"
+    },
+    {
+      "name": "PinRecoveryConfirm / Phone",
+      "frame_id": "Td2wY",
+      "viewport": "phone",
+      "screenshot": "specs/004-local-lock/design/pinrecoveryconfirm-phone.png"
+    },
+    {
+      "name": "PinRecoveryConfirm / Tablet",
+      "frame_id": "qIHxR",
+      "viewport": "tablet",
+      "screenshot": "specs/004-local-lock/design/pinrecoveryconfirm-tablet.png"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/008-home-dashboard/design",
+  "screens": [
+    {
+      "name": "Home / Phone",
+      "frame_id": "XmxN2",
+      "screenshot": "specs/008-home-dashboard/design/home-phone.png"
+    },
+    {
+      "name": "HomeEmpty / Phone",
+      "frame_id": "yHNTP",
+      "screenshot": "specs/008-home-dashboard/design/home-empty-phone.png"
+    },
+    {
+      "name": "Home / Tablet",
+      "frame_id": "czxzV",
+      "screenshot": "specs/008-home-dashboard/design/home-tablet.png"
+    },
+    {
+      "name": "HomeEmpty / Tablet",
+      "frame_id": "IvIBz",
+      "screenshot": "specs/008-home-dashboard/design/home-empty-tablet.png"
+    },
+    {
+      "name": "ConfirmModal / Phone",
+      "frame_id": "zwiuM",
+      "screenshot": "specs/008-home-dashboard/design/modals/confirm-modal-phone.png"
+    },
+    {
+      "name": "ConfirmModal / Tablet",
+      "frame_id": "Lasp4",
+      "screenshot": "specs/008-home-dashboard/design/modals/confirm-modal-tablet.png"
+    }
+  ]
+}

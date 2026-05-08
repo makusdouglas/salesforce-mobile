@@ -1,0 +1,24 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/016-product-lifecycle-roles/design",
+  "screens": [
+    { "name": "AdminProductsList / Phone", "frame_id": "hq0zE", "screenshot": "specs/016-product-lifecycle-roles/design/admin-products-list.png", "scope": "modify" },
+    { "name": "AdminProductsList / Tablet", "frame_id": "luM9m", "screenshot": null, "scope": "modify" },
+    { "name": "AdminProductForm / Phone", "frame_id": "ImfjY", "screenshot": "specs/016-product-lifecycle-roles/design/admin-product-form.png", "scope": "modify" },
+    { "name": "AdminProductForm / Tablet", "frame_id": "qmIMf", "screenshot": null, "scope": "modify" },
+    { "name": "AdminProductDeactivateConfirm / Phone", "frame_id": "3kyN7", "screenshot": "specs/016-product-lifecycle-roles/design/admin-product-deactivate-confirm-phone.png", "scope": "new" },
+    { "name": "AdminProductDeactivateConfirm / Tablet", "frame_id": "evhGY", "screenshot": "specs/016-product-lifecycle-roles/design/admin-product-deactivate-confirm-tablet.png", "scope": "new" },
+    { "name": "DraftDiscontinuedAlert / Phone", "frame_id": "A65W2", "screenshot": "specs/016-product-lifecycle-roles/design/draft-discontinued-alert-phone.png", "scope": "new" },
+    { "name": "DraftDiscontinuedAlert / Tablet", "frame_id": "5w1q2", "screenshot": "specs/016-product-lifecycle-roles/design/draft-discontinued-alert-tablet.png", "scope": "new" },
+    { "name": "RepeatOrderDiscontinuedAlert / Phone", "frame_id": "boQMF", "screenshot": "specs/016-product-lifecycle-roles/design/repeat-order-discontinued-alert-phone.png", "scope": "new" },
+    { "name": "RepeatOrderDiscontinuedAlert / Tablet", "frame_id": "Yp9ot", "screenshot": "specs/016-product-lifecycle-roles/design/repeat-order-discontinued-alert-tablet.png", "scope": "new" },
+    { "name": "AdminMenu / Phone", "frame_id": "5r1fS", "screenshot": "specs/016-product-lifecycle-roles/design/admin-menu-phone.png", "scope": "modify" },
+    { "name": "AdminMenu / Tablet", "frame_id": "qAGM6", "screenshot": "specs/016-product-lifecycle-roles/design/admin-menu-tablet.png", "scope": "modify" },
+    { "name": "AdminUsersList / Phone", "frame_id": "bObF0", "screenshot": "specs/016-product-lifecycle-roles/design/admin-users-list-phone.png", "scope": "new" },
+    { "name": "AdminUsersList / Tablet", "frame_id": "Nm3SK", "screenshot": "specs/016-product-lifecycle-roles/design/admin-users-list-tablet.png", "scope": "new" },
+    { "name": "AdminUserRolesForm / Phone", "frame_id": "YL1iX", "screenshot": "specs/016-product-lifecycle-roles/design/admin-user-roles-form-phone.png", "scope": "new" },
+    { "name": "AdminUserRolesForm / Tablet", "frame_id": "zeSbE", "screenshot": "specs/016-product-lifecycle-roles/design/admin-user-roles-form-tablet.png", "scope": "new" },
+    { "name": "ProfileScreen / Phone", "frame_id": null, "screenshot": null, "scope": "modify-append-roles-section" },
+    { "name": "ProfileScreen / Tablet", "frame_id": null, "screenshot": null, "scope": "modify-append-roles-section" }
+  ]
+}

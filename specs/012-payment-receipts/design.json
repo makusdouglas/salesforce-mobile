@@ -1,0 +1,36 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/012-payment-receipts/design",
+  "screens": [
+    {
+      "name": "Order Receipts / Phone",
+      "frame_id": "OhaXW",
+      "screenshot": "specs/012-payment-receipts/design/order-receipts-phone.png"
+    },
+    {
+      "name": "Order Receipts / Tablet",
+      "frame_id": "M71E2",
+      "screenshot": "specs/012-payment-receipts/design/order-receipts-tablet.png"
+    },
+    {
+      "name": "Payment Receipt Form / Phone",
+      "frame_id": "xFdWB",
+      "screenshot": "specs/012-payment-receipts/design/payment-receipt-form-phone.png"
+    },
+    {
+      "name": "Payment Receipt Form / Tablet",
+      "frame_id": "qmurF",
+      "screenshot": "specs/012-payment-receipts/design/payment-receipt-form-tablet.png"
+    },
+    {
+      "name": "Payment Receipt Detail / Phone",
+      "frame_id": "dPZom",
+      "screenshot": "specs/012-payment-receipts/design/payment-receipt-detail-phone.png"
+    },
+    {
+      "name": "Payment Receipt Detail / Tablet",
+      "frame_id": "bfEgo",
+      "screenshot": "specs/012-payment-receipts/design/payment-receipt-detail-tablet.png"
+    }
+  ]
+}

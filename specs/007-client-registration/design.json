@@ -1,0 +1,82 @@
+{
+  "pen_file": "layout.pen",
+  "design_dir": "specs/007-client-registration/design",
+  "viewports": {
+    "phone": { "width": 390, "height": 844 },
+    "tablet": { "width": 820, "height": 1180 }
+  },
+  "screens": [
+    {
+      "name": "ClientList / Phone",
+      "frame_id": "ol4CQ",
+      "viewport": "phone",
+      "screenshot": "specs/007-client-registration/design/client-list-phone.png"
+    },
+    {
+      "name": "ClientListEmpty / Phone",
+      "frame_id": "gnjgv",
+      "viewport": "phone",
+      "screenshot": "specs/007-client-registration/design/client-list-empty-phone.png"
+    },
+    {
+      "name": "ClientListNoMatches / Phone",
+      "frame_id": "JtIt0",
+      "viewport": "phone",
+      "screenshot": "specs/007-client-registration/design/client-list-no-matches-phone.png"
+    },
+    {
+      "name": "NewClient / Phone",
+      "frame_id": "YwVIa",
+      "viewport": "phone",
+      "screenshot": "specs/007-client-registration/design/new-client-phone.png"
+    },
+    {
+      "name": "ClientProfile / Phone",
+      "frame_id": "C0KRb",
+      "viewport": "phone",
+      "screenshot": "specs/007-client-registration/design/client-profile-phone.png"
+    },
+    {
+      "name": "ClientProfileEmpty / Phone",
+      "frame_id": "kQnDq",
+      "viewport": "phone",
+      "screenshot": "specs/007-client-registration/design/client-profile-empty-phone.png"
+    },
+    {
+      "name": "ClientList / Tablet",
+      "frame_id": "c2qmp",
+      "viewport": "tablet",
+      "screenshot": "specs/007-client-registration/design/client-list-tablet.png"
+    },
+    {
+      "name": "ClientListEmpty / Tablet",
+      "frame_id": "bJaze",
+      "viewport": "tablet",
+      "screenshot": "specs/007-client-registration/design/client-list-empty-tablet.png"
+    },
+    {
+      "name": "ClientListNoMatches / Tablet",
+      "frame_id": "yCDAy",
+      "viewport": "tablet",
+      "screenshot": "specs/007-client-registration/design/client-list-no-matches-tablet.png"
+    },
+    {
+      "name": "NewClient / Tablet",
+      "frame_id": "1NI9V",
+      "viewport": "tablet",
+      "screenshot": "specs/007-client-registration/design/new-client-tablet.png"
+    },
+    {
+      "name": "ClientProfile / Tablet",
+      "frame_id": "ymEhF",
+      "viewport": "tablet",
+      "screenshot": "specs/007-client-registration/design/client-profile-tablet.png"
+    },
+    {
+      "name": "ClientProfileEmpty / Tablet",
+      "frame_id": "lG0qd",
+      "viewport": "tablet",
+      "screenshot": "specs/007-client-registration/design/client-profile-empty-tablet.png"
+    }
+  ]
+}
